@@ -1,0 +1,18 @@
+## This docker-compose config file is used to define test variations of the
+## images in this repository.
+
+version: "3.4"
+
+services:
+  api_test:
+    image: "golang:1.11"
+    container_name: api_test
+    working_dir: "/app"
+    command: ["make", "test"]
+    environment:
+      - GO_ENV=production
+      - GO111MODULE=on
+    volumes:
+      - type: bind
+        source: ./api
+        target: /app
