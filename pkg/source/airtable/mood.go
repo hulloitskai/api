@@ -23,9 +23,9 @@ func (c *Client) Moods(limit int) ([]*m.Mood, error) {
 	params := at.ListParameters{
 		Fields:     []string{"valence", "context", "id", "mood", "reason", "date"},
 		MaxRecords: limit,
-		View:       "Main View",
+		View:       c.cfg.MoodTableView,
 	}
-	if err := c.c.ListRecords("moods", &raw, params); err != nil {
+	if err := c.c.ListRecords(c.cfg.MoodTableName, &raw, params); err != nil {
 		return nil, ess.AddCtx("airtable", err)
 	}
 

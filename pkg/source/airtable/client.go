@@ -8,20 +8,21 @@ import (
 )
 
 type Client struct {
-	c at.Client
+	cfg Config
+	c   at.Client
 }
 
-func New(cfg Config) (*Client, error) {
-	if cfg == nil {
+func New(config *Config) (*Client, error) {
+	if config == nil {
 		return nil, errors.New("airtable: nil config")
 	}
+	cfg := *config
+	cfg.setDefaults()
 
-	c, err := at.New(cfg.APIKey(), cfg.BaseID())
+	c, err := at.New(cfg.APIKey, cfg.BaseID)
 	if err != nil {
 		return nil, ess.AddCtx("airtable", err)
 	}
 
-	return &Client{
-		c: *c,
-	}, nil
+	return &Client{c: *c, cfg: cfg}, nil
 }
