@@ -9,11 +9,8 @@ type Config struct {
 	MoodTableView string `env:"MOOD_VIEW"`
 }
 
-func (cfg *Config) setDefaults() {
+func (cfg *Config) configureDefaults() {
 	if cfg.MoodTableName == "" {
 		cfg.MoodTableName = "moods"
-	}
-	if cfg.MoodTableView == "" {
-		cfg.MoodTableView = "Grid view"
 	}
 }

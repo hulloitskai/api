@@ -16,7 +16,6 @@ services:
       cache_from:
         - stevenxie/api:latest
         - alpine:3.8
-        - golang:alpine
     container_name: api
     environment:
       - GO_ENV=development

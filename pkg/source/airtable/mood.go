@@ -1,45 +1,23 @@
 package airtable
 
-import (
-	"time"
+import "time"
 
-	at "github.com/fabioberger/airtable-go"
-	m "github.com/stevenxie/api/pkg/mood"
-	ess "github.com/unixpickle/essentials"
-)
-
-type mood struct {
-	ID      string    `json:"id"`
-	Mood    string    `json:"mood"`
-	Valence int       `json:"valence"`
-	Context string    `json:"context"`
-	Reason  string    `json:"reason"`
-	Date    time.Time `json:"date"`
+// A Mood is an Airtable record from the 'moods' table.
+type Mood struct {
+	ID      int64     `mapstructure:"id"`
+	Mood    []string  `mapstructure:"mood"`
+	Valence int       `mapstructure:"valence"`
+	Context []string  `mapstructure:"context"`
+	Reason  string    `mapstructure:"reason"`
+	Date    time.Time `mapstructure:"date"`
 }
 
 // Moods retrieves the last `limit` moods from Airtable.
-func (c *Client) Moods(limit int) ([]*m.Mood, error) {
-	var raw []mood
-	params := at.ListParameters{
-		Fields:     []string{"valence", "context", "id", "mood", "reason", "date"},
-		MaxRecords: limit,
-		View:       c.cfg.MoodTableView,
-	}
-	if err := c.c.ListRecords(c.cfg.MoodTableName, &raw, params); err != nil {
-		return nil, ess.AddCtx("airtable", err)
-	}
-
-	moods := make([]*m.Mood, len(raw))
-	for i := range raw {
-		rm := &raw[i]
-		moods[i] = &m.Mood{
-			ExtID:   rm.ID,
-			Mood:    rm.Mood,
-			Valence: rm.Valence,
-			Context: rm.Context,
-			Reason:  rm.Reason,
-			Date:    rm.Date,
-		}
+func (c *Client) Moods(limit int) ([]*Mood, error) {
+	var moods []*Mood
+	if err := c.UnmarshalRecords(c.cfg.MoodTableName, c.cfg.MoodTableView, limit,
+		&moods); err != nil {
+		return nil, err
 	}
 	return moods, nil
 }

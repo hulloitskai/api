@@ -1,6 +1,4 @@
-language: go
-go:
-  - '1.11'
+language: bash
 
 os:
   - linux
@@ -43,7 +41,7 @@ deploy:
 cache:
   directories:
     ## Preserve external tools.
-    - $BIN_PATH
+    - $BINPATH
     ## Preserve golint executable.
     - $GOBIN
     ## Preserve Go module cache.

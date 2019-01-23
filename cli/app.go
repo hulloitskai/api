@@ -1,4 +1,4 @@
-package cmd
+package cli
 
 import (
 	"fmt"
@@ -23,14 +23,14 @@ func init() {
 	pflag.BoolVarP(&opts.ShowVersion, "version", "v", false, "Show version.")
 	pflag.IntVarP(&opts.Port, "port", "p", 3000, "Port to listen on.")
 
-	loadEnv() // load .env variables
-	pflag.Parse()
+	loadEnv()     // load .env variables
+	pflag.Parse() // parse CLI arguments
 }
 
 // Exec is the entrypoint to command rgv.
 func Exec() {
 	if opts.ShowHelp {
-		showHelp()
+		pflag.Usage()
 		os.Exit(0)
 	}
 	if opts.ShowVersion {

@@ -1,28 +1,31 @@
 package airtable
 
 import (
-	"errors"
-
-	at "github.com/fabioberger/airtable-go"
-	ess "github.com/unixpickle/essentials"
+	"net/http"
+	"net/http/cookiejar"
 )
 
+// Client is capable of retrieving data from the Airtable API.
 type Client struct {
-	cfg Config
-	c   at.Client
+	HC  *http.Client
+	Jar *cookiejar.Jar
+
+	cfg *Config
 }
 
-func New(config *Config) (*Client, error) {
-	if config == nil {
-		return nil, errors.New("airtable: nil config")
-	}
-	cfg := *config
-	cfg.setDefaults()
+// New creates a new Airtbale client.
+func New(cfg Config) *Client {
+	cfg.configureDefaults()
 
-	c, err := at.New(cfg.APIKey, cfg.BaseID)
+	jar, err := cookiejar.New(nil)
 	if err != nil {
-		return nil, ess.AddCtx("airtable", err)
+		panic(err)
 	}
 
-	return &Client{c: *c, cfg: cfg}, nil
+	hc := &http.Client{Jar: jar}
+	return &Client{
+		HC:  hc,
+		Jar: jar,
+		cfg: &cfg,
+	}
 }

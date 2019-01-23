@@ -1,9 +1,9 @@
 package main
 
 import (
-	"github.com/stevenxie/api/cmd"
+	"github.com/stevenxie/api/cli"
 )
 
 func main() {
-	cmd.Exec()
+	cli.Exec()
 }
