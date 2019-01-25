@@ -1,21 +1,23 @@
 package cli
 
 import (
+	"fmt"
 	"os"
 	"strings"
 
 	"go.uber.org/zap"
 
 	"github.com/joho/godotenv"
+	"github.com/stevenxie/api/internal/info"
 	ess "github.com/unixpickle/essentials"
 )
 
 func loadEnv() {
 	var err error
-	if os.Getenv("GO_ENV") == "development" {
+	if os.Getenv("GOENV") == "development" {
 		err = godotenv.Load(".env", ".env.local")
 	} else {
-		err = godotenv.Load("/secrets/env/.env")
+		err = godotenv.Load(fmt.Sprintf("/etc/%s/.env", info.Namespace))
 	}
 
 	if (err != nil) &&
@@ -29,7 +31,7 @@ func buildLogger() (*zap.SugaredLogger, error) {
 		raw *zap.Logger
 		err error
 	)
-	if os.Getenv("GO_ENV") == "development" {
+	if os.Getenv("GOENV") == "development" {
 		raw, err = zap.NewDevelopment()
 	} else {
 		cfg := zap.NewProductionConfig()

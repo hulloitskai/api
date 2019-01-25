@@ -2,7 +2,7 @@
 ## BUILDER IMAGE
 ##################################################
 
-FROM golang:alpine AS builder
+FROM golang:1-alpine AS builder
 
 ARG BINARY="api"
 
@@ -34,7 +34,7 @@ FROM alpine:3.8 as production
 
 ARG BINARY="api"
 ARG BUILD_VERSION="unset"
-ENV GO_ENV="production"
+ENV GOENV="production"
 
 ## Labels:
 LABEL maintainer="Steven Xie <dev@stevenxie.me>"
@@ -60,5 +60,5 @@ HEALTHCHECK --interval=30s --timeout=30s --start-period=10s --retries=1 \
 EXPOSE 3000
 
 ## Set entrypoint.
-ENV BINARY=$BINARY GO_ENV="production"
+ENV BINARY=$BINARY GOENV="production"
 ENTRYPOINT "$BINARY"

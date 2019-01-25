@@ -36,7 +36,7 @@ clean: go-clean ## Clean build artifacts.
 
 GENV = development
 run:## Run project (development).
-	@GO_ENV="$(GENV)" && $(MAKE) go-run
+	@GOENV="$(GENV)" $(MAKE) go-run
 
 lint: go-lint ## Lint and check code.
 test: go-test ## Run tests.
@@ -114,24 +114,26 @@ go-run:
 
 go-lint:
 	@if command -v goimports > /dev/null; then \
-	   echo "Formatting code with 'goimports'..." && goimports -w .; \
+	   echo "Formatting code with 'goimports'..." && \
+	   goimports -w -l . | tee /dev/stderr | xargs -0 test -z; EXIT=$$?; \
 	 else \
-	   echo "'goimports' not installed, formatting code with 'go fmt'..." && \
-	   go fmt .; \
+	   echo "'goimports' not installed, skipping format step."; \
 	 fi && \
 	 if command -v golint > /dev/null; then \
-	   echo "Linting code with 'golint'..." && golint ./...; \
+	   echo "Linting code with 'golint'..." && \
+	   golint -set_exit_status ./...; EXIT="$${EXIT:-?}"; \
 	 else \
 	   echo "'golint' not installed, skipping linting step."; \
 	 fi && \
 	 echo "Checking code with 'go vet'..." && go vet ./... && \
-	 echo done
+	 echo done && exit $$EXIT
 
 COVERFILE = coverage.out
 TIMEOUT   = 20s
-TARGS = -race
-__TEST = go test ./... -coverprofile="$(COVERFILE)" -covermode=atomic \
-                       -timeout="$(TIMEOUT)" $(TARGS)
+TARGS     = -race
+__TEST = go test -coverprofile="$(COVERFILE)" -covermode=atomic \
+                 -timeout="$(TIMEOUT)" $(BUILDARGS) $(TARGS) \
+                 ./...
 go-test:
 	@echo "Running tests with 'go test':" && $(__TEST)
 
@@ -141,10 +143,16 @@ go-review: go-lint go-test
 ## Docker:
 .PHONY: dk-pull dk-push dk-build dk-build-push dk-clean dk-tags dk-up \
         dk-build-up dk-down dk-logs dk-test
-__DK    = docker
-__DKCMP = docker-compose
+
+__DK     = docker $(DKARGS)
+__DKFILE = docker-compose.yml
+
+__DKCMP  = docker-compose -f "$(__DKFILE)" $(DKARGS)
 __DKCMP_VER = VERSION="$(VERSION)" $(__DKCMP)
-__DKCMP_LST  = VERSION=latest $(__DKCMP)
+__DKCMP_LST = VERSION=latest $(__DKCMP)
+ifeq (DKENV,test)
+	__DKFILE = docker-compose.test.yml
+endif
 
 dk-pull: ## Pull latest Docker images from registry.
 	@echo "Pulling latest images from registry..." && \
@@ -198,9 +206,9 @@ dk-down: ## Shut down containerized services.
 dk-logs: ## Show logs for containerized services.
 	@$(__DKCMP_VER) logs -f $(SVC)
 
-__DKCMP_TEST = $(__DKCMP_VER) -f docker-compose.test.yml
+__DKCMP_TEST = $(__DKCMP_VER) -f docker-compose.test.yml up
 dk-test: ## Test using 'docker-compose.test.yml'.
 	@if [ -s docker-compose.test.yml ]; then \
 	   echo "Running containerized service tests..." && \
-	   $(__DKCMP_TEST) up; \
+	   $(__DKCMP_TEST); \
 	 fi

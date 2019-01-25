@@ -3,6 +3,8 @@ package airtable
 import (
 	"net/http"
 	"net/http/cookiejar"
+
+	defaults "gopkg.in/mcuadros/go-defaults.v1"
 )
 
 // Client is capable of retrieving data from the Airtable API.
@@ -14,8 +16,8 @@ type Client struct {
 }
 
 // New creates a new Airtbale client.
-func New(cfg Config) *Client {
-	cfg.configureDefaults()
+func New(cfg *Config) *Client {
+	defaults.SetDefaults(cfg)
 
 	jar, err := cookiejar.New(nil)
 	if err != nil {
@@ -26,6 +28,6 @@ func New(cfg Config) *Client {
 	return &Client{
 		HC:  hc,
 		Jar: jar,
-		cfg: &cfg,
+		cfg: cfg,
 	}
 }

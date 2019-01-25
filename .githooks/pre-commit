@@ -11,7 +11,7 @@ lint() {
   echo "Performing code check:"
   make lint || return $?
 }
-lint || exit $?
+lint
 
 ## Hide secrets using git-secret.
 git-secret() {

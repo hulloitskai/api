@@ -1,8 +1,9 @@
 ## [Repository]
 .env.local
 
-## git-secret:
+## Secrets:
 .gitsecret/keys/random_seed
+.env
 
 ## The compiled binary:
 /build/

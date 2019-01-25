@@ -18,11 +18,20 @@ services:
         - alpine:3.8
     container_name: api
     environment:
-      - GO_ENV=development
+      - GOENV=development
     networks:
       - public
     ports:
       - "3000:3000" # for development
+
+  api_test:
+    image: "stevenxie/api:tester"
+    build:
+      context: .
+      dockerfile: test.Dockerfile
+      cache_from:
+        - stevenxie/api:tester
+        - golang:1
 
 
 networks:

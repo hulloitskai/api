@@ -10,17 +10,14 @@ env:
   ##   - GH_TOKEN, GH_KUBECONFIG_PATH
   global:
     - DEPLOYMENTS="api"
-    - RELEASE_BRANCH=master
-    - DOCKER_COMPOSE_VERSION="1.23.2"
 
-# Install external tools.
+# Install external tools, fetch tags.
 before_install:
-  - export GOBIN="${GOPATH}/bin" BINPATH=/opt/bin
-  - export PATH=$BINPATH:$PATH
+  - export PATH="${BINPATH}:${PATH}"
   - ./scripts/tools.sh
   - git fetch --tags
 
-## Install dependencies.
+## Install dependencies and build artifacts.
 install: export GO111MODULE=on && make ci-install
 
 ## Run tests.
@@ -38,11 +35,7 @@ deploy:
 # after_success:
 #   - bash <(curl -s https://codecov.io/bash)
 
+## Preserve external tools.
 cache:
   directories:
-    ## Preserve external tools.
     - $BINPATH
-    ## Preserve golint executable.
-    - $GOBIN
-    ## Preserve Go module cache.
-    - ${GOPATH}/pkg/mod/cache

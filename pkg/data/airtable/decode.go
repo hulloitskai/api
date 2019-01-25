@@ -15,21 +15,48 @@ import (
 // BaseURL is the base url for the Airtable API.
 const BaseURL = "https://api.airtable.com/v0"
 
-// UnmarshalRecords unmarshalls `limit` records from `table` into v.
-func (c *Client) UnmarshalRecords(table, view string, limit int,
-	v interface{}) error {
+type fetchOpts struct {
+	Limit int
+	Sort  []sortConfig
+}
+
+type sortConfig struct {
+	Field     string `mapstructure:"field"`
+	Direction string `mapstructure:"direction"`
+}
+
+// fetchRecords fetches `limit` records from `table` in Airtable, and unmarshals
+// them into v.
+func (c *Client) fetchRecords(table, v interface{}, opts *fetchOpts) error {
 	// Construct and perform request.
 	u, err := url.Parse(fmt.Sprintf("%s/%s/%s", BaseURL, c.cfg.BaseID, table))
 	if err != nil {
 		panic(err)
 	}
 
-	params := u.Query()
-	params.Set("maxRecords", strconv.Itoa(limit))
-	if view != "" {
-		params.Set("view", view)
+	// Configure request according to opts.
+	if opts != nil {
+		params := u.Query()
+		if opts.Limit > 0 {
+			params.Set("maxRecords", strconv.Itoa(opts.Limit))
+		}
+		if len(opts.Sort) > 0 {
+			sortMaps := make([]map[string]string, len(opts.Sort))
+			for i := range opts.Sort {
+				if err := ms.Decode(&opts.Sort[i], &sortMaps[i]); err != nil {
+					panic(err)
+				}
+			}
+
+			for i, sortMap := range sortMaps {
+				for sortField, sortVal := range sortMap {
+					key := fmt.Sprintf("sort[%d][%s]", i, sortField)
+					params.Set(key, sortVal)
+				}
+			}
+		}
+		u.RawQuery = params.Encode()
 	}
-	u.RawQuery = params.Encode()
 
 	req, err := http.NewRequest("GET", u.String(), nil)
 	if err != nil {

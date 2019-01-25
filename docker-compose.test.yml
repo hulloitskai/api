@@ -5,14 +5,16 @@ version: "3.4"
 
 services:
   api_test:
-    image: "golang:1.11"
+    image: "stevenxie/api:tester"
+    build:
+      context: .
+      dockerfile: test.Dockerfile
+      cache_from:
+        - stevenxie/api:tester
+        - golang:1
     container_name: api_test
     working_dir: "/app"
-    command: ["make", "test"]
-    environment:
-      - GO_ENV=production
-      - GO111MODULE=on
     volumes:
       - type: bind
-        source: ./api
+        source: .
         target: /app

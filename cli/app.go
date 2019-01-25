@@ -2,11 +2,13 @@ package cli
 
 import (
 	"fmt"
+	"net/http"
 	"os"
-
-	"github.com/stevenxie/api/internal/info"
+	"os/signal"
 
 	"github.com/spf13/pflag"
+	"github.com/stevenxie/api/internal/info"
+	"github.com/stevenxie/api/internal/server"
 	ess "github.com/unixpickle/essentials"
 )
 
@@ -44,35 +46,30 @@ func Exec() {
 		ess.Die("Error while building zap.SugaredLogger:", err)
 	}
 
-	logger.Debugf("Hello from API!")
+	// Create and run server.
+	s, err := server.New(logger)
+	if err != nil {
+		ess.Die("Error while building server:", err)
+	}
 
-	// // Create and run server.
-	// server, err := api.NewServer(logger)
-	// if err != nil {
-	// 	ess.Die("Error while building server:", err)
-	// }
+	addr := fmt.Sprintf(":%d", opts.Port)
+	fmt.Printf("Listening on address '%s'...\n", addr)
 
-	// addr := fmt.Sprintf(":%d", opts.Port)
-	// fmt.Printf("Listening on address '%s'...\n", addr)
-
-	// go shutdownUponInterrupt(server)
-	// err = server.ListenAndServe(addr)
-	// if (err != nil) && (err != http.ErrServerClosed) {
-	// 	ess.Die("Error while starting server:", err)
-	// }
+	go shutdownUponInterrupt(s)
+	if err = s.ListenAndServe(addr); (err != nil) &&
+		(err != http.ErrServerClosed) {
+		ess.Die("Error while starting server:", err)
+	}
 }
 
-// func shutdownUponInterrupt(s *api.Server) {
-// 	const timeout = 1 * time.Second
+func shutdownUponInterrupt(s *server.Server) {
+	ch := make(chan os.Signal)
+	signal.Notify(ch, os.Interrupt, os.Kill)
 
-// 	ch := make(chan os.Signal)
-// 	signal.Notify(ch, os.Interrupt, os.Kill)
-
-// 	<-ch // wait for a signal
-// 	fmt.Printf("Shutting down server gracefully (timeout: %s)...\n", timeout)
-// 	ctx, cancel := context.WithTimeout(context.Background(), timeout)
-// 	defer cancel()
-// 	if err := s.Shutdown(ctx); err != nil {
-// 		ess.Die("Error during server shutdown:", err)
-// 	}
-// }
+	<-ch // wait for a signal
+	fmt.Printf("Shutting down server gracefully (timeout: %v)...\n",
+		s.ShutdownTimeout)
+	if err := s.Shutdown(); err != nil {
+		ess.Die("Error during server shutdown:", err)
+	}
+}
