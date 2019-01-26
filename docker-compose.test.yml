@@ -5,12 +5,12 @@ version: "3.4"
 
 services:
   api_test:
-    image: "stevenxie/api:tester"
+    image: "stevenxie/api-tester"
     build:
       context: .
       dockerfile: test.Dockerfile
       cache_from:
-        - stevenxie/api:tester
+        - stevenxie/api-tester:latest
         - golang:1
     container_name: api_test
     working_dir: "/app"

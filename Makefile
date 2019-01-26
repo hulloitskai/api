@@ -148,7 +148,7 @@ go-review: go-lint go-test
 __DK     = docker $(DKARGS)
 __DKFILE = docker-compose.yml
 
-__DKCMP  = docker-compose -f "$(__DKFILE)" $(DKARGS)
+__DKCMP  = docker-compose -f "$(__DKFILE)"
 __DKCMP_VER = VERSION="$(VERSION)" $(__DKCMP)
 __DKCMP_LST = VERSION=latest $(__DKCMP)
 ifeq (DKENV,test)
@@ -157,20 +157,20 @@ endif
 
 dk-pull: ## Pull latest Docker images from registry.
 	@echo "Pulling latest images from registry..." && \
-	 $(__DKCMP_LST) pull $(SVC)
+	 $(__DKCMP_LST) pull $(DKARGS) $(SVC)
 
 dk-push: ## Push new Docker images to registry.
 	@if git describe --exact-match --tags > /dev/null 2>&1; then \
 	   echo "Pushing versioned images to registry (:$(VERSION))..." && \
-	   $(__DKCMP_VER) push $(SVC); \
+	   $(__DKCMP_VER) push $(DKARGS) $(SVC); \
 	 fi && \
 	 echo "Pushing latest images to registry (:latest)..." && \
-	 $(__DKCMP_LST) push $(SVC) && \
+	 $(__DKCMP_LST) push $(DKARGS) $(SVC) && \
 	 echo done
 
 dk-build: ## Build and tag Docker images.
 	@echo "Building images..." && \
-	 $(__DKCMP_VER) build --parallel --compress $(SVC) && \
+	 $(__DKCMP_VER) build $(DKARGS) --parallel --compress $(SVC) && \
 	 echo done && $(MAKE) dk-tags
 
 dk-clean: ## Clean up unused Docker data.
@@ -190,7 +190,7 @@ dk-tags: ## Tag versioned Docker images with ':latest'.
 	done && \
 	echo done
 
-__DK_UP = $(__DKCMP_VER) up -d
+__DK_UP = $(__DKCMP_VER) up $(DKARGS) -d
 dk-up: ## Start up containerized services.
 	@echo "Bringing up services..." && $(__DK_UP) $(SVC) && echo done
 
@@ -201,11 +201,11 @@ dk-build-up: ## Build new images, then start them.
 
 dk-down: ## Shut down containerized services.
 	@echo "Bringing down services..." && \
-	 $(__DKCMP_VER) down $(SVC) && \
+	 $(__DKCMP_VER) down $(DKARGS) $(SVC) && \
 	 echo done
 
 dk-logs: ## Show logs for containerized services.
-	@$(__DKCMP_VER) logs -f $(SVC)
+	@$(__DKCMP_VER) logs $(DKARGS) -f $(SVC)
 
 __DKCMP_TEST = $(__DKCMP_VER) -f docker-compose.test.yml up
 dk-test: ## Test using 'docker-compose.test.yml'.

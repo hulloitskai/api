@@ -19,18 +19,24 @@ services:
     container_name: api
     environment:
       - GOENV=development
+    env_file:
+      - ./.env
+    volumes:
+      - type: bind
+        source: ./config.yml
+        target: /etc/api/config.yml
     networks:
       - public
     ports:
       - "3000:3000" # for development
 
   api_test:
-    image: "stevenxie/api:tester"
+    image: "stevenxie/api-tester"
     build:
       context: .
       dockerfile: test.Dockerfile
       cache_from:
-        - stevenxie/api:tester
+        - stevenxie/api-tester:latest
         - golang:1
 
 

@@ -11,19 +11,18 @@ RUN apk add upx gcc musl-dev git make
 
 ## Copy source files.
 WORKDIR /build
-COPY ./api/ ./api/
-COPY ./.git/ ./.git/
+COPY . .
 
 ## Install app dependencies.
 ENV GO111MODULE=on
-WORKDIR /build/api
+WORKDIR /build
 RUN go version && make install
 
 ## Create production binary at '/build/dist/$BINARY'
-RUN make build BARGS="-o ../dist/$BINARY"
+RUN make build BARGS="-o ./dist/${BINARY}"
 
 ## Compress binary with UPX.
-RUN upx -9 "../dist/$BINARY"
+RUN upx -9 "./dist/${BINARY}"
 
 
 ##################################################

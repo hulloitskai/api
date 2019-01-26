@@ -13,6 +13,7 @@ env:
 
 # Install external tools, fetch tags.
 before_install:
+  - export BINPATH=/opt/bin
   - export PATH="${BINPATH}:${PATH}"
   - ./scripts/tools.sh
   - git fetch --tags
