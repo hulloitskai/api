@@ -1,0 +1,54 @@
+---
+
+apiVersion: apps/v1
+kind: Deployment
+
+metadata:
+  name: api
+  namespace: default
+
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: api
+      tier: backend
+      track: stable
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxSurge: 1
+      maxUnavailable: 1
+  minReadySeconds: 5
+  template:
+    metadata:
+      labels:
+        app: api
+        tier: backend
+        track: stable
+    spec:
+      containers:
+        - name: api
+          image: "stevenxie/api:latest"
+          imagePullPolicy: Always
+          envFrom:
+            - secretRef:
+                name: api
+          volumeMounts:
+            - name: config
+              mountPath: /etc/api
+          ports:
+            - name: api
+              containerPort: 3000
+          livenessProbe:
+            httpGet:
+              path: /
+              port: api
+          readinessProbe:
+            httpGet:
+              path: /
+              port: api
+      volumes:
+        - name: config
+          configMap:
+            name: api

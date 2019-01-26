@@ -19,8 +19,8 @@ services:
     container_name: api
     environment:
       - GOENV=development
-    env_file:
-      - ./.env
+    # env_file:
+    #   - ./.env
     volumes:
       - type: bind
         source: ./config.yml
