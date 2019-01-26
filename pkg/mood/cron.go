@@ -1,9 +1,7 @@
 package mood
 
 import (
-	"errors"
-
-	"github.com/jinzhu/gorm"
+	"github.com/robfig/cron"
 	"go.uber.org/zap"
 )
 
@@ -12,34 +10,22 @@ const (
 	cronSpec   = "@every 15m"
 )
 
-// A CronJob is a runnable object.
-type CronJob interface{ Run() }
-
-// A CronMan manages CronJobs.
-type CronMan interface {
-	AddJob(spec string, job CronJob)
-}
-
 // A Fetcher is a CronJob that can fetch moods from a source.
 type Fetcher struct {
-	Source
-	*gorm.DB
+	Source Source
+	Repo   Repo
 
 	l *zap.SugaredLogger
 }
 
 // NewFetcher returns a new Fetcher.
-func NewFetcher(s Source, db *gorm.DB, l *zap.SugaredLogger) *Fetcher {
+func NewFetcher(s Source, r Repo, l *zap.SugaredLogger) *Fetcher {
 	if l == nil {
 		l = zap.NewNop().Sugar()
 	}
-	if db == nil {
-		panic(errors.New("cannot create fetcher with nil db"))
-	}
-
 	return &Fetcher{
 		Source: s,
-		DB:     db,
+		Repo:   r,
 		l:      l,
 	}
 }
@@ -48,13 +34,21 @@ func NewFetcher(s Source, db *gorm.DB, l *zap.SugaredLogger) *Fetcher {
 func (f *Fetcher) Run() {
 	f.l.Info("Starting fetch procedure...")
 
-	var latest *Mood
-	f.DB.Last(&latest)
-	if f.DB.Error != nil {
-		f.l.Errorf("Failed to fatch last mood from DB: %v", f.DB.Error)
+	// Select last mood from repo.
+	var (
+		results, err = f.Repo.SelectMoods(1, "")
+		last         *Mood
+	)
+	if err != nil {
+		f.l.Errorf("Error while selecting last mood: %v", err)
 		return
 	}
+	if len(results) > 0 {
+		last = results[0]
+		f.l.Debugf("Last saved mood: %+v", last)
+	}
 
+	// Fetch new moods from source.
 	moods, err := f.Source.FetchMoods(fetchLimit)
 	if err != nil {
 		f.l.Errorf("Failed to fetch new moods: %v", err)
@@ -63,21 +57,34 @@ func (f *Fetcher) Run() {
 
 	// Filter out already-saved moods.
 	var keep []*Mood
-	if latest == nil {
+	if last == nil {
 		keep = moods // keep all moods
 	} else {
 		for i := range moods {
-			if moods[i].ExtID > latest.ExtID {
+			if moods[i].ExtID > last.ExtID {
 				keep = append(keep, moods[i])
 			}
 		}
 	}
+	if len(keep) == 0 {
+		f.l.Infof("No new moods available to save.")
+		return
+	}
 
-	// Save new moods.
-	f.DB.Save(&keep)
-	if f.DB.Error != nil {
-		f.l.Errorf("Failed to save new moods to repo: %v", f.DB.Error)
+	// Save new moods to repo.
+	if err := f.Repo.InsertMoods(moods); err != nil {
+		f.l.Errorf("Failed to insert moods: %v", err)
 		return
 	}
 	f.l.Infof("Successfully saved %d new moods to repo.", len(keep))
+}
+
+// Cron manages CronJobs.
+type Cron interface {
+	AddJob(spec string, job cron.Job) error
+}
+
+// RegisterTo registers the Fetcher to a Cron.
+func (f *Fetcher) RegisterTo(c Cron) error {
+	return c.AddJob(cronSpec, f)
 }

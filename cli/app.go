@@ -53,13 +53,11 @@ func Exec() {
 	}
 
 	addr := fmt.Sprintf(":%d", opts.Port)
-	fmt.Printf("Listening on address '%s'...\n", addr)
-
-	go shutdownUponInterrupt(s)
 	if err = s.ListenAndServe(addr); (err != nil) &&
 		(err != http.ErrServerClosed) {
 		ess.Die("Error while starting server:", err)
 	}
+	go shutdownUponInterrupt(s)
 }
 
 func shutdownUponInterrupt(s *server.Server) {

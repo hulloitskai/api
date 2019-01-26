@@ -4,6 +4,9 @@ import (
 	"net/http"
 	"net/http/cookiejar"
 
+	validator "gopkg.in/validator.v2"
+
+	"github.com/spf13/viper"
 	defaults "gopkg.in/mcuadros/go-defaults.v1"
 )
 
@@ -15,9 +18,10 @@ type Client struct {
 	cfg *Config
 }
 
-// New creates a new Airtbale client.
+// New creates a new Airtable client.
 func New(cfg *Config) *Client {
 	defaults.SetDefaults(cfg)
+	validator.Validate(cfg)
 
 	jar, err := cookiejar.New(nil)
 	if err != nil {
@@ -30,4 +34,13 @@ func New(cfg *Config) *Client {
 		Jar: jar,
 		cfg: cfg,
 	}
+}
+
+// NewUsing creates a new Airtable client using a config derived from v.
+func NewUsing(v *viper.Viper) (*Client, error) {
+	cfg, err := ConfigFromViper(v)
+	if err != nil {
+		return nil, err
+	}
+	return New(cfg), nil
 }

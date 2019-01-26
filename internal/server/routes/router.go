@@ -5,22 +5,24 @@ import (
 	"net/http"
 
 	"github.com/julienschmidt/httprouter"
+	"github.com/stevenxie/api/internal/data"
 	"go.uber.org/zap"
 )
 
 // Router matches requests to the routes defined in this package.
 type Router struct {
-	*Config
-	hr httprouter.Router
+	Repos *data.RepoSet
+	hr    httprouter.Router
+	l     *zap.SugaredLogger
 }
 
 // NewRouter returns a new Router.
-func NewRouter(cfg *Config) (*Router, error) {
-	if cfg == nil {
-		return nil, errors.New("routes: cannot create Router with a nil Config")
+func NewRouter(repos *data.RepoSet, logger *zap.SugaredLogger) (*Router, error) {
+	if repos == nil {
+		panic(errors.New("server: cannot make router with nil data.RepoSet"))
 	}
-	if cfg.Logger == nil {
-		cfg.Logger = zap.NewNop().Sugar()
+	if logger == nil {
+		logger = zap.NewNop().Sugar()
 	}
 
 	// Make and configure httprouter.Router.
@@ -28,8 +30,9 @@ func NewRouter(cfg *Config) (*Router, error) {
 	// hr.RedirectTrailingSlash = false
 
 	r := &Router{
-		Config: cfg,
-		hr:     *hr,
+		Repos: repos,
+		hr:    *hr,
+		l:     logger,
 	}
 	r.registerRoutes()
 	return r, nil
@@ -42,8 +45,6 @@ func (r *Router) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 
 func (r *Router) registerRoutes() {
 	router := &r.hr
-	registerIndex(router, r.Config.Logger.Named("index"))
-	// registerFilings(router, r.Config.Scraper, r.Config.Logger.Named("filings"))
-	// registerSheets(router, r.Config.Scraper, r.Config.Logger.Named("sheets"))
-	// registerNotes(router, r.Config.Scraper, r.Config.Logger.Named("notes"))
+	registerIndex(router, r.l.Named("index"))
+	registerMoods(router, r.Repos.MoodRepo, r.l.Named("moods"))
 }

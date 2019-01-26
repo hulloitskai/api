@@ -13,12 +13,10 @@ import (
 )
 
 func loadEnv() {
-	var err error
-	if os.Getenv("GOENV") == "development" {
-		err = godotenv.Load(".env", ".env.local")
-	} else {
-		err = godotenv.Load(fmt.Sprintf("/etc/%s/.env", info.Namespace))
-	}
+	var (
+		sysEnvPath = fmt.Sprintf("/etc/%s/.env", info.Namespace)
+		err        = godotenv.Load(".env", ".env.local", sysEnvPath)
+	)
 
 	if (err != nil) &&
 		!strings.Contains(err.Error(), "no such file or directory") {

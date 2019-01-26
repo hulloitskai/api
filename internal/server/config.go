@@ -1,7 +1,10 @@
 package server
 
 import (
+	"context"
 	"time"
+
+	defaults "gopkg.in/mcuadros/go-defaults.v1"
 
 	ms "github.com/mitchellh/mapstructure"
 	"github.com/spf13/viper"
@@ -12,14 +15,32 @@ type Config struct {
 	ShutdownTimeout time.Duration `ms:"shutdown_timeout"`
 }
 
+const defaultShutdownTimeout = "2s"
+
 // SetDefaults sets zeroed values in Config to sensible default values.
-func (c *Config) SetDefaults() error {
-	var err error
-	if c.ShutdownTimeout == 0 {
-		c.ShutdownTimeout, err = time.ParseDuration("2s")
+func (cfg *Config) SetDefaults() {
+	defaults.SetDefaults(cfg)
+
+	if cfg.ShutdownTimeout == 0 {
+		var err error
+		cfg.ShutdownTimeout, err = time.ParseDuration(defaultShutdownTimeout)
+		if err != nil {
+			panic(err)
+		}
 	}
-	return err
 }
+
+// ShutdownContext returns a context with the appropriate timeout for a server
+// shutdown.
+func (cfg *Config) ShutdownContext() (context.Context, context.CancelFunc) {
+	bg := context.Background()
+	if cfg.ShutdownTimeout == 0 {
+		return bg, noop
+	}
+	return context.WithTimeout(bg, cfg.ShutdownTimeout)
+}
+
+func noop() {}
 
 // ConfigFromViper reads a Config from a viper.Viper instance.
 func ConfigFromViper(v *viper.Viper) (*Config, error) {

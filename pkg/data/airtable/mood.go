@@ -2,6 +2,9 @@ package airtable
 
 import "time"
 
+// MoodsTable is the name of Mood objects table in Airtable.
+const MoodsTable = "moods"
+
 // A Mood is an Airtable record from the 'moods' table.
 type Mood struct {
 	ID        int64     `mapstructure:"id"`
@@ -24,6 +27,6 @@ func (c *Client) Moods(limit int) ([]*Mood, error) {
 		}
 		moods []*Mood
 	)
-	err := c.fetchRecords(c.cfg.MoodTableName, &moods, &opts)
+	err := c.fetchRecords(MoodsTable, &moods, &opts)
 	return moods, err
 }

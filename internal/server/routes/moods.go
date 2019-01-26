@@ -1,39 +1,82 @@
 package routes
 
-// func registerSheets(r *hr.Router, s Scraper, logger *zap.SugaredLogger) {
-// 	sh := &sheetsHandler{Scraper: s, l: logger}
-// 	sh.RegisterTo(r)
-// }
+import (
+	"errors"
+	"net/http"
+	"strconv"
 
-// type sheetsHandler struct {
-// 	Scraper
-// 	l *zap.SugaredLogger
-// }
+	hr "github.com/julienschmidt/httprouter"
+	"github.com/stevenxie/api/pkg/mood"
+	ess "github.com/unixpickle/essentials"
+	"go.uber.org/zap"
+)
 
-// func (sh *sheetsHandler) RegisterTo(r *hr.Router) {
-// 	r.GET("/sheets/:cik/:accNum", sh.Handle)
-// 	r.GET("/sheets/:cik/:accNum/", handleTrailingSlashRedir)
-// }
+func registerMoods(r *hr.Router, repo mood.Repo, logger *zap.SugaredLogger) {
+	mh := &moodsHandler{Repo: repo, l: logger}
+	mh.RegisterTo(r)
+}
 
-// func (sh *sheetsHandler) Handle(w http.ResponseWriter, _ *http.Request,
-// 	params hr.Params) {
-// 	var (
-// 		cik         = params.ByName("cik")
-// 		accNum      = params.ByName("accNum")
-// 		sheets, err = sh.ScrapeBalanceSheets(cik, accNum)
-// 		rw          = responseWriter{w, sh.l}
-// 	)
+type moodsHandler struct {
+	mood.Repo
+	l *zap.SugaredLogger
+}
 
-// 	if err != nil {
-// 		sh.l.Debugf("Error while scraping balance sheets for cik='%s', "+
-// 			"accNum='%s': %v", cik, accNum, err)
-// 		ess.AddCtxTo("routes: scraping balance sheets", &err)
+func (mh *moodsHandler) RegisterTo(r *hr.Router) {
+	r.GET("/moods/", mh.Handle)
+	// r.GET("/sheets/:cik/:accNum/", handleTrailingSlashRedir)
+}
 
-// 		code := http.StatusInternalServerError
-// 		w.WriteHeader(code)
-// 		jerr := jsonErrorFrom(err, code)
-// 		rw.WriteJSON(&jerr)
-// 	}
+const (
+	moodsLimitMax = 50
+)
 
-// 	rw.WriteJSON(sheets)
-// }
+func (mh *moodsHandler) Handle(w http.ResponseWriter, r *http.Request,
+	params hr.Params) {
+	var (
+		limit   = 10
+		startID = ""
+
+		rw  = responseWriter{w, mh.l}
+		qp  = r.URL.Query()
+		err error
+	)
+
+	// Parse and validate query params.
+	if l := qp.Get("limit"); l != "" {
+		if limit, err = strconv.Atoi(l); err != nil {
+			ess.AddCtxTo("routes: parsing 'limit' parameter as int", &err)
+		}
+		if limit <= 0 {
+			err = errors.New("routes: limit must be a positive integer")
+		}
+		if limit > moodsLimitMax {
+			limit = moodsLimitMax
+		}
+	}
+	if err != nil {
+		var (
+			code = http.StatusBadRequest
+			jerr = jsonErrorFrom(err, code)
+		)
+		w.WriteHeader(code)
+		rw.WriteJSON(&jerr)
+		return
+	}
+
+	if sid := qp.Get("startId"); sid != "" {
+		startID = sid
+	}
+
+	moods, err := mh.Repo.SelectMoods(limit, startID)
+	if err != nil {
+		var (
+			code = http.StatusInternalServerError
+			jerr = jsonErrorFrom(err, code)
+		)
+		w.WriteHeader(code)
+		rw.WriteJSON(&jerr)
+		return
+	}
+
+	rw.WriteJSON(moods)
+}

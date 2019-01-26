@@ -12,11 +12,11 @@ const Namespace = "postgres"
 
 // Config describes the settings for connecting to a Postgres database.
 type Config struct {
-	Host    string `ms:"host" default:"localhost"`
-	Port    string `ms:"post" default:"5432"`
-	User    string `ms:"user" default:"postgres"`
-	Pass    string `ms:"pass"`
-	DB      string `ms:"db"`
+	Host    string `ms:"host"    default:"localhost"`
+	Port    string `ms:"post"    default:"5432"`
+	User    string `ms:"user"    default:"postgres"`
+	Pass    string `ms:"pass"    valid:"nonzero"`
+	DB      string `ms:"db"      valid:"nonzero"`
 	SSLMode string `ms:"sslmode" default:"disable"`
 }
 

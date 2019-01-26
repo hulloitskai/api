@@ -12,10 +12,8 @@ const Namespace = "airtable"
 
 // Config describes the options for configuring an airtable.Client.
 type Config struct {
-	APIKey string `ms:"api_key"`
-	BaseID string `ms:"base_id"`
-
-	MoodTableName string `ms:"mood_table" default:"moods"`
+	APIKey string `ms:"api_key" validate:"nonzero"`
+	BaseID string `ms:"base_id" validate:"nonzero"`
 }
 
 // ConfigFromViper parses a Config from a viper.Viper instance.

@@ -6,9 +6,10 @@ ifeq ($(shell ls -1 go.mod 2> /dev/null),go.mod)
 endif
 
 ## Program version.
-VERSION = latest
-ifneq ($(shell git describe --tags 2> /dev/null),)
-	VERSION = $(shell git describe --tags | cut -c 2-)
+VERSION ?= latest
+__GIT_DESC = git describe --tags
+ifneq ($(shell $(__GIT_DESC) 2> /dev/null),)
+	VERSION = $(shell $(__GIT_DESC) | cut -c 2-)
 endif
 
 ## Custom Go linker flag.
@@ -34,9 +35,9 @@ install: go-install ## Install project dependencies.
 build: go-build ## Build project.
 clean: go-clean ## Clean build artifacts.
 
-GENV = development
-run:## Run project (development).
-	@GOENV="$(GENV)" $(MAKE) go-run
+GOENV ?= development
+run: ## Run project (development).
+	@GOENV="$(GOENV)" $(MAKE) go-run
 
 lint: go-lint ## Lint and check code.
 test: go-test ## Run tests.
@@ -129,10 +130,10 @@ go-lint:
 	 echo done && exit $$EXIT
 
 COVERFILE = coverage.out
-TIMEOUT   = 20s
+TTIMEOUT  = 20s
 TARGS     = -race
 __TEST = go test -coverprofile="$(COVERFILE)" -covermode=atomic \
-                 -timeout="$(TIMEOUT)" $(BUILDARGS) $(TARGS) \
+                 -timeout="$(TTIMEOUT)" $(BUILDARGS) $(TARGS) \
                  ./...
 go-test:
 	@echo "Running tests with 'go test':" && $(__TEST)
