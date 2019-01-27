@@ -5,7 +5,7 @@ version: "3.4"
 
 services:
   api_test:
-    image: "stevenxie/api-tester"
+    image: "stevenxie/api-tester:latest"
     build:
       context: .
       dockerfile: test.Dockerfile
@@ -18,3 +18,12 @@ services:
       - type: bind
         source: .
         target: /app
+
+  varnish_test:
+    image: "cooptilleuls/varnish:6.0.0-alpine"
+    command: ["varnishd", "-Cf", "/usr/local/etc/varnish/default.vcl"]
+    volumes:
+      - type: bind
+        source: ./varnish.vcl
+        target: /usr/local/etc/varnish/default.vcl
+        read_only: true

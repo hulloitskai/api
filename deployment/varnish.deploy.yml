@@ -1,0 +1,43 @@
+---
+
+apiVersion: apps/v1
+kind: Deployment
+
+metadata:
+  name: api-varnish
+  namespace: default
+
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: api-varnish
+      tier: backend
+      track: stable
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxSurge: 1
+      maxUnavailable: 1
+  minReadySeconds: 5
+  template:
+    metadata:
+      labels:
+        app: api-varnish
+        tier: backend
+        track: stable
+    spec:
+      containers:
+        - name: varnish
+          image: "cooptilleuls/varnish:6.0.0-alpine"
+          imagePullPolicy: IfNotPresent
+          volumeMounts:
+            - name: config
+              mountPath: /usr/local/etc/varnish/
+          ports:
+            - name: varnish
+              containerPort: 3000
+      volumes:
+        - name: config
+          configMap:
+            name: api-varnish

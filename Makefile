@@ -212,7 +212,12 @@ dk-logs: ## Show logs for containerized services.
 	@$(__DKCMP_VER) logs $(DKARGS) -f $(SVC)
 
 dk-test: ## Test using 'docker-compose.test.yml'.
-	@if [ -s docker-compose.test.yml ]; then \
+	$(eval __DKFILE = docker-compose.test.yml)
+	@if [ -s "$(__DKFILE)" ]; then \
 	   echo "Running containerized service tests..." && \
-	   $(MAKE) dk-up DKENV=test; \
-	 fi
+	   for svc in $$($(__DKCMP_LST) config --services); do \
+	     $(eval DKARGS = --abort-on-container-exit) \
+	     if ! $(__DK_UP) "$$svc"; then exit -1; fi \
+	   done; \
+	 fi && \
+	 echo done

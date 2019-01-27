@@ -1,6 +1,8 @@
 ## [Repository]
 /debug*
 .env.local
+config.yml
+config.yaml
 
 ## Secrets:
 .gitsecret/keys/random_seed

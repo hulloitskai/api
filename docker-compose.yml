@@ -26,5 +26,17 @@ services:
     ports:
       - "3000:3000" # for development
 
+  varnish:
+    image: "cooptilleuls/varnish:6.0.0-alpine"
+    volumes:
+      - type: bind
+        source: ./varnish.vcl
+        target: /usr/local/etc/varnish/default.vcl
+        read_only: true
+    networks:
+      - public
+    ports:
+      - "8080:80"
+
 networks:
   public:

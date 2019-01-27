@@ -4,11 +4,10 @@ import (
 	"net/http"
 	"os"
 
-	defaults "github.com/mcuadros/go-defaults"
-
 	"go.uber.org/zap"
 
 	hr "github.com/julienschmidt/httprouter"
+	defaults "github.com/mcuadros/go-defaults"
 	"github.com/stevenxie/api/internal/info"
 )
 

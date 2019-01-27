@@ -16,7 +16,7 @@ services:
     container_name: api
 
   api_test:
-    image: "stevenxie/api-tester"
+    image: "stevenxie/api-tester:latest"
     build:
       context: .
       dockerfile: test.Dockerfile

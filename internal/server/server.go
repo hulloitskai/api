@@ -5,9 +5,9 @@ import (
 	"net/http"
 	"os"
 
-	defaults "github.com/mcuadros/go-defaults"
 	"go.uber.org/zap"
 
+	defaults "github.com/mcuadros/go-defaults"
 	"github.com/robfig/cron"
 	"github.com/spf13/viper"
 	"github.com/stevenxie/api/internal/config"
@@ -29,19 +29,20 @@ type Server struct {
 }
 
 // New returnsa new Server.
-func New(logger *zap.SugaredLogger) (*Server, error) {
+func New(v *viper.Viper, logger *zap.SugaredLogger) (*Server, error) {
+	// Validate arguments.
 	if logger == nil {
 		logger = zap.NewNop().Sugar()
 	}
-
-	// Load Viper config.
-	viper, err := config.LoadViper()
-	if err != nil {
-		return nil, ess.AddCtx("server: loading Viper config", err)
+	var err error
+	if v == nil {
+		if v, err = config.LoadViper(); err != nil {
+			return nil, ess.AddCtx("server: loading Viper config", err)
+		}
 	}
 
 	// Configure self using Viper.
-	cfg, err := ConfigFromViper(viper)
+	cfg, err := ConfigFromViper(v)
 	if err != nil {
 		return nil, ess.AddCtx("server: configuring with Viper", err)
 	}
@@ -54,7 +55,7 @@ func New(logger *zap.SugaredLogger) (*Server, error) {
 	return &Server{
 		Config: cfg,
 		Cron:   c,
-		viper:  viper,
+		viper:  v,
 		l:      logger,
 	}, nil
 }
