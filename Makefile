@@ -55,11 +55,13 @@ help:
 .PHONY: ci-install ci-test ci-deploy
 __KB = kubectl
 
-ci-install: dk-pull
+ci-install:
+	@$(MAKE) dk-pull DKENV=test
 ci-test: dk-test
-	@$(__DKCMP_VER) up --no-start && $(MAKE) dk-tags
+	@$(MAKE) dk-up DKENV=ci DKARGS="--no-start" && \
+	 $(MAKE) dk-tags DKENV=ci
 ci-deploy:
-	@$(MAKE) dk-push && \
+	@$(MAKE) dk-push DKENV=ci && \
 	 for deploy in $(DEPLOYS); do \
 	   $(__KB) patch deployment "$$deploy" \
 	     -p "{\"spec\":{\"template\":{\"metadata\":{\"annotations\":{\"date\":\"$$(date +'%s')\"}}}}}"; \
@@ -147,13 +149,15 @@ go-review: go-lint go-test
 
 __DK     = docker $(DKARGS)
 __DKFILE = docker-compose.yml
-
+ifeq ($(DKENV),test)
+	__DKFILE = docker-compose.test.yml
+endif
+ifeq ($(DKENV),ci)
+	__DKFILE = docker-compose.build.yml
+endif
 __DKCMP  = docker-compose -f "$(__DKFILE)"
 __DKCMP_VER = VERSION="$(VERSION)" $(__DKCMP)
 __DKCMP_LST = VERSION=latest $(__DKCMP)
-ifeq (DKENV,test)
-	__DKFILE = docker-compose.test.yml
-endif
 
 dk-pull: ## Pull latest Docker images from registry.
 	@echo "Pulling latest images from registry..." && \
@@ -190,7 +194,7 @@ dk-tags: ## Tag versioned Docker images with ':latest'.
 	done && \
 	echo done
 
-__DK_UP = $(__DKCMP_VER) up $(DKARGS) -d
+__DK_UP = $(__DKCMP_VER) up $(DKARGS)
 dk-up: ## Start up containerized services.
 	@echo "Bringing up services..." && $(__DK_UP) $(SVC) && echo done
 
@@ -207,9 +211,8 @@ dk-down: ## Shut down containerized services.
 dk-logs: ## Show logs for containerized services.
 	@$(__DKCMP_VER) logs $(DKARGS) -f $(SVC)
 
-__DKCMP_TEST = $(__DKCMP_VER) -f docker-compose.test.yml up
 dk-test: ## Test using 'docker-compose.test.yml'.
 	@if [ -s docker-compose.test.yml ]; then \
 	   echo "Running containerized service tests..." && \
-	   $(__DKCMP_TEST); \
+	   $(MAKE) dk-up DKENV=test; \
 	 fi

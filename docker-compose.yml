@@ -1,8 +1,4 @@
-## This docker-compose config file is used to define build processes for the
-## images in this repository, and for development deployment.
-##
-## It is not meant for use in production deployments. See the deployment/
-## directory for production deployment configurations.
+## This docker-compose file is to be used for development only.
 
 version: "3.4"
 
@@ -19,8 +15,8 @@ services:
     container_name: api
     environment:
       - GOENV=development
-    # env_file:
-    #   - ./.env
+    env_file:
+      - ./.env
     volumes:
       - type: bind
         source: ./config.yml
@@ -29,16 +25,6 @@ services:
       - public
     ports:
       - "3000:3000" # for development
-
-  api_test:
-    image: "stevenxie/api-tester"
-    build:
-      context: .
-      dockerfile: test.Dockerfile
-      cache_from:
-        - stevenxie/api-tester:latest
-        - golang:1
-
 
 networks:
   public:

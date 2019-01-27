@@ -1,0 +1,25 @@
+## This docker-compose config file is used to define Cbuild processes for the
+## images in this repository.
+
+version: "3.4"
+
+services:
+  api:
+    image: "stevenxie/api:${VERSION}"
+    build:
+      context: .
+      args:
+        BUILD_VERSION: "${VERSION}"
+      cache_from:
+        - stevenxie/api:latest
+        - alpine:3.8
+    container_name: api
+
+  api_test:
+    image: "stevenxie/api-tester"
+    build:
+      context: .
+      dockerfile: test.Dockerfile
+      cache_from:
+        - stevenxie/api-tester:latest
+        - golang:1
