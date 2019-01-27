@@ -23,7 +23,6 @@ type moodsHandler struct {
 
 func (mh *moodsHandler) RegisterTo(r *hr.Router) {
 	r.GET("/moods/", mh.Handle)
-	// r.GET("/sheets/:cik/:accNum/", handleTrailingSlashRedir)
 }
 
 const (

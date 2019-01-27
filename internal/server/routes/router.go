@@ -25,10 +25,7 @@ func NewRouter(repos *data.RepoSet, logger *zap.SugaredLogger) (*Router, error) 
 		logger = zap.NewNop().Sugar()
 	}
 
-	// Make and configure httprouter.Router.
 	hr := httprouter.New()
-	// hr.RedirectTrailingSlash = false
-
 	r := &Router{
 		Repos: repos,
 		hr:    *hr,
