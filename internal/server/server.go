@@ -5,6 +5,7 @@ import (
 	"net/http"
 	"os"
 
+	defaults "github.com/mcuadros/go-defaults"
 	"go.uber.org/zap"
 
 	"github.com/robfig/cron"
@@ -44,7 +45,7 @@ func New(logger *zap.SugaredLogger) (*Server, error) {
 	if err != nil {
 		return nil, ess.AddCtx("server: configuring with Viper", err)
 	}
-	cfg.SetDefaults()
+	defaults.SetDefaults(cfg)
 
 	// Configure cron.
 	c := cron.New()

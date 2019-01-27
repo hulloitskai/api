@@ -6,8 +6,8 @@ import (
 
 	validator "gopkg.in/validator.v2"
 
+	defaults "github.com/mcuadros/go-defaults"
 	"github.com/spf13/viper"
-	defaults "gopkg.in/mcuadros/go-defaults.v1"
 )
 
 // Client is capable of retrieving data from the Airtable API.
@@ -19,9 +19,11 @@ type Client struct {
 }
 
 // New creates a new Airtable client.
-func New(cfg *Config) *Client {
+func New(cfg *Config) (*Client, error) {
 	defaults.SetDefaults(cfg)
-	validator.Validate(cfg)
+	if err := validator.Validate(cfg); err != nil {
+		return nil, err
+	}
 
 	jar, err := cookiejar.New(nil)
 	if err != nil {
@@ -33,7 +35,7 @@ func New(cfg *Config) *Client {
 		HC:  hc,
 		Jar: jar,
 		cfg: cfg,
-	}
+	}, nil
 }
 
 // NewUsing creates a new Airtable client using a config derived from v.
@@ -42,5 +44,5 @@ func NewUsing(v *viper.Viper) (*Client, error) {
 	if err != nil {
 		return nil, err
 	}
-	return New(cfg), nil
+	return New(cfg)
 }

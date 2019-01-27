@@ -6,22 +6,26 @@ import (
 
 	validator "gopkg.in/validator.v2"
 
-	ess "github.com/unixpickle/essentials"
-
+	defaults "github.com/mcuadros/go-defaults"
 	m "github.com/mongodb/mongo-go-driver/mongo"
 	"github.com/spf13/viper"
+	ess "github.com/unixpickle/essentials"
 )
 
 // Connect connects to a Mongo database, configured using cfg.
 func Connect(cfg *Config) (*DB, error) {
-	cfg.SetDefaults()
-	validator.Validate(cfg)
+	defaults.SetDefaults(cfg)
+	if err := validator.Validate(cfg); err != nil {
+		return nil, err
+	}
+
 	connstr := fmt.Sprintf(
 		"mongodb://%s:%s@%s:%s/%s",
 		cfg.User, cfg.Pass, cfg.Host, cfg.Port, cfg.DB,
 	)
 
 	// Configure context with a timeout.
+	fmt.Println(cfg.ConnectTimeout)
 	ctx, cancel := context.WithTimeout(context.Background(), cfg.ConnectTimeout)
 	defer cancel()
 

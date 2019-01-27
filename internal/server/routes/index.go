@@ -4,6 +4,8 @@ import (
 	"net/http"
 	"os"
 
+	defaults "github.com/mcuadros/go-defaults"
+
 	"go.uber.org/zap"
 
 	hr "github.com/julienschmidt/httprouter"
@@ -18,7 +20,7 @@ func registerIndex(r *hr.Router, logger *zap.SugaredLogger) {
 type apiInfo struct {
 	Name    string `json:"name"`
 	Version string `json:"version"`
-	Env     string `json:"environment"`
+	Env     string `json:"environment" default:"(unset)"`
 }
 
 type indexHandler struct {
@@ -39,6 +41,7 @@ func newIndexHandler(logger *zap.SugaredLogger) *indexHandler {
 func (ih *indexHandler) Info() *apiInfo {
 	info := ih.template
 	info.Env = os.Getenv("GOENV")
+	defaults.SetDefaults(&info)
 	return &info
 }
 

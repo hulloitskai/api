@@ -4,8 +4,6 @@ import (
 	"context"
 	"time"
 
-	defaults "gopkg.in/mcuadros/go-defaults.v1"
-
 	ms "github.com/mitchellh/mapstructure"
 	"github.com/spf13/viper"
 	ess "github.com/unixpickle/essentials"
@@ -23,23 +21,8 @@ type Config struct {
 	Pass string `ms:"pass" valid:"nonzero"`
 	DB   string `ms:"db"   valid:"nonzero"`
 
-	ConnectTimeout   time.Duration `ms:"connect_timeout"`
+	ConnectTimeout   time.Duration `ms:"connect_timeout" default:"20s"`
 	OperationTimeout time.Duration `ms:"operation_timeout"`
-}
-
-const defaultConnectTimeout = "10s"
-
-// SetDefaults loads the default values for any zeroed fields in the Config.
-func (cfg *Config) SetDefaults() {
-	defaults.SetDefaults(cfg)
-
-	if cfg.ConnectTimeout == 0 {
-		var err error
-		cfg.ConnectTimeout, err = time.ParseDuration(defaultConnectTimeout)
-		if err != nil {
-			panic(err)
-		}
-	}
 }
 
 // OperationContext returns an operational context, with a timeout as specified

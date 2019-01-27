@@ -18,6 +18,7 @@ require (
 	github.com/kr/pretty v0.1.0 // indirect
 	github.com/lib/pq v1.0.0 // indirect
 	github.com/mattn/go-sqlite3 v1.10.0 // indirect
+	github.com/mcuadros/go-defaults v1.1.1-0.20161116231230-e1c978be3307
 	github.com/mitchellh/mapstructure v1.1.2
 	github.com/mongodb/mongo-go-driver v0.2.0
 	github.com/pkg/errors v0.8.1 // indirect
@@ -38,6 +39,5 @@ require (
 	golang.org/x/sys v0.0.0-20190124100055-b90733256f2e // indirect
 	google.golang.org/appengine v1.4.0 // indirect
 	gopkg.in/check.v1 v1.0.0-20180628173108-788fd7840127 // indirect
-	gopkg.in/mcuadros/go-defaults.v1 v1.1.0
 	gopkg.in/validator.v2 v2.0.0-20180514200540-135c24b11c19
 )
