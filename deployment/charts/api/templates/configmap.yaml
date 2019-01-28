@@ -1,0 +1,16 @@
+{{- $name := include "chart.name" . }}
+{{- $fullName := include "chart.fullname" . -}}
+
+apiVersion: v1
+kind: ConfigMap
+
+metadata:
+  name: {{ $fullName }}
+  labels:
+    app.kubernetes.io/name: {{ $name }}
+    app.kubernetes.io/instance: {{ .Release.Name }}
+    app.kubernetes.io/managed-by: {{ .Release.Service }}
+    helm.sh/chart: {{ include "chart.chart" . }}
+
+data:
+  config.yml: | {{- .Values.config | nindent 4 -}}

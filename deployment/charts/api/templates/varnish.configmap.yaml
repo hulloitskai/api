@@ -1,0 +1,18 @@
+{{- if .Values.varnish.enabled }}
+{{- $name := include "varnish.name" . }}
+{{- $fullName := include "varnish.fullname" . -}}
+
+apiVersion: v1
+kind: ConfigMap
+
+metadata:
+  name: {{ $fullName }}
+  labels:
+    app.kubernetes.io/name: {{ $name }}
+    app.kubernetes.io/instance: {{ .Release.Name }}
+    app.kubernetes.io/managed-by: {{ .Release.Service }}
+    helm.sh/chart: {{ include "chart.chart" . }}
+
+data:
+  default.vcl: | {{- .Values.varnish.config | nindent 4 -}}
+{{- end}}

@@ -1,0 +1,16 @@
+{{- if .Values.ingress.enabled }}
+API has been started, and is located at:
+
+    {{ .Values.ingress.host }}{{ .Values.ingress.path }}
+
+The API is is located at the path: {{ .Values.ingress.path | default "/" }}
+{{- else }}
+API has been started.
+You can find out the port numbers being used by API by running:
+
+    {{- if .Values.varnish.enabled }}
+    $ kubectl describe svc {{ template "varnish.fullname" . }} --namespace {{ .Release.Namespace }}
+    {{- else }}
+    $ kubectl describe svc {{ template "chart.fullname" . }} --namespace {{ .Release.Namespace }}
+    {{- end }}
+{{- end -}}

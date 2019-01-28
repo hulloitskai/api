@@ -1,0 +1,111 @@
+# Default values for chart.
+# This is a YAML-formatted file.
+# Declare variables to be passed into your templates.
+
+secrets: {}
+config: ""
+
+
+deployment:
+  image: stevenxie/api
+  imagePullPolicy: Always
+  port: 3000
+  replicaCount: 1
+  labels:
+    tier: backend
+  resources: {}
+  nodeSelector: {}
+  tolerations: []
+  affinity: {}
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxSurge: 1
+      maxUnavailable: 1
+  minReadySeconds: 5
+
+
+service:
+  type: ClusterIP
+  port: 3000
+  labels:
+    tier: backend
+
+
+ingress:
+  enabled: true
+  host: api.example.127.0.0.1.xip.io
+  annotations: {}
+    # ingress.kubernetes.io/custom-response-headers: "X-Service:merlin"
+  labels: []
+  tls: []
+
+
+varnish:
+  enabled: true
+
+  deployment:
+    image: cooptilleuls/varnish:6.0.0-alpine
+    imagePullPolicy: IfNotPresent
+    port: 80
+    replicaCount: 1
+    labels:
+      tier: backend
+    resources: {}
+    nodeSelector: {}
+    tolerations: []
+    affinity: {}
+
+  service:
+    type: ClusterIP
+    port: 80
+    labels:
+      tier: backend
+    strategy:
+      type: RollingUpdate
+      rollingUpdate:
+        maxSurge: 1
+        maxUnavailable: 1
+    minReadySeconds: 5
+
+  config: |-
+    vcl 4.0;
+
+    backend default {
+      .host = "api";
+      .port = "3000";
+    }
+
+    sub vcl_backend_response {
+      set beresp.ttl = 120s;
+    }
+
+    sub vcl_recv {
+      unset req.http.X-Body-Len;
+
+      ## Remove has_js and Cloudflare/Google Analytics __* cookies, and
+      ## normalize cookies.
+      set req.http.Cookie = regsuball(req.http.Cookie,
+        "(^|;\s*)(_[_a-z]+|has_js)=[^;]*", "");
+      set req.http.Cookie = regsub(req.http.Cookie, "^;\s*", "");
+      if (req.http.Cookie ~ "^ *$") {
+        unset req.http.Cookie;
+      }
+
+      if (req.method != "GET" && req.method != "HEAD") {
+        return (pass);
+      }
+
+      if (req.http.Authorization) {
+        return (pass);
+      }
+
+      if (req.http.X-Force-Backend) {
+        return (pass);
+      }
+    }
+
+    sub vcl_deliver {
+      unset resp.http.Via;
+      return (deliver);
+    }

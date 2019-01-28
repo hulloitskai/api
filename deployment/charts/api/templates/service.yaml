@@ -1,0 +1,31 @@
+{{- $name:= include "chart.name" . }}
+{{- $fullName := include "chart.fullname" . }}
+{{- define "labels" }}
+  {{- range $key, $val := .Values.service.labels }}
+    {{- $key }}: {{ $val | quote }}
+  {{- end }}
+{{- end }}
+{{- $labels := include "labels" . -}}
+
+apiVersion: v1
+kind: Service
+
+metadata:
+  name: {{ $fullName }}
+  labels:
+    app.kubernetes.io/name: {{ $name }}
+    helm.sh/chart: {{ include "chart.chart" . }}
+    app.kubernetes.io/instance: {{ .Release.Name }}
+    app.kubernetes.io/managed-by: {{ .Release.Service }}
+{{ $labels | indent 4 }}
+
+spec:
+  type: {{ .Values.service.type }}
+  ports:
+    - name: api
+      protocol: TCP
+      port: {{ .Values.service.port }}
+  selector:
+    app.kubernetes.io/name: {{ $name }}
+    app.kubernetes.io/instance: {{ .Release.Name }}
+{{ $labels | indent 4 }}
