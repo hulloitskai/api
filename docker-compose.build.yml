@@ -1,7 +1,7 @@
 ## This docker-compose config file is used to define Cbuild processes for the
 ## images in this repository.
 
-version: "3.4"
+version: "3.7"
 
 services:
   api:

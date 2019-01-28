@@ -40,9 +40,17 @@ spec:
         - name: varnish
           image: {{ .Values.varnish.deployment.image | quote }}
           imagePullPolicy: {{ .Values.varnish.deployment.imagePullPolicy }}
+          args:
+            - varnishd
+            - -Ff
+            - /usr/local/etc/varnish/default.vcl
+            - -s
+            - file,/var/lib/varnish/varnish_storage.bin,{{ .Values.varnish.storage.size }}
           volumeMounts:
             - name: config
               mountPath: /usr/local/etc/varnish/
+            - name: storage
+              mountPath: /var/lib/varnish/varnish_storage.bin
           ports:
             - name: varnish
               containerPort: {{ .Values.varnish.deployment.port }}
@@ -55,6 +63,10 @@ spec:
         - name: config
           configMap:
             name: {{ $name }}
+        - name: storage
+          hostPath:
+            path: {{ .Values.varnish.storage.hostPath }}
+            type: FileOrCreate
       {{- with .Values.varnish.deployment.nodeSelector }}
       nodeSelector:
         {{ toYaml . | nindent 8 }}

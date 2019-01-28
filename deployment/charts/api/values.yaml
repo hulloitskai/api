@@ -43,6 +43,9 @@ ingress:
 
 varnish:
   enabled: true
+  storage:
+    size: 100M
+    hostPath: /tmp/api-varnish_storage.bin
 
   deployment:
     image: cooptilleuls/varnish:6.0.0-alpine
