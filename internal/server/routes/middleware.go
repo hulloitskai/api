@@ -10,11 +10,10 @@ import (
 // If the header already set by handle, corsMiddleware does nothing.
 func corsMiddleware(handle http.HandlerFunc) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		handle(w, r)
-		if (r.Method != "GET") ||
-			(w.Header().Get("Access-Control-Allow-Origin") != "") {
-			return
+		switch r.Method {
+		case "GET", "HEAD":
+			w.Header().Set("Access-Control-Allow-Origin", "*")
 		}
-		w.Header().Set("Access-Control-Allow-Origin", "*")
+		handle(w, r)
 	}
 }
