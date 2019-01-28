@@ -1,0 +1,34 @@
+{{- $name:= include "varnish.name" . }}
+{{- $fullName := include "varnish.fullname" . -}}
+{{- define "labels" }}
+  {{- range $key, $val := .Values.varnish.service.labels }}
+    {{- $key }}: {{ $val | quote }}
+  {{- end }}
+{{- end }}
+{{- $labels := include "labels" . -}}
+
+{{- if .Values.varnish.enabled -}}
+apiVersion: v1
+kind: Service
+
+metadata:
+  name: {{ $fullName }}
+  labels:
+    app.kubernetes.io/name: {{ $name }}
+    helm.sh/chart: {{ include "chart.chart" . }}
+    app.kubernetes.io/instance: {{ .Release.Name }}
+    app.kubernetes.io/managed-by: {{ .Release.Service }}
+  {{- range $key, $val := .Values.varnish.service.labels }}
+    {{ $key }}: {{ $val | quote }}
+  {{- end }}
+
+spec:
+  type: {{ .Values.service.type }}
+  ports:
+    - name: varnish
+      protocol: TCP
+      port: {{ .Values.varnish.service.port }}
+  selector:
+    app.kubernetes.io/name: {{ $name }}
+    app.kubernetes.io/instance: {{ .Release.Name }}
+{{- end }}

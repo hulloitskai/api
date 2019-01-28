@@ -1,0 +1,79 @@
+{{- $name := include "chart.name" . }}
+{{- $fullName := include "chart.fullname" . }}
+{{- define "labels" }}
+  {{- range $key, $val := .Values.deployment.labels }}
+    {{- $key }}: {{ $val | quote }}
+  {{- end }}
+{{- end }}
+{{- $labels := include "labels" . -}}
+
+apiVersion: apps/v1
+kind: Deployment
+
+metadata:
+  name: {{ $fullName }}
+  labels:
+    app.kubernetes.io/name: {{ $name }}
+    app.kubernetes.io/instance: {{ .Release.Name }}
+    app.kubernetes.io/managed-by: {{ .Release.Service }}
+    helm.sh/chart: {{ include "chart.chart" . }}
+{{ $labels | indent 4 }}
+
+spec:
+  replicas: {{ .Values.deployment.replicaCount }}
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: {{ $name }}
+      app.kubernetes.io/instance: {{ .Release.Name }}
+{{ $labels | indent 6 }}
+  strategy: {{- toYaml .Values.deployment.strategy | nindent 4 -}}
+  minReadySeconds: {{ .Values.deployment.minReadySeconds }}
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: {{ $name }}
+        app.kubernetes.io/instance: {{ .Release.Name }}
+{{ $labels | indent 8 }}
+    spec:
+      containers:
+        - name: api
+          image: {{ .Values.deployment.image | quote }}
+          imagePullPolicy: {{ .Values.deployment.imagePullPolicy }}
+          envFrom:
+            - secretRef:
+                name: {{ $name }}
+          volumeMounts:
+            - name: config
+              mountPath: /etc/api
+          ports:
+            - name: api
+              containerPort: {{ .Values.deployment.port }}
+              protocol: TCP
+          livenessProbe:
+            httpGet:
+              path: /
+              port: api
+          readinessProbe:
+            httpGet:
+              path: /
+              port: api
+          {{- with .Values.deployment.resources }}
+          resources:
+            {{ toYaml . | nindent 12 }}
+          {{- end }}
+      volumes:
+        - name: config
+          configMap:
+            name: {{ $name }}
+      {{- with .Values.deployment.nodeSelector }}
+      nodeSelector:
+        {{ toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.deployment.affinity }}
+      affinity:
+        {{- toYaml . | nindent 8 -}}
+      {{- end }}
+      {{- with .Values.deployment.tolerations }}
+      tolerations:
+        {{ toYaml . | nindent 8 }}
+      {{- end }}

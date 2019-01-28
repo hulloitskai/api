@@ -1,0 +1,53 @@
+{{- if (and .Values.ingress.enabled (not .Values.varnish.enabled)) }}
+{{- $name:= include "chart.name" . }}
+{{- $fullName := include "chart.fullname" . -}}
+
+apiVersion: extensions/v1beta1
+kind: Ingress
+
+metadata:
+  name: {{ $fullName }}
+  labels:
+    app.kubernetes.io/name: {{ $name }}
+    helm.sh/chart: {{ include "chart.chart" . }}
+    app.kubernetes.io/instance: {{ .Release.Name }}
+    app.kubernetes.io/managed-by: {{ .Release.Service }}
+  {{- range $key, $val := .Values.ingress.labels }}
+    {{ $key }}: {{ $val | quote }}
+  {{- end }}
+  annotations:
+  {{- range $key, $val := .Values.ingress.annotations }}
+    {{ $key }}: {{ $val | quote }}
+  {{- end }}
+
+spec:
+{{- if .Values.ingress.tls }}
+  tls:
+  {{- range .Values.ingress.tls }}
+    - hosts:
+      {{- range .hosts }}
+        - {{ . | quote }}
+      {{- end }}
+      secretName: {{ .secretName }}
+  {{- end }}
+  {{- range .Values.ingress.tls }}
+    - hosts:
+      {{- range .hosts }}
+        - {{ . | quote }}
+      {{- end }}
+      secretName: {{ .secretName }}
+  {{- end }}
+{{- end }}
+  rules:
+    - host: {{ .Values.ingress.host | quote }}
+      http:
+        paths:
+          {{- if .Values.ingress.path }}
+          - path: {{ .Values.ingress.path }}
+            backend:
+          {{- else }}
+          - backend:
+          {{- end }}
+              serviceName: {{ $fullName }}
+              servicePort: api
+{{- end }}
