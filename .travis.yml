@@ -9,7 +9,7 @@ env:
   ##   - DOCKER_USER, DOCKER_PASS
   ##   - GH_TOKEN, GH_KUBECONFIG_PATH
   global:
-    - DEPLOYMENTS="api"
+    - DEPLOYMENTS="api api-varnish"
 
 # Install external tools, fetch tags.
 before_install:
