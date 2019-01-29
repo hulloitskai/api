@@ -72,7 +72,7 @@ func (f *Fetcher) Run() {
 	}
 
 	// Save new moods to repo.
-	if err := f.Repo.InsertMoods(moods); err != nil {
+	if err := f.Repo.InsertMoods(keep); err != nil {
 		f.l.Errorf("Failed to insert moods: %v", err)
 		return
 	}
