@@ -22,8 +22,7 @@ type Config struct {
 
 // ConfigFromViper parses a Config from a viper.Viper instance.
 func ConfigFromViper(v *viper.Viper) (*Config, error) {
-	v = v.Sub(Namespace)
-	if v == nil {
+	if v = v.Sub(Namespace); v == nil {
 		v = viper.New()
 	}
 

@@ -4,7 +4,6 @@ import (
 	"net/http"
 
 	"github.com/stevenxie/api/internal/data"
-
 	"github.com/stevenxie/api/internal/server/routes"
 	ess "github.com/unixpickle/essentials"
 )

@@ -27,8 +27,7 @@ func noop() {}
 
 // ConfigFromViper reads a Config from a viper.Viper instance.
 func ConfigFromViper(v *viper.Viper) (*Config, error) {
-	v = v.Sub("server")
-	if v == nil {
+	if v = v.Sub("server"); v == nil {
 		return new(Config), nil
 	}
 

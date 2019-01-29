@@ -3,9 +3,8 @@ package adapter
 import (
 	"errors"
 
-	"github.com/mongodb/mongo-go-driver/bson/primitive"
-
 	"github.com/mongodb/mongo-go-driver/bson"
+	"github.com/mongodb/mongo-go-driver/bson/primitive"
 	mongo "github.com/mongodb/mongo-go-driver/mongo"
 	"github.com/mongodb/mongo-go-driver/mongo/options"
 	m "github.com/stevenxie/api/pkg/data/mongo"
@@ -28,15 +27,19 @@ func NewMongoAdapter(db *m.DB) (MongoAdapter, error) {
 		panic(errors.New("adapter: cannot create MongoAdapter with nil db"))
 	}
 
-	// Initialize collection and extId index.
+	// Initialize collection, create 'extId' index.
 	var (
-		indexModel  = mongo.IndexModel{Keys: bson.D{{Key: "extId", Value: -1}}}
 		coll        = db.Collection(MongoMoodsCollection)
 		ctx, cancel = db.Config.OperationContext()
+
+		unique = true
+		model  = mongo.IndexModel{
+			Keys:    bson.D{{Key: "extId", Value: -1}},
+			Options: &options.IndexOptions{Unique: &unique},
+		}
 	)
 	defer cancel()
-	_, err := coll.Indexes().CreateOne(ctx, indexModel)
-	if err != nil {
+	if _, err := coll.Indexes().CreateOne(ctx, model); err != nil {
 		return MongoAdapter{}, ess.AddCtx("adapter: creating 'extId' index", err)
 	}
 
