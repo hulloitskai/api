@@ -4,7 +4,8 @@ import (
 	"context"
 	"time"
 
-	ms "github.com/mitchellh/mapstructure"
+	"github.com/stevenxie/api/internal/common"
+
 	"github.com/spf13/viper"
 	ess "github.com/unixpickle/essentials"
 )
@@ -51,10 +52,11 @@ func ConfigFromViper(v *viper.Viper) (*Config, error) {
 		return nil, ess.AddCtx("postgres: binding viper envvars", err)
 	}
 	var (
-		cfg Config
-		err = v.Unmarshal(&cfg, func(dc *ms.DecoderConfig) {
-			dc.TagName = "ms"
-		})
+		cfg = new(Config)
+		err = v.Unmarshal(cfg, common.DecoderConfigOption)
 	)
-	return &cfg, err
+	if err != nil {
+		return nil, err
+	}
+	return cfg, nil
 }

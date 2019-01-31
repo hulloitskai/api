@@ -7,9 +7,9 @@ import (
 	"github.com/stevenxie/api/internal/info"
 )
 
-// NewViper returns a viper.Viper instance that is set to read a YAML config
+// BuildViper returns a viper.Viper instance that is set to read a YAML config
 // from the host filesystem.
-func NewViper() *viper.Viper {
+func BuildViper() *viper.Viper {
 	v := viper.New()
 	v.SetConfigName("config")
 	v.SetConfigType("yaml")
@@ -24,7 +24,7 @@ func NewViper() *viper.Viper {
 // LoadViper loads a viper.Viper instance from a YAML config on the host
 // filesystem.
 func LoadViper() (*viper.Viper, error) {
-	v := NewViper()
+	v := BuildViper()
 	if err := v.ReadInConfig(); err != nil {
 		return nil, err
 	}

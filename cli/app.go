@@ -6,9 +6,8 @@ import (
 	"os"
 	"os/signal"
 
-	"github.com/stevenxie/api/internal/config"
-
 	"github.com/spf13/pflag"
+	"github.com/stevenxie/api/internal/config"
 	"github.com/stevenxie/api/internal/info"
 	"github.com/stevenxie/api/internal/server"
 	ess "github.com/unixpickle/essentials"
@@ -24,12 +23,15 @@ var opts struct {
 
 // Define CLI flags, initialize program.
 func init() {
+	if err := config.LoadDotEnv(); err != nil {
+		ess.Die("Reading '.env' files:", err)
+	}
+
 	pflag.BoolVarP(&opts.ShowHelp, "help", "h", false, "Show help (usage).")
 	pflag.BoolVarP(&opts.ShowVersion, "version", "v", false, "Show version.")
 	pflag.IntVarP(&opts.Port, "port", "p", 3000, "Port to listen on.")
 	pflag.StringVarP(&opts.ConfigPath, "config", "c", "", "Path to config file.")
 
-	loadEnv()     // load .env variables
 	pflag.Parse() // parse CLI arguments
 }
 
@@ -45,13 +47,13 @@ func Exec() {
 	}
 
 	// Create program logger.
-	logger, err := buildLogger()
+	logger, err := config.BuildLogger()
 	if err != nil {
 		ess.Die("Error while building zap.SugaredLogger:", err)
 	}
 
 	// Create viper instance.
-	v := config.NewViper()
+	v := config.BuildViper()
 	if opts.ConfigPath != "" {
 		v.AddConfigPath(opts.ConfigPath)
 	}
