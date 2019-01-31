@@ -1,8 +1,8 @@
 package airtable
 
 import (
-	ms "github.com/mitchellh/mapstructure"
 	"github.com/spf13/viper"
+	"github.com/stevenxie/api/internal/common"
 	ess "github.com/unixpickle/essentials"
 )
 
@@ -27,10 +27,11 @@ func ConfigFromViper(v *viper.Viper) (*Config, error) {
 		return nil, ess.AddCtx("airtable: binding viper envvars", err)
 	}
 	var (
-		cfg Config
-		err = v.Unmarshal(&cfg, func(dc *ms.DecoderConfig) {
-			dc.TagName = "ms"
-		})
+		cfg = new(Config)
+		err = v.Unmarshal(cfg, common.DecoderConfigOption)
 	)
-	return &cfg, err
+	if err != nil {
+		return nil, err
+	}
+	return cfg, nil
 }

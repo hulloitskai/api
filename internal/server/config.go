@@ -32,12 +32,15 @@ func ConfigFromViper(v *viper.Viper) (*Config, error) {
 	}
 
 	var (
-		cfg Config
-		err = v.Unmarshal(&cfg, func(dc *ms.DecoderConfig) {
+		cfg = new(Config)
+		err = v.Unmarshal(cfg, func(dc *ms.DecoderConfig) {
 			dc.TagName = "ms"
 			dc.DecodeHook = ms.ComposeDecodeHookFunc(dc.DecodeHook,
 				ms.StringToTimeDurationHookFunc)
 		})
 	)
-	return &cfg, err
+	if err != nil {
+		return nil, err
+	}
+	return cfg, nil
 }
