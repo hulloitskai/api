@@ -1,0 +1,10 @@
+apiVersion: v1
+kind: ConfigMap
+
+metadata:
+  name: api-jobs-ui
+  namespace: default
+
+data:
+  REDIS_ADDR: redis://redis-master:6379
+  NAMESPACE: api

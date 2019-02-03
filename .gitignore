@@ -9,7 +9,6 @@ config.yaml
 .env
 
 ## Compiled binaries:
-/build/
 /dist/
 /*api*
 !/*api*.*
