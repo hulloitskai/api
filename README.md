@@ -1,6 +1,6 @@
 # api
 
-_A personal API server._
+_A personal API._
 
 [![Github: Tag][tag-img]][tag]
 [![Travis: Build][travis-img]][travis]

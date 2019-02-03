@@ -2,7 +2,7 @@
 ## Go module name.
 MODULE = $(shell basename "$$(pwd)")
 ifeq ($(shell ls -1 go.mod 2> /dev/null),go.mod)
-	MODULE = $(shell cat go.mod | grep module | awk '{print $$2}')
+	MODULE = $(shell cat go.mod | head -1 | awk '{print $$2}')
 endif
 
 ## Program version.
@@ -15,6 +15,10 @@ endif
 ## Custom Go linker flag.
 LDFLAGS = -X $(MODULE)/internal/info.Version=$(VERSION)
 
+## Project variables.
+GOENV ?= development
+BDIR = ./cmd/server
+DKDIR= ./build/
 
 
 ## ----- TARGETS ------
@@ -31,14 +35,12 @@ setup: go-setup ## Set up this project on a new device.
 	 git config core.hooksPath .githooks && \
 	 echo done
 
-install: go-install ## Install project dependencies.
-build: go-build ## Build project.
-clean: go-clean ## Clean build artifacts.
-
-GOENV ?= development
 run: ## Run project (development).
 	@GOENV="$(GOENV)" $(MAKE) go-run
 
+install: go-install ## Install project dependencies.
+build: go-build ## Build project.
+clean: go-clean ## Clean build artifacts.
 lint: go-lint ## Lint and check code.
 test: go-test ## Run tests.
 review: go-review ## Lint code and run tests.
@@ -100,7 +102,7 @@ go-install:
 	 echo done
 
 BUILDARGS = -ldflags "$(LDFLAGS)" $(BARGS)
-BDIR = .
+BDIR ?= .
 go-build:
 	@echo "Building with 'go build'..." && \
 	 go build $(BUILDARGS) $(BDIR) && \
@@ -147,13 +149,15 @@ go-review: go-lint go-test
 .PHONY: dk-pull dk-push dk-build dk-build-push dk-clean dk-tags dk-up \
         dk-build-up dk-down dk-logs dk-test
 
+DKDIR ?= .
+
 __DK     = docker $(DKARGS)
-__DKFILE = docker-compose.yml
+__DKFILE = $(DKDIR)/docker-compose.yml
 ifeq ($(DKENV),test)
-	__DKFILE = docker-compose.test.yml
+	__DKFILE = $(DKDIR)/docker-compose.test.yml
 endif
 ifeq ($(DKENV),ci)
-	__DKFILE = docker-compose.build.yml
+	__DKFILE = $(DKDIR)/docker-compose.build.yml
 endif
 __DKCMP  = docker-compose -f "$(__DKFILE)"
 __DKCMP_VER = VERSION="$(VERSION)" $(__DKCMP)

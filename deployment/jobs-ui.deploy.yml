@@ -1,0 +1,48 @@
+---
+
+apiVersion: apps/v1
+kind: Deployment
+
+metadata:
+  name: api-jobs-ui
+  namespace: default
+
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: api-jobs-ui
+      tier: backend
+      track: stable
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxSurge: 1
+      maxUnavailable: 1
+  minReadySeconds: 5
+  template:
+    metadata:
+      labels:
+        app: api-jobs-ui
+        tier: backend
+        track: stable
+    spec:
+      containers:
+        - name: ui
+          image: "stevenxie/api-jobs-ui:latest"
+          imagePullPolicy: Always
+          envFrom:
+            - configMapRef:
+                name: api-jobs-ui
+          ports:
+            - name: http
+              containerPort: 80
+          livenessProbe:
+            httpGet:
+              path: /
+              port: http
+          readinessProbe:
+            httpGet:
+              path: /
+              port: http
+

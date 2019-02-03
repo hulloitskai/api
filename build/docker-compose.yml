@@ -1,0 +1,87 @@
+## This docker-compose file is to be used for development only.
+
+version: "3.7"
+
+services:
+  api:
+    image: "stevenxie/api:${VERSION}"
+    build:
+      context: ..
+      dockerfile: ./build/api.Dockerfile
+      args:
+        BUILD_VERSION: "${VERSION}"
+      cache_from:
+        - stevenxie/api:latest
+        - alpine:3.8
+    container_name: api
+    environment:
+      - GOENV=development
+    env_file:
+      - ../.env
+    volumes:
+      - type: bind
+        source: ../config.yml
+        target: /etc/api/config.yml
+    ports:
+      - "3000:3000"
+
+  redis:
+    image: "redis:4-alpine"
+    container_name: redis
+    ports:
+      - "6379:6379"
+
+  jobs:
+    image: "stevenxie/api-jobs:${VERSION}"
+    build:
+      context: ..
+      dockerfile: ./build/jobs.Dockerfile
+      args:
+        BUILD_VERSION: "${VERSION}"
+      cache_from:
+        - stevenxie/api-jobs:latest
+        - alpine:3.8
+    container_name: jobs
+    env_file:
+      - ../.env
+    volumes:
+      - type: bind
+        source: ../config.yml
+        target: /etc/api/config.yml
+
+  jobs-ui:
+    image: "stevenxie/api-jobs-ui:${VERSION}"
+    build:
+      context: ..
+      dockerfile: ./build/jobs-ui.Dockerfile
+      args:
+        BUILD_VERSION: "${VERSION}"
+      cache_from:
+        - stevenxie/api-jobs-ui:latest
+        - alpine:3.8
+    container_name: jobs-ui
+    environment:
+      - REDIS_ADDR=redis://redis:6379
+      - NAMESPACE=api
+    ports:
+      - "8081:80"
+
+  varnish:
+    image: "cooptilleuls/varnish:6.0.0-alpine"
+    command:
+      - varnishd
+      - -Ff
+      - /usr/local/etc/varnish/default.vcl
+      - -s
+      - file,/var/lib/varnish/varnish_storage.bin,100M
+    volumes:
+      - type: bind
+        source: ../varnish.vcl
+        target: /usr/local/etc/varnish/default.vcl
+        read_only: true
+      - type: tmpfs
+        target: /var/lib/varnish/varnish_storage.bin
+        tmpfs:
+          size: 105000000
+    ports:
+      - "8080:80"
