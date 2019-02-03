@@ -23,15 +23,16 @@ type moodsHandler struct {
 }
 
 func (mh *moodsHandler) RegisterTo(r *hr.Router) {
-	r.GET("/moods/", mh.Handle)
+	r.GET("/moods/", mh.ListMoods)
+	r.GET("/moods/:id", mh.GetMood)
 }
 
 const (
 	moodsLimitMax = 50
 )
 
-func (mh *moodsHandler) Handle(w http.ResponseWriter, r *http.Request,
-	params hr.Params) {
+func (mh *moodsHandler) ListMoods(w http.ResponseWriter, r *http.Request,
+	_ hr.Params) {
 	var (
 		limit  = 10
 		offset int
@@ -95,4 +96,27 @@ func (mh *moodsHandler) Handle(w http.ResponseWriter, r *http.Request,
 
 	// Write response.
 	rw.WriteJSON(moods)
+}
+
+func (mh *moodsHandler) GetMood(w http.ResponseWriter, r *http.Request,
+	params hr.Params) {
+	var (
+		id = params.ByName("id")
+		rw = responseWriter{w, mh.l}
+	)
+
+	// Get mood by ID.
+	mood, err := mh.Svc.GetMood(id)
+	if err != nil {
+		var (
+			code = http.StatusInternalServerError
+			jerr = jsonErrorFrom(err, code)
+		)
+		w.WriteHeader(code)
+		rw.WriteJSON(&jerr)
+		return
+	}
+
+	// Write response.
+	rw.WriteJSON(mood)
 }

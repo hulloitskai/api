@@ -11,9 +11,9 @@ import (
 	"github.com/stevenxie/api/data/mongo"
 	"github.com/stevenxie/api/internal/config"
 	"github.com/stevenxie/api/internal/info"
+	"github.com/stevenxie/api/jobserver"
 	"github.com/stevenxie/api/work"
 	"github.com/stevenxie/api/work/airtable"
-	"github.com/stevenxie/api/work/jobserver"
 )
 
 // opts are a set of program options.
