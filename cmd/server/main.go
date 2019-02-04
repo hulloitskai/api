@@ -9,7 +9,6 @@ import (
 	"github.com/spf13/pflag"
 	ess "github.com/unixpickle/essentials"
 
-	"github.com/stevenxie/api"
 	"github.com/stevenxie/api/data"
 	"github.com/stevenxie/api/internal/config"
 	"github.com/stevenxie/api/internal/info"
@@ -86,19 +85,13 @@ func main() {
 	}
 
 	fmt.Println("Starting server...")
-	addr := fmt.Sprintf(":%d", opts.Port)
-	go shutdownUponInterrupt(s, provider)
-	if err = s.ListenAndServe(addr); (err != nil) &&
-		(err != http.ErrServerClosed) {
-		ess.Die("Error while starting server:", err)
-	}
-}
+	go startServer(s, fmt.Sprintf(":%d", opts.Port))
 
-func shutdownUponInterrupt(s *server.Server, sp api.ServiceProvider) {
+	//  Wait for kill / interrupt signal.
 	ch := make(chan os.Signal)
 	signal.Notify(ch, os.Interrupt, os.Kill)
 
-	<-ch // wait for a signal
+	<-ch
 	fmt.Printf("Shutting down server gracefully (timeout: %v)...\n",
 		s.Config.ShutdownTimeout)
 	if err := s.Shutdown(); err != nil {
@@ -106,7 +99,14 @@ func shutdownUponInterrupt(s *server.Server, sp api.ServiceProvider) {
 	}
 
 	fmt.Println("Closing data providers...")
-	if err := sp.Close(); err != nil {
+	if err := provider.Close(); err != nil {
 		ess.Die("Error while closing service provider:", err)
+	}
+}
+
+func startServer(s *server.Server, addr string) {
+	err := s.ListenAndServe(addr)
+	if (err != nil) && (err != http.ErrServerClosed) {
+		ess.Die("Error while starting server:", err)
 	}
 }

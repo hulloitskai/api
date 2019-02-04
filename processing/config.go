@@ -1,4 +1,4 @@
-package jobserver
+package processing
 
 import (
 	defaults "github.com/mcuadros/go-defaults"

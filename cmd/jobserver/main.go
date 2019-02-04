@@ -11,7 +11,7 @@ import (
 	"github.com/stevenxie/api/data/mongo"
 	"github.com/stevenxie/api/internal/config"
 	"github.com/stevenxie/api/internal/info"
-	"github.com/stevenxie/api/jobserver"
+	"github.com/stevenxie/api/processing"
 	"github.com/stevenxie/api/work"
 	"github.com/stevenxie/api/work/airtable"
 )
@@ -77,7 +77,7 @@ func main() {
 	}
 
 	// Create server.
-	s, err := jobserver.NewUsing(v)
+	s, err := processing.NewServerUsing(v)
 	if err != nil {
 		ess.Die("Error while creating manager:", err)
 	}
@@ -89,14 +89,12 @@ func main() {
 	// Start manager, shutdown upon interrupt.
 	fmt.Println("Starting work server...")
 	s.Start()
-	shutdownUponInterrupt(s, mp)
-}
 
-func shutdownUponInterrupt(s *jobserver.Server, mp *mongo.Provider) {
+	// Wait for kill / interrupt signal.
 	ch := make(chan os.Signal)
 	signal.Notify(ch, os.Interrupt, os.Kill)
 
-	<-ch // wait for a signal
+	<-ch
 	fmt.Println("Shutting down server gracefully...")
 	if err := s.Stop(); err != nil {
 		ess.Die("Error while stopping manager:", err)

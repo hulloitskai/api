@@ -4,8 +4,8 @@ import (
 	"time"
 
 	"github.com/spf13/viper"
+	"github.com/stevenxie/api/data/airtable"
 	"github.com/stevenxie/api/internal/util"
-	"github.com/stevenxie/api/work/airtable/client"
 
 	defaults "github.com/mcuadros/go-defaults"
 	"github.com/stevenxie/api"
@@ -41,11 +41,11 @@ func (cfg *MoodSourceConfig) SetDefaults() {
 
 // A MoodSource implements job.MoodSource for an Airtable client.
 type MoodSource struct {
-	*client.Client
+	*airtable.Client
 	cfg *MoodSourceConfig
 }
 
-func newMoodSource(c *client.Client, cfg *MoodSourceConfig) *MoodSource {
+func newMoodSource(c *airtable.Client, cfg *MoodSourceConfig) *MoodSource {
 	return &MoodSource{
 		Client: c,
 		cfg:    cfg,
@@ -64,9 +64,9 @@ type moodRecord struct {
 // GetNewMoods gets new moods from Airtable.
 func (ms *MoodSource) GetNewMoods() ([]*api.Mood, error) {
 	var (
-		opts = client.FetchOptions{
+		opts = airtable.FetchOptions{
 			Limit: ms.cfg.Limit,
-			Sort: []client.SortConfig{{
+			Sort: []airtable.SortConfig{{
 				Field:     "id",
 				Direction: "desc",
 			}},
