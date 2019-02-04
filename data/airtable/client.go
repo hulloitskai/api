@@ -1,4 +1,4 @@
-package client
+package airtable
 
 import (
 	"errors"
@@ -21,7 +21,7 @@ type Client struct {
 // New creates a new Airtable client.
 func New(cfg *Config) (*Client, error) {
 	if cfg == nil {
-		return nil, errors.New("client: cannot create client with nil config")
+		return nil, errors.New("airtable: cannot create client with nil config")
 	}
 	if err := validator.Validate(cfg); err != nil {
 		return nil, err

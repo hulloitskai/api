@@ -4,14 +4,14 @@ import (
 	"errors"
 
 	"github.com/spf13/viper"
-	"github.com/stevenxie/api/work/airtable/client"
+	"github.com/stevenxie/api/data/airtable"
 	ess "github.com/unixpickle/essentials"
 )
 
 // A Provider provides data using Airtable as an underlying datasource.
 type Provider struct {
 	*Config
-	*client.Client
+	*airtable.Client
 
 	*MoodSource
 }
@@ -23,7 +23,7 @@ func New(cfg *Config) (*Provider, error) {
 	}
 	cfg.SetDefaults()
 
-	c, err := client.New(cfg.ClientConfig)
+	c, err := airtable.New(cfg.ClientConfig)
 	if err != nil {
 		return nil, ess.AddCtx("airtable: creating client", err)
 	}

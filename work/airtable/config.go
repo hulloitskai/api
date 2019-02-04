@@ -2,7 +2,7 @@ package airtable
 
 import (
 	"github.com/spf13/viper"
-	"github.com/stevenxie/api/work/airtable/client"
+	"github.com/stevenxie/api/data/airtable"
 	ess "github.com/unixpickle/essentials"
 )
 
@@ -12,13 +12,13 @@ const Namespace = "airtable"
 
 // A Config is used to configure a Provider.
 type Config struct {
-	ClientConfig *client.Config
+	ClientConfig *airtable.Config
 	*MoodSourceConfig
 }
 
 // ConfigFromViper parses a Config from a viper.Viper instance.
 func ConfigFromViper(v *viper.Viper) (*Config, error) {
-	ccfg, err := client.ConfigFromViper(v)
+	atcfg, err := airtable.ConfigFromViper(v)
 	if err != nil {
 		return nil, ess.AddCtx("airtable: creating client config", err)
 	}
@@ -32,7 +32,7 @@ func ConfigFromViper(v *viper.Viper) (*Config, error) {
 	}
 
 	return &Config{
-		ClientConfig:     ccfg,
+		ClientConfig:     atcfg,
 		MoodSourceConfig: mscfg,
 	}, nil
 }

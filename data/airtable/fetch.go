@@ -1,4 +1,4 @@
-package client
+package airtable
 
 import (
 	"encoding/json"

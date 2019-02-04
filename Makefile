@@ -15,10 +15,10 @@ endif
 ## Custom Go linker flag.
 LDFLAGS = -X $(MODULE)/internal/info.Version=$(VERSION)
 
-## Project variables.
+## Project variables:
 GOENV ?= development
-BDIR = ./cmd/server
-DKDIR= ./build/
+BDIR  = ./cmd/server
+DKDIR = ./build/
 
 
 ## ----- TARGETS ------
@@ -101,11 +101,11 @@ go-install:
 	 go mod download && \
 	 echo done
 
-BUILDARGS = -ldflags "$(LDFLAGS)" $(BARGS)
+BUILDARGS = -ldflags "$(LDFLAGS)"
 BDIR ?= .
 go-build:
 	@echo "Building with 'go build'..." && \
-	 go build $(BUILDARGS) $(BDIR) && \
+	 go build $(BUILDARGS) $(BARGS) $(BDIR) && \
 	 echo done
 
 go-clean:
@@ -115,7 +115,7 @@ go-clean:
 
 go-run:
 	@echo "Running with 'go run'..." && \
-	 go run $(BUILDARGS) $(BDIR)
+	 go run $(BUILDARGS) $(RARGS) $(BDIR) $(XARGS)
 
 go-lint:
 	@if command -v goimports > /dev/null; then \

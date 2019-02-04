@@ -1,4 +1,4 @@
-package jobserver
+package processing
 
 import (
 	"errors"
@@ -8,15 +8,15 @@ import (
 	"github.com/spf13/viper"
 )
 
-// A Server handles job requests.
+// A Server handles background job processing.
 type Server struct {
 	*Config
 	RedisPool   *redis.Pool
 	WorkerPools map[string]*work.WorkerPool
 }
 
-// New makes a new Server using cfg.
-func New(cfg *Config) *Server {
+// NewServer makes a new Server using cfg.
+func NewServer(cfg *Config) *Server {
 	if cfg == nil {
 		panic(errors.New("work: cannot create Server with nil config"))
 	}
@@ -38,13 +38,13 @@ func New(cfg *Config) *Server {
 	}
 }
 
-// NewUsing creates a Server, configured using v.
-func NewUsing(v *viper.Viper) (*Server, error) {
+// NewServerUsing creates a Server, configured using v.
+func NewServerUsing(v *viper.Viper) (*Server, error) {
 	cfg, err := ConfigFromViper(v)
 	if err != nil {
 		return nil, err
 	}
-	return New(cfg), nil
+	return NewServer(cfg), nil
 }
 
 // Start starts all workers.

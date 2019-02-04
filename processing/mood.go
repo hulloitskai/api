@@ -1,4 +1,4 @@
-package jobserver
+package processing
 
 import (
 	wk "github.com/gocraft/work"

@@ -1,4 +1,4 @@
-package client
+package airtable
 
 import (
 	"github.com/spf13/viper"
