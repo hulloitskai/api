@@ -4,6 +4,7 @@ import (
 	"errors"
 	"net/http"
 	"strconv"
+	"strings"
 
 	hr "github.com/julienschmidt/httprouter"
 	"github.com/stevenxie/api"
@@ -108,10 +109,14 @@ func (mh *moodsHandler) GetMood(w http.ResponseWriter, r *http.Request,
 	// Get mood by ID.
 	mood, err := mh.Svc.GetMood(id)
 	if err != nil {
-		var (
+		var code int
+		if strings.Contains(err.Error(), "mongo: converting id into ObjectID:") {
+			err = errors.New("invalid id")
+			code = http.StatusBadRequest
+		} else {
 			code = http.StatusInternalServerError
-			jerr = jsonErrorFrom(err, code)
-		)
+		}
+		jerr := jsonErrorFrom(err, code)
 		w.WriteHeader(code)
 		rw.WriteJSON(&jerr)
 		return

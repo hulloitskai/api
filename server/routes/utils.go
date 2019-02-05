@@ -13,6 +13,11 @@ type responseWriter struct {
 }
 
 func (rw *responseWriter) WriteJSON(v interface{}) error {
+	jerr, ok := v.(*jsonError)
+	if ok && (jerr.Code == http.StatusInternalServerError) {
+		rw.l.Errorf("Internal server error: %v", jerr.Error)
+	}
+
 	rw.Header().Set("Content-Type", "application/json")
 	enc := json.NewEncoder(rw)
 	enc.SetIndent("", "  ")
