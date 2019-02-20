@@ -1,52 +1,43 @@
 package airtable
 
 import (
-	"errors"
 	"net/http"
 	"net/http/cookiejar"
 
-	validator "gopkg.in/validator.v2"
-
-	"github.com/spf13/viper"
+	errors "golang.org/x/xerrors"
 )
 
-// Client is capable of retrieving data from the Airtable API.
+// Client is capable of fetching data from the Airtable API.
 type Client struct {
-	HC  *http.Client
-	Jar *cookiejar.Jar
+	httpc *http.Client
 
-	cfg *Config
+	apiKey, baseID string
 }
 
-// New creates a new Airtable client.
-func New(cfg *Config) (*Client, error) {
-	if cfg == nil {
-		return nil, errors.New("airtable: cannot create client with nil config")
-	}
-	if err := validator.Validate(cfg); err != nil {
-		return nil, err
-	}
+// NewClient creates a new Airtable client.
+func NewClient(apiKey, baseID string) (*Client, error) {
+	return NewClientCustom(apiKey, baseID, nil)
+}
 
-	// Configure components.
-	jar, err := cookiejar.New(nil)
-	if err != nil {
-		panic(err)
+// NewClientCustom creates a new Airtable client using a custom http.Client.
+func NewClientCustom(apiKey, baseID string, client *http.Client) (*Client,
+	error) {
+	if apiKey == "" {
+		return nil, errors.New("airtable: empty API key")
 	}
-	hc := &http.Client{Jar: jar}
-
-	// Create client.
+	if baseID == "" {
+		return nil, errors.New("airtable: empty base ID")
+	}
+	if client == nil {
+		jar, err := cookiejar.New(nil)
+		if err != nil {
+			return nil, errors.Errorf("airtable: creating cookiejar: %w", err)
+		}
+		client = &http.Client{Jar: jar}
+	}
 	return &Client{
-		HC:  hc,
-		Jar: jar,
-		cfg: cfg,
+		httpc:  client,
+		apiKey: apiKey,
+		baseID: baseID,
 	}, nil
-}
-
-// NewUsing creates a new Airtable client using a config derived from v.
-func NewUsing(v *viper.Viper) (*Client, error) {
-	cfg, err := ConfigFromViper(v)
-	if err != nil {
-		return nil, err
-	}
-	return New(cfg)
 }

@@ -32,7 +32,7 @@ func ConfigFromViper(v *viper.Viper) (*Config, error) {
 	}
 	var (
 		cfg = new(Config)
-		err = v.Unmarshal(cfg, util.DecoderConfigOption)
+		err = v.Unmarshal(cfg, util.DecodeShortTag)
 	)
 	if err != nil {
 		return nil, err
