@@ -16,6 +16,9 @@ func NewFromViper(p Provider, v *viper.Viper) *Server {
 	}
 	util.BindViperEnv(v, Namespace, "shutdownTimeout")
 	srv := New(p)
-	srv.SetShutdownTimeout(v.GetDuration("shutdownTimeout"))
+
+	if v.IsSet("shutdownTimeout") {
+		srv.SetShutdownTimeout(v.GetDuration("shutdownTimeout"))
+	}
 	return srv
 }

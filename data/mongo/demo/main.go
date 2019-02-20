@@ -3,9 +3,9 @@ package main
 import (
 	"fmt"
 
+	"github.com/stevenxie/api"
 	"github.com/stevenxie/api/internal/util"
 
-	"github.com/stevenxie/api"
 	"github.com/stevenxie/api/data/mongo"
 	ess "github.com/unixpickle/essentials"
 )

@@ -23,8 +23,12 @@ func NewProviderFromViper(v *viper.Viper) (*Provider, error) {
 	}
 
 	util.BindViperEnv(v, Namespace, "connectTimeout", "operationTimeout")
-	p.SetConnectTimeout(v.GetDuration("connectTimeout"))
-	p.SetOperationTimeout(v.GetDuration("operationTimeout"))
+	if v.IsSet("connectTimeout") {
+		p.SetConnectTimeout(v.GetDuration("connectTimeout"))
+	}
+	if v.IsSet("operationTimeout") {
+		p.SetOperationTimeout(v.GetDuration("operationTimeout"))
+	}
 
 	return p, nil
 }
