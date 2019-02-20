@@ -202,8 +202,10 @@ func (ms *MoodService) DeleteMood(id string) error {
 
 type moodDoc struct {
 	api.Mood `bson:",inline"`
-	ID       primitive.ObjectID `bson:"_id,omitempty"`
+	OID      primitive.ObjectID `bson:"_id,omitempty"`
 	ExtID    int64              `bson:"extId"`
+
+	ID util.Empty `bson:"id,omitempty"` // mask original ID field
 }
 
 func marshalMoodDoc(src *api.Mood, dst *moodDoc) error {
@@ -214,12 +216,15 @@ func marshalMoodDoc(src *api.Mood, dst *moodDoc) error {
 	}
 
 	var err error
-	dst.ID, err = primitive.ObjectIDFromHex(src.ID)
+	dst.OID, err = primitive.ObjectIDFromHex(src.ID)
 	return err
 }
 
 func unmarshalMoodDoc(src *moodDoc, dst *api.Mood) {
 	*dst = src.Mood
 	dst.ExtID = src.ExtID
-	dst.ID = src.ID.Hex()
+
+	if len(src.OID) > 0 {
+		dst.ID = src.OID.Hex()
+	}
 }
