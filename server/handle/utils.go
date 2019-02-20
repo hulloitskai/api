@@ -1,10 +1,11 @@
-package routes
+package handle
 
 import (
 	"encoding/json"
 	"net/http"
 
 	"go.uber.org/zap"
+	errors "golang.org/x/xerrors"
 )
 
 type responseWriter struct {
@@ -26,10 +27,15 @@ func (rw *responseWriter) WriteJSON(v interface{}) error {
 
 type jsonError struct {
 	Error string `json:"error"`
+	Cause string `json:"cause,omitempty"`
 	Desc  string `json:"description,omitempty"`
 	Code  int    `json:"code,omitempty"`
 }
 
 func jsonErrorFrom(err error, code int) jsonError {
-	return jsonError{Error: err.Error(), Code: code}
+	return jsonError{
+		Error: err.Error(),
+		Cause: errors.Unwrap(err).Error(),
+		Code:  code,
+	}
 }

@@ -3,8 +3,8 @@ package main
 import (
 	"fmt"
 
+	"github.com/stevenxie/api/data/airtable"
 	"github.com/stevenxie/api/internal/util"
-	"github.com/stevenxie/api/work/airtable"
 	ess "github.com/unixpickle/essentials"
 )
 
@@ -15,12 +15,12 @@ func main() {
 		ess.Die("Loading Viper config:", err)
 	}
 
-	client, err := airtable.NewUsing(v)
+	p, err := airtable.NewProviderViper(v)
 	if err != nil {
 		ess.Die("Creating Airtable client:", err)
 	}
 
-	moods, err := client.GetNewMoods()
+	moods, err := p.MoodSource().GetNewMoods()
 	if err != nil {
 		ess.Die("Fetching mood records:", err)
 	}

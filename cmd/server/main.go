@@ -9,7 +9,6 @@ import (
 	"github.com/spf13/pflag"
 	ess "github.com/unixpickle/essentials"
 
-	"github.com/stevenxie/api/data"
 	"github.com/stevenxie/api/internal/config"
 	"github.com/stevenxie/api/internal/info"
 	"github.com/stevenxie/api/server"
@@ -48,7 +47,7 @@ func main() {
 	}
 
 	// Create program logger.
-	logger, err := config.BuildLogger()
+	l, err := config.BuildLogger()
 	if err != nil {
 		ess.Die("Error while building zap.SugaredLogger:", err)
 	}
@@ -59,54 +58,42 @@ func main() {
 		v.AddConfigPath(opts.ConfigPath)
 	}
 	if err = v.ReadInConfig(); err != nil {
-		ess.Die("Error while reading Viper config:", err)
+		l.Fatalf("Error while reading Viper config: %v", err)
 	}
 
-	// Create data provider.
-	provider, err := data.NewProviderUsing(v)
+	// Create service provider.
+	l.Info("Initializing service provider...")
+	provider, err := newProvider(v)
 	if err != nil {
-		ess.Die("Error while creating service provider:", err)
+		l.Fatalf("Error while creating service provider: %v", err)
 	}
-
-	fmt.Println("Initializing service provider...")
 	if err = provider.Open(); err != nil {
-		ess.Die("Error while initializing provider:", err)
+		l.Fatalf("Error while initializing provider: %v", err)
 	}
+	defer func() {
+		l.Info("Closing service provider...")
+		if err := provider.Close(); err != nil {
+			l.Fatalf("Error while closing service provider: %v", err)
+		}
+	}()
 
 	// Create and run server.
-	cfg, err := server.ConfigFromViper(v)
-	if err != nil {
-		ess.Die("Error configuring server using Viper:", err)
-	}
-
-	s, err := server.New(provider, logger, cfg)
-	if err != nil {
-		ess.Die("Error while building server:", err)
-	}
-
-	fmt.Println("Starting server...")
-	go startServer(s, fmt.Sprintf(":%d", opts.Port))
+	srv := server.NewFromViper(provider, v)
+	srv.SetLogger(l.Named("server"))
+	go func() {
+		err := srv.ListenAndServe(fmt.Sprintf(":%d", opts.Port))
+		if (err != nil) && (err != http.ErrServerClosed) {
+			l.Fatalf("Error while starting server: %v", err)
+		}
+	}()
 
 	//  Wait for kill / interrupt signal.
 	ch := make(chan os.Signal)
 	signal.Notify(ch, os.Interrupt, os.Kill)
 
 	<-ch
-	fmt.Printf("Shutting down server gracefully (timeout: %v)...\n",
-		s.Config.ShutdownTimeout)
-	if err := s.Shutdown(); err != nil {
-		ess.Die("Error during server shutdown:", err)
-	}
-
-	fmt.Println("Closing data providers...")
-	if err := provider.Close(); err != nil {
-		ess.Die("Error while closing service provider:", err)
-	}
-}
-
-func startServer(s *server.Server, addr string) {
-	err := s.ListenAndServe(addr)
-	if (err != nil) && (err != http.ErrServerClosed) {
-		ess.Die("Error while starting server:", err)
+	l.Info("Shutting down server gracefully...")
+	if err = srv.Shutdown(); err != nil {
+		l.Errorf("Error during server shutdown: %v", err)
 	}
 }

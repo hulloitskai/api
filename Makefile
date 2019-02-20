@@ -126,7 +126,7 @@ go-lint:
 	 fi && \
 	 if command -v golint > /dev/null; then \
 	   echo "Linting code with 'golint'..." && \
-	   golint -set_exit_status ./...; EXIT="$${EXIT:-?}"; \
+	   golint -set_exit_status ./...; EXIT="$$((EXIT | $$?))"; \
 	 else \
 	   echo "'golint' not installed, skipping linting step."; \
 	 fi && \
