@@ -2,7 +2,9 @@ package jobserver
 
 import (
 	"github.com/gocraft/work"
+
 	"github.com/stevenxie/api/internal/info"
+	"github.com/stevenxie/api/internal/util"
 	"github.com/stevenxie/api/processing"
 )
 
@@ -11,7 +13,7 @@ func (srv *Server) registerMoodFetcher() {
 	fetcher.SetLogger(srv.l.Named("moodfetcher"))
 	srv.moodFetcher = fetcher
 
-	pool := work.NewWorkerPool(empty{}, 1, info.Namespace, srv.redisPool)
+	pool := work.NewWorkerPool(util.Empty{}, 1, info.Namespace, srv.redisPool)
 	pool.Job("fetch_moods", moodFetcher{fetcher}.FetchMoods)
 
 	// TODO: finish this up, make sure your default timings are set in the
@@ -20,10 +22,7 @@ func (srv *Server) registerMoodFetcher() {
 	srv.workerPools["moodfetcher"] = pool
 }
 
-type (
-	moodFetcher struct{ *processing.MoodFetcher }
-	empty       struct{}
-)
+type moodFetcher struct{ *processing.MoodFetcher }
 
 func (mf moodFetcher) FetchMoods(*work.Job) error {
 	return mf.MoodFetcher.FetchMoods()

@@ -7,7 +7,7 @@ import (
 
 // Mood describes the record of a mood.
 type Mood struct {
-	ID        string    `json:"id" bson:",omitempty"`
+	ID        string    `json:"id"`
 	ExtID     int64     `json:"extId"`
 	Moods     []string  `json:"moods"`
 	Valence   int       `json:"valence"`
