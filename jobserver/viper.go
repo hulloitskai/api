@@ -12,6 +12,9 @@ func NewViper(p Provider, v *viper.Viper) *Server {
 		v = viper.New()
 	}
 	srv := New(p, v.GetString("redisAddr"))
-	srv.SetFetchMoodsCron(v.GetString("fetchMoodsCron"))
+
+	if v.IsSet("fetchMoodsCron") {
+		srv.SetFetchMoodsCron(v.GetString("fetchMoodsCron"))
+	}
 	return srv
 }

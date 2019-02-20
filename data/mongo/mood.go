@@ -204,8 +204,6 @@ type moodDoc struct {
 	api.Mood `bson:",inline"`
 	OID      primitive.ObjectID `bson:"_id,omitempty"`
 	ExtID    int64              `bson:"extId"`
-
-	ID util.Empty `bson:"id,omitempty"` // mask original ID field
 }
 
 func marshalMoodDoc(src *api.Mood, dst *moodDoc) error {
