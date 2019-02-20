@@ -34,6 +34,11 @@ spec:
         app.kubernetes.io/name: {{ $name }}
         app.kubernetes.io/instance: {{ .Release.Name }}
 {{ $labels | indent 8 }}
+    strategy:
+      type: RollingUpdate
+      rollingUpdate:
+        maxSurage: 1
+        maxUnavailable: 25%
     spec:
       containers:
         - name: api
@@ -53,10 +58,12 @@ spec:
             httpGet:
               path: /
               port: api
+              initialDelaySeconds: 10
           readinessProbe:
             httpGet:
               path: /
               port: api
+              initialDelaySeconds: 10
           {{- with .Values.deployment.resources }}
           resources:
             {{ toYaml . | nindent 12 }}
