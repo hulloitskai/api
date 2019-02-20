@@ -1,6 +1,9 @@
 package api
 
-import "time"
+import (
+	"fmt"
+	"time"
+)
 
 // Mood describes the record of a mood.
 type Mood struct {
@@ -13,6 +16,8 @@ type Mood struct {
 	Timestamp time.Time `json:"timestamp"`
 }
 
+func (m *Mood) String() string { return fmt.Sprintf("%+v", *m) }
+
 // MoodService is capable of storing and retrieving Moods.
 type MoodService interface {
 	GetMood(id string) (*Mood, error)
@@ -20,3 +25,6 @@ type MoodService interface {
 	CreateMood(mood *Mood) error
 	CreateMoods(moods []*Mood) error
 }
+
+// A MoodSource can be polled for new moods.
+type MoodSource interface{ GetNewMoods() ([]*Mood, error) }

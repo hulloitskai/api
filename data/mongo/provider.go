@@ -1,84 +1,104 @@
 package mongo
 
 import (
-	"errors"
-	"fmt"
+	"context"
+	"time"
 
-	defaults "github.com/mcuadros/go-defaults"
-	m "github.com/mongodb/mongo-go-driver/mongo"
-	"github.com/spf13/viper"
-	ess "github.com/unixpickle/essentials"
-	validator "gopkg.in/validator.v2"
+	errors "golang.org/x/xerrors"
+
+	"github.com/mongodb/mongo-go-driver/mongo"
+	"github.com/stevenxie/api/internal/util"
 )
 
 // A Provider provides various services that use Mongo as an underlying data
 // store.
 type Provider struct {
-	Client *m.Client
-	DB     *m.Database
+	client *mongo.Client
+	db     *mongo.Database
+	dbname string
 
-	*MoodService
+	moodService *MoodService
 
-	cfg *Config
+	connectTimeout   time.Duration
+	operationTimeout time.Duration
 }
 
-// NewProvider returns a new Provider.
-func NewProvider(cfg *Config) (*Provider, error) {
-	if cfg == nil {
-		return nil, errors.New("mongo: config must not be nil")
+// NewProvider creates a new Provider that connects to Mongo using uri, and
+// uses the specified db.
+//
+// uri should be of the format:
+//   mongodb://<username>:<password>@<host>:<port>[/<database>]
+func NewProvider(uri, db string) (*Provider, error) {
+	// Validate arguments.
+	if uri == "" {
+		uri = "mongodb://localhost:27017"
+	}
+	if db == "" {
+		return nil, errors.New("mongo: empty database name")
 	}
 
-	defaults.SetDefaults(cfg)
-	if err := validator.Validate(cfg); err != nil {
-		return nil, err
-	}
-
-	client, err := m.NewClient(cfg.Connstr())
+	// Create Mongo client.
+	client, err := mongo.NewClient(uri)
 	if err != nil {
 		return nil, err
 	}
 
 	return &Provider{
-		Client: client,
-		cfg:    cfg,
+		client: client,
+		dbname: db,
 	}, nil
 }
 
-// NewProviderUsing returns a new Provider that is configured using v.
-func NewProviderUsing(v *viper.Viper) (*Provider, error) {
-	cfg, err := ConfigFromViper(v)
-	if err != nil {
-		return nil, err
-	}
-	return NewProvider(cfg)
+// SetConnectTimeout sets the connect / disconnect timeout.
+func (p *Provider) SetConnectTimeout(timeout time.Duration) {
+	p.connectTimeout = timeout
 }
 
-// Open opens a connection to Mongo, and initializes p.DB as well as other
-// internal services.
-func (p *Provider) Open() error {
-	ctx, cancel := p.cfg.ConnectContext()
-	defer cancel()
+// SetOperationTimeout sets the default timeout for a Mongo operation.
+func (p *Provider) SetOperationTimeout(timeout time.Duration) {
+	p.operationTimeout = timeout
+	if p.moodService != nil {
+		p.moodService.SetTimeout(timeout)
+	}
+}
 
-	if err := p.Client.Connect(ctx); err != nil {
+func (p *Provider) connectionContext() (context.Context, context.CancelFunc) {
+	return util.ContextWithTimeout(p.connectTimeout)
+}
+
+// Open opens a connection to Mongo, and initializes internal services.
+func (p *Provider) Open() error {
+	// Connect to DB.
+	ctx, cancel := p.connectionContext()
+	defer cancel()
+	if err := p.client.Connect(ctx); err != nil {
 		return err
 	}
 
-	// Initialize p.DB.
-	db := p.Client.Database(p.cfg.DB)
+	// Initialize p.db.
+	db := p.client.Database(p.dbname)
 	if db == nil {
-		return fmt.Errorf("mongo: no such database '%s'", p.cfg.DB)
+		return errors.Errorf("mongo: no such database '%s'", p.dbname)
 	}
-	p.DB = db
+	p.db = db
 
 	// Initialize services.
-	var err error
-	p.MoodService, err = newMoodService(p.DB, p.cfg.OperationContext)
-	return ess.AddCtx("mongo: creating mood service", err)
+	moods := newMoodService(db)
+	moods.SetTimeout(p.operationTimeout)
+	if err := moods.init(); err != nil {
+		return errors.Errorf("mongo: initializing mood service: %w", err)
+	}
+	p.moodService = moods
+	return nil
 }
 
 // Close closes the Provider's underlying Mongo connection.
 func (p *Provider) Close() error {
-	ctx, cancel := p.cfg.ConnectContext()
+	p.db = nil
+	ctx, cancel := p.connectionContext()
 	defer cancel()
-	return p.Client.Disconnect(ctx)
+	return p.client.Disconnect(ctx)
 }
+
+// MoodService returns a MoodService.
+func (p *Provider) MoodService() *MoodService { return p.moodService }

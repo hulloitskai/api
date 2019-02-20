@@ -1,63 +1,111 @@
 package jobserver
 
 import (
-	"errors"
+	"go.uber.org/zap"
+	errors "golang.org/x/xerrors"
 
 	"github.com/gocraft/work"
 	"github.com/gomodule/redigo/redis"
-	"github.com/spf13/viper"
+	"github.com/stevenxie/api"
+	"github.com/stevenxie/api/processing"
 )
 
-// A Server handles job requests.
+// A Server handles background job processing.
 type Server struct {
-	*Config
-	RedisPool   *redis.Pool
-	WorkerPools map[string]*work.WorkerPool
+	provider    Provider
+	redisPool   *redis.Pool
+	workerPools map[string]*work.WorkerPool
+	l           *zap.SugaredLogger
+
+	moodFetcher    *processing.MoodFetcher
+	fetchMoodsCron string // default: "0 0-59/5 * * * *"
+
+	started, stopped bool
 }
 
-// New makes a new Server using cfg.
-func New(cfg *Config) *Server {
-	if cfg == nil {
-		panic(errors.New("work: cannot create Server with nil config"))
-	}
-	cfg.SetDefaults()
+// Provider provides the underlying services required by a Server.
+type Provider interface {
+	api.MoodSource
+	api.MoodService
+}
 
-	pool := &redis.Pool{
+// New creates a new Server.
+func New(p Provider, redisAddr string) *Server {
+	if redisAddr == "" {
+		redisAddr = ":6379"
+	}
+	redisPool := &redis.Pool{
 		MaxActive: 5,
 		MaxIdle:   5,
 		Wait:      true,
 		Dial: func() (redis.Conn, error) {
-			return redis.Dial("tcp", cfg.RedisAddr)
+			return redis.Dial("tcp", redisAddr)
 		},
 	}
-
 	return &Server{
-		Config:      cfg,
-		RedisPool:   pool,
-		WorkerPools: make(map[string]*work.WorkerPool),
+		provider:       p,
+		redisPool:      redisPool,
+		workerPools:    make(map[string]*work.WorkerPool),
+		l:              zap.NewNop().Sugar(),
+		fetchMoodsCron: "0 0-59/5 * * * *",
 	}
 }
 
-// NewUsing creates a Server, configured using v.
-func NewUsing(v *viper.Viper) (*Server, error) {
-	cfg, err := ConfigFromViper(v)
-	if err != nil {
-		return nil, err
+// SetLogger sets the logger used by the Server.
+func (srv *Server) SetLogger(logger *zap.SugaredLogger) {
+	if logger == nil {
+		logger = zap.NewNop().Sugar()
 	}
-	return New(cfg), nil
+	srv.l = logger
+	if srv.moodFetcher != nil {
+		srv.moodFetcher.SetLogger(logger.Named("moodFetcher"))
+	}
 }
+
+// SetFetchMoodsCron sets the cron spec for the "fetch moods" job.
+func (srv *Server) SetFetchMoodsCron(cron string) { srv.fetchMoodsCron = cron }
 
 // Start starts all workers.
-func (s *Server) Start() {
-	for _, pool := range s.WorkerPools {
+func (srv *Server) Start() error {
+	// Validate conditions.
+	if srv.stopped {
+		return errors.New("jobserver: cannot restart a stopped server")
+	}
+	if srv.started {
+		return nil
+	}
+
+	// Register jobs.
+	srv.registerJobs()
+
+	// Start workers.
+	for _, pool := range srv.workerPools {
 		pool.Start()
 	}
+	srv.started = true
+	srv.l.Infof("Job server started.")
+	return nil
 }
 
 // Stop stops all workers, and closes the underlying Redis connection pool.
-func (s *Server) Stop() error {
-	for _, pool := range s.WorkerPools {
+func (srv *Server) Stop() error {
+	// Validate conditions.
+	if srv.stopped {
+		return nil
+	}
+
+	// Stop workers.
+	for _, pool := range srv.workerPools {
 		pool.Stop()
 	}
-	return s.RedisPool.Close()
+	if err := srv.redisPool.Close(); err != nil {
+		return errors.Errorf("jobserver: closing redis pool: %w", err)
+	}
+	srv.stopped = true
+	return nil
+}
+
+// registerJobs registers jobs to be run by the Server.
+func (srv *Server) registerJobs() {
+	srv.registerMoodFetcher()
 }

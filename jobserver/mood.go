@@ -1,22 +1,29 @@
 package jobserver
 
 import (
-	wk "github.com/gocraft/work"
+	"github.com/gocraft/work"
+
 	"github.com/stevenxie/api/internal/info"
-	"github.com/stevenxie/api/work"
+	"github.com/stevenxie/api/internal/util"
+	"github.com/stevenxie/api/processing"
 )
 
-// RegisterMoodFetcher registers a MoodFetcher to the server.
-func (s *Server) RegisterMoodFetcher(mf *work.MoodFetcher) {
-	ctx := moodFetcherContext{mf}
-	pool := wk.NewWorkerPool(ctx, 1, info.Namespace, s.RedisPool)
-	pool.Job("fetch_moods", ctx.FetchMoods)
-	pool.PeriodicallyEnqueue(s.Config.FetchMoodsCron, "fetch_moods")
-	s.WorkerPools["moodfetcher"] = pool
+func (srv *Server) registerMoodFetcher() {
+	fetcher := processing.NewMoodFetcher(srv.provider, srv.provider)
+	fetcher.SetLogger(srv.l.Named("moodfetcher"))
+	srv.moodFetcher = fetcher
+
+	pool := work.NewWorkerPool(util.Empty{}, 1, info.Namespace, srv.redisPool)
+	pool.Job("fetch_moods", moodFetcher{fetcher}.FetchMoods)
+
+	// TODO: finish this up, make sure your default timings are set in the
+	// function itself dont default in constructor
+	pool.PeriodicallyEnqueue(srv.fetchMoodsCron, "fetch_moods")
+	srv.workerPools["moodfetcher"] = pool
 }
 
-type moodFetcherContext struct{ *work.MoodFetcher }
+type moodFetcher struct{ *processing.MoodFetcher }
 
-func (mfc moodFetcherContext) FetchMoods(*wk.Job) error {
-	return mfc.MoodFetcher.FetchMoods()
+func (mf moodFetcher) FetchMoods(*work.Job) error {
+	return mf.MoodFetcher.FetchMoods()
 }

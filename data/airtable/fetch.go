@@ -1,4 +1,4 @@
-package client
+package airtable
 
 import (
 	"encoding/json"
@@ -32,7 +32,7 @@ type SortConfig struct {
 func (c *Client) FetchRecords(table string, v interface{},
 	opts *FetchOptions) error {
 	// Construct and perform request.
-	u, err := url.Parse(fmt.Sprintf("%s/%s/%s", BaseURL, c.cfg.BaseID, table))
+	u, err := url.Parse(fmt.Sprintf("%s/%s/%s", BaseURL, c.baseID, table))
 	if err != nil {
 		panic(err)
 	}
@@ -64,8 +64,8 @@ func (c *Client) FetchRecords(table string, v interface{},
 	if err != nil {
 		panic(err)
 	}
-	req.Header.Set("Authorization", fmt.Sprintf("Bearer %s", c.cfg.APIKey))
-	res, err := c.HC.Do(req)
+	req.Header.Set("Authorization", fmt.Sprintf("Bearer %s", c.apiKey))
+	res, err := c.httpc.Do(req)
 	if err != nil {
 		return err
 	}

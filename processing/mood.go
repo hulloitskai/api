@@ -1,34 +1,35 @@
-package work
+package processing
 
 import (
 	"go.uber.org/zap"
+	errors "golang.org/x/xerrors"
 
 	"github.com/stevenxie/api"
-	ess "github.com/unixpickle/essentials"
 )
-
-// A MoodSource can be polled for new moods.
-type MoodSource interface{ GetNewMoods() ([]*api.Mood, error) }
 
 // A MoodFetcher can fetch moods from a MoodSource, and save them into a
 // MoodService.
 type MoodFetcher struct {
-	Src MoodSource
-	Svc api.MoodService
+	src api.MoodSource
+	svc api.MoodService
 	l   *zap.SugaredLogger
 }
 
 // NewMoodFetcher builds a MoodFetcher.
-func NewMoodFetcher(src MoodSource, svc api.MoodService,
-	l *zap.SugaredLogger) *MoodFetcher {
-	if l == nil {
-		l = zap.NewNop().Sugar()
-	}
+func NewMoodFetcher(src api.MoodSource, svc api.MoodService) *MoodFetcher {
 	return &MoodFetcher{
-		Src: src,
-		Svc: svc,
-		l:   l,
+		src: src,
+		svc: svc,
+		l:   zap.NewNop().Sugar(),
 	}
+}
+
+// SetLogger sets the logger that MoodFetcher uses.
+func (mf *MoodFetcher) SetLogger(logger *zap.SugaredLogger) {
+	if logger == nil {
+		logger = zap.NewNop().Sugar()
+	}
+	mf.l = logger
 }
 
 // FetchMoods fetches new moods from mf.Src, and places them in mf.Svc.
@@ -36,18 +37,18 @@ func (mf *MoodFetcher) FetchMoods() error {
 	mf.l.Info("Fetching new moods...")
 
 	// Fetch new moods from source.
-	nmoods, err := mf.Src.GetNewMoods()
+	nmoods, err := mf.src.GetNewMoods()
 	if err != nil {
 		mf.l.Errorf("Error getting new moods from source: %v", err)
-		return ess.AddCtx("job: getting new moods from source", err)
+		return errors.Errorf("job: getting new moods from source: %w", err)
 	}
 	mf.l.Debugf("Got new moods from source: %+v", nmoods)
 
 	// Get last saved mood.
-	lmoods, err := mf.Svc.ListMoods(1, 0)
+	lmoods, err := mf.svc.ListMoods(1, 0)
 	if err != nil {
 		mf.l.Errorf("Error getting last moods from service: %v", err)
-		return ess.AddCtx("job: getting last moods from service", err)
+		return errors.Errorf("job: getting last moods from service: %w", err)
 	}
 
 	// Filter out already-saved moods.
@@ -67,9 +68,9 @@ func (mf *MoodFetcher) FetchMoods() error {
 	}
 
 	// Save new moods to service.
-	if err := mf.Svc.CreateMoods(keep); err != nil {
+	if err = mf.svc.CreateMoods(keep); err != nil {
 		mf.l.Errorf("Error while creating moods in service: %v", err)
-		return ess.AddCtx("job: creating moods in service", err)
+		return errors.Errorf("job: creating moods in service: %w", err)
 	}
 	mf.l.Infof("Saved %d new moods.", len(keep))
 	return nil

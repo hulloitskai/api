@@ -8,12 +8,9 @@ import (
 	"github.com/spf13/pflag"
 	ess "github.com/unixpickle/essentials"
 
-	"github.com/stevenxie/api/data/mongo"
 	"github.com/stevenxie/api/internal/config"
 	"github.com/stevenxie/api/internal/info"
 	"github.com/stevenxie/api/jobserver"
-	"github.com/stevenxie/api/work"
-	"github.com/stevenxie/api/work/airtable"
 )
 
 // opts are a set of program options.
@@ -47,7 +44,7 @@ func main() {
 	}
 
 	// Create program logger.
-	logger, err := config.BuildLogger()
+	l, err := config.BuildLogger()
 	if err != nil {
 		ess.Die("Error while building zap.SugaredLogger:", err)
 	}
@@ -58,50 +55,39 @@ func main() {
 		v.AddConfigPath(opts.ConfigPath)
 	}
 	if err = v.ReadInConfig(); err != nil {
-		ess.Die("Error while reading Viper config:", err)
+		l.Fatalf("Error while reading Viper config: %v", err)
 	}
 
 	// Create data providers.
-	fmt.Println("Creating data providers...")
-	ap, err := airtable.NewUsing(v)
+	l.Info("Creating service provider...")
+	provider, err := newProvider(v)
 	if err != nil {
-		ess.Die("Error while creating Airtable provider:", err)
+		l.Fatalf("Error while creating service provider: %v", err)
 	}
-	// Create mongo provider.
-	mp, err := mongo.NewProviderUsing(v)
-	if err != nil {
-		ess.Die("Error while creating Mongo provider:", err)
+	if err = provider.Open(); err != nil {
+		l.Fatalf("Error while initializing provider: %v", err)
 	}
-	if err := mp.Open(); err != nil {
-		ess.Die("Error while opening Mongo provider:", err)
+	defer func() {
+		if err = provider.Close(); err != nil {
+			l.Errorf("Error while closing Mongo: %v", err)
+		}
+	}()
+
+	// Create and start server.
+	srv := jobserver.NewViper(provider, v)
+	srv.SetLogger(l.Named("jobserver"))
+	l.Info("Starting job server...")
+	if err = srv.Start(); err != nil {
+		l.Errorf("Error while starting job server: %v", err)
 	}
 
-	// Create server.
-	s, err := jobserver.NewUsing(v)
-	if err != nil {
-		ess.Die("Error while creating manager:", err)
-	}
-
-	// Install handlers.
-	mf := work.NewMoodFetcher(ap, mp.MoodService, logger.Named("moodfetcher"))
-	s.RegisterMoodFetcher(mf)
-
-	// Start manager, shutdown upon interrupt.
-	fmt.Println("Starting work server...")
-	s.Start()
-	shutdownUponInterrupt(s, mp)
-}
-
-func shutdownUponInterrupt(s *jobserver.Server, mp *mongo.Provider) {
+	// Wait for kill / interrupt signal.
 	ch := make(chan os.Signal)
 	signal.Notify(ch, os.Interrupt, os.Kill)
 
-	<-ch // wait for a signal
-	fmt.Println("Shutting down server gracefully...")
-	if err := s.Stop(); err != nil {
-		ess.Die("Error while stopping manager:", err)
-	}
-	if err := mp.Close(); err != nil {
-		ess.Die("Error while closing Mongo:", err)
+	<-ch
+	l.Info("Shutting down server gracefully...")
+	if err := srv.Stop(); err != nil {
+		l.Fatalf("Error while stopping manager: %v", err)
 	}
 }

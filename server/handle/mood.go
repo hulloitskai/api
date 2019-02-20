@@ -1,38 +1,36 @@
-package routes
+package handle
 
 import (
 	"errors"
 	"net/http"
 	"strconv"
-	"strings"
+
+	"go.uber.org/zap"
 
 	hr "github.com/julienschmidt/httprouter"
 	"github.com/stevenxie/api"
 	ess "github.com/unixpickle/essentials"
-	"go.uber.org/zap"
 )
 
-func registerMoods(r *hr.Router, svc api.MoodService,
-	logger *zap.SugaredLogger) {
-	mh := &moodsHandler{Svc: svc, l: logger}
-	mh.RegisterTo(r)
-}
-
-type moodsHandler struct {
-	Svc api.MoodService
+// A MoodsHandler handles requests for mood data.
+type MoodsHandler struct {
+	svc api.MoodService
 	l   *zap.SugaredLogger
 }
 
-func (mh *moodsHandler) RegisterTo(r *hr.Router) {
-	r.GET("/moods/", mh.ListMoods)
-	r.GET("/moods/:id", mh.GetMood)
+// NewMoodsHandler creates a new MoodsHandler.
+func NewMoodsHandler(svc api.MoodService,
+	logger *zap.SugaredLogger) *MoodsHandler {
+	if logger == nil {
+		logger = zap.NewNop().Sugar()
+	}
+	return &MoodsHandler{svc: svc, l: logger}
 }
 
-const (
-	moodsLimitMax = 50
-)
+const moodsLimitMax = 50
 
-func (mh *moodsHandler) ListMoods(w http.ResponseWriter, r *http.Request,
+// ListMoods lists moods.
+func (mh *MoodsHandler) ListMoods(w http.ResponseWriter, r *http.Request,
 	_ hr.Params) {
 	var (
 		limit  = 10
@@ -84,7 +82,7 @@ func (mh *moodsHandler) ListMoods(w http.ResponseWriter, r *http.Request,
 	}
 
 	// List moods.
-	moods, err := mh.Svc.ListMoods(limit, offset)
+	moods, err := mh.svc.ListMoods(limit, offset)
 	if err != nil {
 		var (
 			code = http.StatusInternalServerError
@@ -99,24 +97,21 @@ func (mh *moodsHandler) ListMoods(w http.ResponseWriter, r *http.Request,
 	rw.WriteJSON(moods)
 }
 
-func (mh *moodsHandler) GetMood(w http.ResponseWriter, r *http.Request,
-	params hr.Params) {
+// GetMood gets a mood with a particular id.
+func (mh *MoodsHandler) GetMood(w http.ResponseWriter, r *http.Request,
+	ps hr.Params) {
 	var (
-		id = params.ByName("id")
+		id = ps.ByName("id")
 		rw = responseWriter{w, mh.l}
 	)
 
 	// Get mood by ID.
-	mood, err := mh.Svc.GetMood(id)
+	mood, err := mh.svc.GetMood(id)
 	if err != nil {
-		var code int
-		if strings.Contains(err.Error(), "mongo: converting id into ObjectID:") {
-			err = errors.New("invalid id")
-			code = http.StatusBadRequest
-		} else {
+		var (
 			code = http.StatusInternalServerError
-		}
-		jerr := jsonErrorFrom(err, code)
+			jerr = jsonErrorFrom(err, code)
+		)
 		w.WriteHeader(code)
 		rw.WriteJSON(&jerr)
 		return
