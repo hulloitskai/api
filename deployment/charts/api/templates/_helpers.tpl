@@ -1,7 +1,6 @@
 {{/* vim: set filetype=mustache: */}}
-{{/*
-Expand the name of the chart.
-*/}}
+
+{{/* Expand the name of the chart. */}}
 {{- define "chart.name" -}}
 	{{- default .Chart.Name .Values.nameOverride | trunc 63 | trimSuffix "-" -}}
 {{- end -}}
@@ -25,33 +24,37 @@ If release name contains chart name it will be used as a full name.
 	{{- end -}}
 {{- end -}}
 
-{{/*
-Create chart name and version as used by the chart label.
-*/}}
+{{/* Create chart name and version as used by the chart label. */}}
 {{- define "chart.chart" -}}
 	{{- printf "%s-%s" .Chart.Name .Chart.Version | replace "+" "_" | trunc 63 | trimSuffix "-" -}}
 {{- end -}}
 
-{{/*
-Create the name for the Varnish cache proxy.
-*/}}
-{{- define "varnish.name" -}}
-	{{- $name := include "chart.name" . -}}
-	{{- printf "%s-varnish" $name -}}
+{{/* Create the name for the Varnish cache proxy. */}}
+{{- define "varnish.name" }}
+	{{- $name := include "chart.name" . }}
+	{{- printf "%s-varnish" $name }}
 {{- end -}}
 {{- define "varnish.fullname" -}}
-	{{- $fullName := include "chart.fullname" . -}}
-	{{- printf "%s-varnish" $fullName -}}
+	{{- $fullName := include "chart.fullname" . }}
+	{{- printf "%s-varnish" $fullName }}
 {{- end -}}
 
-{{/*
-Create the name for the frontend components.
-*/}}
+{{/* Create the name for the frontend components. */}}
 {{- define "frontend.name" -}}
-	{{- $name := include "chart.name" . -}}
-	{{- printf "%s-frontend" $name -}}
+	{{- $name := include "chart.name" . }}
+	{{- printf "%s-frontend" $name }}
 {{- end -}}
 {{- define "frontend.fullname" -}}
-	{{- $fullName := include "chart.fullname" . -}}
-	{{- printf "%s-frontend" $fullName -}}
+	{{- $fullName := include "chart.fullname" . }}
+	{{- printf "%s-frontend" $fullName }}
+{{- end -}}
+
+{{/* Name jobserver components. */}}
+{{- define "jobs.name" -}}
+  {{- $name := include "chart.name" . }}
+  {{- printf "%s-jobs" $name }}
+{{- end -}}
+{{- define "jobs-ui.name" -}}
+  {{- $name := include "chart.name" . }}
+  {{- printf "%s-jobs-ui" $name }}
 {{- end -}}

@@ -74,7 +74,7 @@ func main() {
 	}()
 
 	// Create and start server.
-	srv := jobserver.NewViper(provider, v)
+	srv := jobserver.NewViper(provider, v.Sub(jobserver.Namespace))
 	srv.SetLogger(l.Named("jobserver"))
 	l.Info("Starting job server...")
 	if err = srv.Start(); err != nil {
