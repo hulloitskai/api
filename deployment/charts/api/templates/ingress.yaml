@@ -1,7 +1,7 @@
-{{- if (and .Values.ingress.enabled (not .Values.varnish.enabled)) }}
 {{- $name:= include "chart.name" . }}
 {{- $fullName := include "chart.fullname" . -}}
 
+{{- if .Values.ingress.enabled }}
 apiVersion: extensions/v1beta1
 kind: Ingress
 
@@ -9,15 +9,17 @@ metadata:
   name: {{ $fullName }}
   labels:
     app.kubernetes.io/name: {{ $name }}
-    helm.sh/chart: {{ include "chart.chart" . }}
     app.kubernetes.io/instance: {{ .Release.Name }}
     app.kubernetes.io/managed-by: {{ .Release.Service }}
+    helm.sh/chart: {{ include "chart.chart" . }}
   {{- range $key, $val := .Values.ingress.labels }}
     {{ $key }}: {{ $val | quote }}
   {{- end }}
+  {{- with .Values.ingress.annotations }}
   annotations:
-  {{- range $key, $val := .Values.ingress.annotations }}
+  {{- range $key, $val := . }}
     {{ $key }}: {{ $val | quote }}
+  {{- end }}
   {{- end }}
 
 spec:
@@ -48,6 +50,11 @@ spec:
           {{- else }}
           - backend:
           {{- end }}
-              serviceName: {{ $fullName }}
+              {{- if .Values.varnish.enabled }}
+              serviceName: {{ include "varnish.fullname" . }}
+              servicePort: varnish
+              {{- else }}
+              serviceName: {{ include "chart.fullname" . }}
               servicePort: api
+              {{- end }}
 {{- end }}

@@ -54,7 +54,16 @@ If release name contains chart name it will be used as a full name.
   {{- $name := include "chart.name" . }}
   {{- printf "%s-jobs" $name }}
 {{- end -}}
+{{- define "jobs.fullname" -}}
+  {{- $fullName := include "chart.fullname" . }}
+  {{- printf "%s-jobs" $fullName }}
+{{- end -}}
 {{- define "jobs-ui.name" -}}
   {{- $name := include "chart.name" . }}
   {{- printf "%s-jobs-ui" $name }}
 {{- end -}}
+{{- define "jobs-ui.fullname" -}}
+  {{- $fullName := include "chart.fullname" . }}
+  {{- printf "%s-jobs-ui" $fullName }}
+{{- end -}}
+

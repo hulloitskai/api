@@ -21,7 +21,7 @@ deployment:
     type: RollingUpdate
     rollingUpdate:
       maxSurge: 1
-      maxUnavailable: 1
+      maxUnavailable: 25%
   minReadySeconds: 5
 
 
@@ -53,7 +53,7 @@ varnish:
     port: 80
     replicaCount: 1
     labels:
-      tier: backend
+      tier: proxy
     resources: {}
     nodeSelector: {}
     tolerations: []
@@ -63,13 +63,7 @@ varnish:
     type: ClusterIP
     port: 80
     labels:
-      tier: backend
-    strategy:
-      type: RollingUpdate
-      rollingUpdate:
-        maxSurge: 1
-        maxUnavailable: 1
-    minReadySeconds: 5
+      tier: proxy
 
   config: |-
     vcl 4.0;
@@ -112,3 +106,50 @@ varnish:
       unset resp.http.Via;
       return (deliver);
     }
+
+
+jobserver:
+  enabled: true
+  deployment:
+    image: stevenxie/api-jobs
+    imagePullPolicy: Always
+    labels: []
+    strategy:
+      type: RollingUpdate
+      rollingUpdate:
+        maxSurge: 1
+        maxUnavailable: 25%
+    minReadySeconds: 5
+    resources: {}
+    nodeSelector: {}
+    affinity: {}
+    tolerations: {}
+    config: ""
+
+  ui:
+    enabled: false
+    namespace: api
+    redisAddr: ":6432"
+
+    deployment:
+      image: stevenxie/api-jobs-ui
+      imagePullPolicy: Always
+      port: 80
+      labels:
+        tier: frontend
+      strategy:
+        type: RollingUpdate
+        rollingUpdate:
+          maxSurge: 1
+          maxUnavailable: 25%
+      minReadySeconds: 5
+      resources: {}
+      nodeSelector: {}
+      affinity: {}
+      tolerations: {}
+
+    service:
+      type: ClusterIP
+      port: 80
+      labels:
+        tier: frontend

@@ -1,11 +1,11 @@
 {{- $name := include "varnish.name" . }}
 {{- $fullName := include "varnish.fullname" . }}
-{{- define "labels" }}
+{{- define "varnish-deploy-labels" }}
   {{- range $key, $val := .Values.varnish.deployment.labels }}
     {{- $key }}: {{ $val | quote }}
   {{- end }}
 {{- end }}
-{{- $labels := include "labels" . -}}
+{{- $labels := include "varnish-deploy-labels" . -}}
 
 {{- if .Values.varnish.enabled -}}
 apiVersion: apps/v1
@@ -18,7 +18,7 @@ metadata:
     app.kubernetes.io/instance: {{ .Release.Name }}
     app.kubernetes.io/managed-by: {{ .Release.Service }}
     helm.sh/chart: {{ include "chart.chart" . }}
-{{ $labels | indent 4 }}
+    {{- $labels | nindent 4 }}
 
 spec:
   replicas: {{ .Values.varnish.deployment.replicaCount }}
@@ -26,15 +26,15 @@ spec:
     matchLabels:
       app.kubernetes.io/name: {{ $name }}
       app.kubernetes.io/instance: {{ .Release.Name }}
-{{ $labels | indent 6 }}
-  strategy: {{- toYaml .Values.deployment.strategy | nindent 4 -}}
+      {{- $labels | nindent 6 }}
+  strategy: {{- toYaml .Values.deployment.strategy | nindent 4 }}
   minReadySeconds: {{ .Values.deployment.minReadySeconds }}
   template:
     metadata:
       labels:
         app.kubernetes.io/name: {{ $name }}
         app.kubernetes.io/instance: {{ .Release.Name }}
-{{ $labels | indent 8 }}
+        {{- $labels | nindent 8 }}
     spec:
       containers:
         - name: varnish
@@ -56,27 +56,23 @@ spec:
               containerPort: {{ .Values.varnish.deployment.port }}
               protocol: TCP
           {{- with .Values.varnish.deployment.resources }}
-          resources:
-            {{ toYaml . | nindent 12 }}
+          resources: {{- toYaml . | nindent 12 }}
           {{- end }}
       volumes:
         - name: config
           configMap:
-            name: {{ $name }}
+            name: {{ $fullName }}
         - name: storage
           hostPath:
             path: {{ .Values.varnish.storage.hostPath }}
             type: FileOrCreate
       {{- with .Values.varnish.deployment.nodeSelector }}
-      nodeSelector:
-        {{ toYaml . | nindent 8 }}
+      nodeSelector: {{- toYaml . | nindent 8 }}
       {{- end }}
       {{- with .Values.varnish.deployment.affinity }}
-      affinity:
-        {{- toYaml . | nindent 8 -}}
+      affinity: {{- toYaml . | nindent 8 }}
       {{- end }}
       {{- with .Values.varnish.deployment.tolerations }}
-      tolerations:
-        {{ toYaml . | nindent 8 }}
+      tolerations: {{- toYaml . | nindent 8 }}
       {{- end }}
 {{- end }}

@@ -1,13 +1,14 @@
-{{- $name:= include "chart.name" . }}
-{{- $fullName := include "chart.fullname" . }}
-{{- $service := .Values.service }}
-{{- define "service-labels" }}
-  {{- range $key, $val := .Values.service.labels }}
+{{- $name := include "jobs-ui.name" . }}
+{{- $fullName := include "jobs-ui.fullname" . }}
+{{- $service := .Values.jobserver.ui.service }}
+{{- define "jobs-ui-service-labels" }}
+  {{- range $key, $val := .Values.jobserver.ui.service.labels }}
     {{- $key }}: {{ $val | quote }}
   {{- end }}
 {{- end }}
-{{- $labels := include "service-labels" . -}}
+{{- $labels := include "jobs-ui-service-labels" . -}}
 
+{{- if .Values.jobserver.ui.enabled }}
 apiVersion: v1
 kind: Service
 
@@ -23,10 +24,11 @@ metadata:
 spec:
   type: {{ $service.type }}
   ports:
-    - name: api
+    - name: http
       protocol: TCP
-      port: {{ .Values.service.port }}
+      port: {{ $service.port }}
   selector:
     app.kubernetes.io/name: {{ $name }}
     app.kubernetes.io/instance: {{ .Release.Name }}
     {{- $labels | nindent 4 }}
+{{- end }}

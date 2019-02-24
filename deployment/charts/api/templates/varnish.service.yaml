@@ -1,11 +1,12 @@
 {{- $name:= include "varnish.name" . }}
 {{- $fullName := include "varnish.fullname" . -}}
-{{- define "labels" }}
+{{- $service := .Values.varnish.service }}
+{{- define "varnish-service-labels" }}
   {{- range $key, $val := .Values.varnish.service.labels }}
     {{- $key }}: {{ $val | quote }}
   {{- end }}
 {{- end }}
-{{- $labels := include "labels" . -}}
+{{- $labels := include "varnish-service-labels" . -}}
 
 {{- if .Values.varnish.enabled -}}
 apiVersion: v1
@@ -15,20 +16,19 @@ metadata:
   name: {{ $fullName }}
   labels:
     app.kubernetes.io/name: {{ $name }}
-    helm.sh/chart: {{ include "chart.chart" . }}
     app.kubernetes.io/instance: {{ .Release.Name }}
     app.kubernetes.io/managed-by: {{ .Release.Service }}
-  {{- range $key, $val := .Values.varnish.service.labels }}
-    {{ $key }}: {{ $val | quote }}
-  {{- end }}
+    helm.sh/chart: {{ include "chart.chart" . }}
+    {{- $labels | nindent 4 }}
 
 spec:
   type: {{ .Values.service.type }}
   ports:
     - name: varnish
       protocol: TCP
-      port: {{ .Values.varnish.service.port }}
+      port: {{ $service.port }}
   selector:
     app.kubernetes.io/name: {{ $name }}
     app.kubernetes.io/instance: {{ .Release.Name }}
+    {{- $labels | nindent 4 }}
 {{- end }}

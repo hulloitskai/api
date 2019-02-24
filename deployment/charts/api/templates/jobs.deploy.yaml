@@ -1,13 +1,15 @@
-{{- $name := include "chart.name" . }}
-{{- $fullName := include "chart.fullname" . }}
-{{- $deploy := .Values.deployment }}
-{{- define "deploy-labels" }}
-  {{- range $key, $val := .Values.deployment.labels }}
+{{- $name := include "jobs.name" . }}
+{{- $fullName := include "jobs.fullname" . }}
+{{- $fullChartName := include "chart.fullname" . }}
+{{- $deploy := .Values.jobserver.deployment }}
+{{- define "jobs-labels" }}
+  {{- range $key, $val := .Values.jobserver.deployment.labels }}
     {{- $key }}: {{ $val | quote }}
   {{- end }}
 {{- end }}
-{{- $labels := include "deploy-labels" . -}}
+{{- $labels := include "jobs-labels" . -}}
 
+{{- if .Values.jobserver.enabled }}
 apiVersion: apps/v1
 kind: Deployment
 
@@ -21,13 +23,13 @@ metadata:
     {{- $labels | nindent 4 }}
 
 spec:
-  replicas: {{ $deploy.replicaCount }}
+  replicas: 1
   selector:
     matchLabels:
       app.kubernetes.io/name: {{ $name }}
       app.kubernetes.io/instance: {{ .Release.Name }}
       {{- $labels | nindent 6 }}
-  strategy: {{- toYaml $deploy.strategy | nindent 4 -}}
+  strategy: {{- toYaml $deploy.strategy | nindent 4 }}
   minReadySeconds: {{ $deploy.minReadySeconds }}
   template:
     metadata:
@@ -37,46 +39,29 @@ spec:
         {{- $labels | nindent 8 }}
     spec:
       containers:
-        - name: api
-          image: {{ $deploy.image | quote }}
+        - name: jobs
+          image: {{ $deploy.image }}
           imagePullPolicy: {{ $deploy.imagePullPolicy }}
           envFrom:
             - secretRef:
-                name: {{ $fullName }}
+                name: {{ $fullChartName }}
           volumeMounts:
             - name: config
               mountPath: /etc/api
-          ports:
-            - name: api
-              containerPort: {{ $deploy.port }}
-              protocol: TCP
-          livenessProbe:
-            httpGet:
-              path: /
-              port: api
-              initialDelaySeconds: 10
-          readinessProbe:
-            httpGet:
-              path: /
-              port: api
-              initialDelaySeconds: 10
           {{- with $deploy.resources }}
-          resources:
-            {{ toYaml . | nindent 12 }}
+          resources: {{- toYaml . | nindent 12 }}
           {{- end }}
       volumes:
         - name: config
           configMap:
-            name: {{ $fullName }}
+            name: {{ $fullChartName }}
       {{- with $deploy.nodeSelector }}
-      nodeSelector:
-        {{- toYaml . | nindent 8 }}
+      nodeSelector: {{- toYaml . | nindent 8 }}
       {{- end }}
       {{- with $deploy.affinity }}
-      affinity:
-        {{- toYaml . | nindent 8 -}}
+      affinity: {{- toYaml . | nindent 8 -}}
       {{- end }}
       {{- with $deploy.tolerations }}
-      tolerations:
-        {{ toYaml . | nindent 8 }}
+      tolerations: {{- toYaml . | nindent 8 }}
       {{- end }}
+{{- end }}
