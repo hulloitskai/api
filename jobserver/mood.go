@@ -10,7 +10,7 @@ import (
 
 func (srv *Server) registerMoodFetcher() {
 	fetcher := processing.NewMoodFetcher(srv.provider, srv.provider)
-	fetcher.SetLogger(srv.l.Named("moodfetcher"))
+	fetcher.SetLogger(srv.logger.Named("moodfetcher"))
 	srv.moodFetcher = fetcher
 
 	pool := work.NewWorkerPool(util.Empty{}, 1, info.Namespace, srv.redisPool)

@@ -1,6 +1,7 @@
 package jobserver
 
 import (
+	"github.com/stevenxie/api/internal/util"
 	"go.uber.org/zap"
 	errors "golang.org/x/xerrors"
 
@@ -15,7 +16,7 @@ type Server struct {
 	provider    Provider
 	redisPool   *redis.Pool
 	workerPools map[string]*work.WorkerPool
-	l           *zap.SugaredLogger
+	logger      *zap.SugaredLogger
 
 	moodFetcher    *processing.MoodFetcher
 	fetchMoodsCron string // default: "0 0-59/5 * * * *"
@@ -46,7 +47,7 @@ func New(p Provider, redisAddr string) *Server {
 		provider:       p,
 		redisPool:      redisPool,
 		workerPools:    make(map[string]*work.WorkerPool),
-		l:              zap.NewNop().Sugar(),
+		logger:         util.NoopLogger,
 		fetchMoodsCron: "0 0-59/5 * * * *",
 	}
 }
@@ -54,9 +55,9 @@ func New(p Provider, redisAddr string) *Server {
 // SetLogger sets the logger used by the Server.
 func (srv *Server) SetLogger(logger *zap.SugaredLogger) {
 	if logger == nil {
-		logger = zap.NewNop().Sugar()
+		logger = util.NoopLogger
 	}
-	srv.l = logger
+	srv.logger = logger
 	if srv.moodFetcher != nil {
 		srv.moodFetcher.SetLogger(logger.Named("moodFetcher"))
 	}
@@ -83,7 +84,7 @@ func (srv *Server) Start() error {
 		pool.Start()
 	}
 	srv.started = true
-	srv.l.Infof("Job server started.")
+	srv.l().Infof("Job server started.")
 	return nil
 }
 
@@ -109,3 +110,5 @@ func (srv *Server) Stop() error {
 func (srv *Server) registerJobs() {
 	srv.registerMoodFetcher()
 }
+
+func (srv *Server) l() *zap.SugaredLogger { return srv.logger }

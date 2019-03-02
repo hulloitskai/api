@@ -16,7 +16,7 @@ func (srv *Server) buildHandler() http.Handler {
 	handle := corsMiddleware(srv.router.ServeHTTP)
 	handle = stripTrailingSlash(handle)
 	if os.Getenv("GOENV") == "development" {
-		handle = loggingMiddleware(handle, srv.l.Desugar())
+		handle = loggingMiddleware(handle, srv.logger.Desugar())
 	}
 	return http.HandlerFunc(handle)
 }

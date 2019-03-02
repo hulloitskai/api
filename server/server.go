@@ -17,7 +17,7 @@ type Server struct {
 	provider Provider
 	httpsrv  *http.Server
 	router   *httprouter.Router
-	l        *zap.SugaredLogger
+	logger   *zap.SugaredLogger
 
 	shutdownTimeout time.Duration
 }
@@ -36,7 +36,7 @@ func New(p Provider) *Server {
 		provider: p,
 		router:   router,
 		httpsrv:  new(http.Server),
-		l:        zap.NewNop().Sugar(),
+		logger:   util.NoopLogger,
 	}
 	srv.registerRoutes()
 	return srv
@@ -49,17 +49,17 @@ func (srv *Server) SetShutdownTimeout(timeout time.Duration) {
 
 // SetLogger sets a zap.SugaredLogger for srv.
 func (srv *Server) SetLogger(logger *zap.SugaredLogger) {
-	if logger == nil { // validate logger
-		logger = zap.NewNop().Sugar()
+	if logger == nil {
+		logger = util.NoopLogger
 	}
-	srv.l = logger
+	srv.logger = logger
 }
 
 // ListenAndServe starts the server, and listens for connections on addr.
 func (srv *Server) ListenAndServe(addr string) error {
 	srv.httpsrv.Handler = srv.buildHandler()
 	srv.httpsrv.Addr = addr
-	srv.l.Infof("Listening on address '%s'...", addr)
+	srv.l().Infof("Listening on address '%s'...", addr)
 	return srv.httpsrv.ListenAndServe()
 }
 
@@ -74,3 +74,5 @@ func (srv *Server) Shutdown() error {
 func (srv *Server) shutdownContext() (context.Context, context.CancelFunc) {
 	return util.ContextWithTimeout(srv.shutdownTimeout)
 }
+
+func (srv *Server) l() *zap.SugaredLogger { return srv.logger }

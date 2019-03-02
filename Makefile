@@ -19,6 +19,7 @@ LDFLAGS = -X $(MODULE)/internal/info.Version=$(VERSION)
 GOENV ?= development
 BDIR  = ./cmd/server
 DKDIR = ./build/
+BARGS ?= -o ./dist/server
 
 
 ## ----- TARGETS ------

@@ -6,8 +6,8 @@ import "github.com/spf13/viper"
 // variables, etc.
 const Namespace = "jobserver"
 
-// NewViper creates a new Server, configured using Viper.
-func NewViper(p Provider, v *viper.Viper) *Server {
+// NewFromViper creates a new Server, configured using Viper.
+func NewFromViper(p Provider, v *viper.Viper) *Server {
 	if v == nil {
 		v = viper.New()
 	}

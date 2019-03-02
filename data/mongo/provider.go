@@ -100,5 +100,6 @@ func (p *Provider) Close() error {
 	return p.client.Disconnect(ctx)
 }
 
-// MoodService returns a MoodService.
+// MoodService exposes a MoodService that uses Mongo as an underlying data
+// store.
 func (p *Provider) MoodService() *MoodService { return p.moodService }
