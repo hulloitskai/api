@@ -18,8 +18,8 @@ LDFLAGS = -X $(MODULE)/internal/info.Version=$(VERSION)
 ## Project variables:
 GOENV ?= development
 BDIR  = ./cmd/server
-DKDIR = ./build/
-BARGS ?= -o ./dist/server
+DKDIR = ./build
+BARGS = -o ./dist/server
 
 
 ## ----- TARGETS ------
@@ -31,7 +31,7 @@ default: run
 version: ## Show project version (derived from 'git describe').
 	@echo $(VERSION)
 
-setup: go-setup ## Set up this project on a new device.
+setup: go-setup ## Set this project up on a new environment.
 	@echo "Configuring githooks..." && \
 	 git config core.hooksPath .githooks && \
 	 echo done
@@ -152,7 +152,6 @@ go-review: go-lint go-test
 
 DKDIR ?= .
 
-__DK     = docker $(DKARGS)
 __DKFILE = $(DKDIR)/docker-compose.yml
 ifeq ($(DKENV),test)
 	__DKFILE = $(DKDIR)/docker-compose.test.yml
@@ -160,6 +159,8 @@ endif
 ifeq ($(DKENV),ci)
 	__DKFILE = $(DKDIR)/docker-compose.build.yml
 endif
+
+__DK     = docker $(DKARGS)
 __DKCMP  = docker-compose -f "$(__DKFILE)"
 __DKCMP_VER = VERSION="$(VERSION)" $(__DKCMP)
 __DKCMP_LST = VERSION=latest $(__DKCMP)
@@ -217,7 +218,7 @@ dk-logs: ## Show logs for containerized services.
 	@$(__DKCMP_VER) logs $(DKARGS) -f $(SVC)
 
 dk-test: ## Test using 'docker-compose.test.yml'.
-	$(eval __DKFILE = docker-compose.test.yml)
+	$(eval __DKFILE = $(DKDIR)/docker-compose.test.yml)
 	@if [ -s "$(__DKFILE)" ]; then \
 	   echo "Running containerized service tests..." && \
 	   for svc in $$($(__DKCMP_LST) config --services); do \

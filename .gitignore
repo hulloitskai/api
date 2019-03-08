@@ -10,9 +10,6 @@ config.yaml
 
 ## Compiled binaries:
 /dist/
-/*api*
-!/*api*.*
-/*api*.exe
 
 
 ## [Go]

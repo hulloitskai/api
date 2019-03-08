@@ -13,15 +13,16 @@ services:
         - stevenxie/api-tester:latest
         - golang:1
     container_name: api_test
-    working_dir: "/app"
+    working_dir: /workspace
     volumes:
       - type: bind
-        source: .
-        target: /app
+        source: ..
+        target: /workspace
 
   varnish_test:
     image: "cooptilleuls/varnish:6.0.0-alpine"
     command: ["varnishd", "-Cf", "/usr/local/etc/varnish/default.vcl"]
+    container_name: varnish_test
     volumes:
       - type: bind
         source: ./varnish.vcl

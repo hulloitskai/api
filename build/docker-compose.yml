@@ -76,7 +76,7 @@ services:
       - file,/var/lib/varnish/varnish_storage.bin,100M
     volumes:
       - type: bind
-        source: ../varnish.vcl
+        source: ./varnish.vcl
         target: /usr/local/etc/varnish/default.vcl
         read_only: true
       - type: tmpfs

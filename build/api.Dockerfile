@@ -4,10 +4,10 @@
 
 FROM golang:1-alpine AS builder
 
-ARG BINARY="server"
+ARG BINARY=server
 
 ## Install dependencies.
-RUN apk add upx gcc musl-dev git make
+RUN apk add --update upx gcc musl-dev git make
 
 ## Copy source files.
 WORKDIR /build
@@ -31,23 +31,21 @@ RUN upx -9 "./dist/${BINARY}"
 
 FROM alpine:3.8 as production
 
-ARG BINARY="server"
-ARG BUILD_VERSION="unset"
-ENV GOENV="production"
+ARG BINARY=server
+ARG BUILD_VERSION=unset
 
 ## Labels:
 LABEL maintainer="Steven Xie <dev@stevenxie.me>"
 LABEL org.label-schema.schema-version="1.0"
 LABEL org.label-schema.name="stevenxie/api"
-LABEL org.label-schema.description="Personal API Server"
 LABEL org.label-schema.url="https://api.stevenxie.me/"
 LABEL org.label-schema.vcs-url="https://github.com/stevenxie/api"
 LABEL org.label-schema.version="$BUILD_VERSION"
 
 ## Install dependencies.
-RUN apk add ca-certificates
+RUN apk add --no-cache ca-certificates
 
-## Copy production artifacts to /api.
+## Copy production artifacts to /usr/bin/.
 COPY --from=builder /build/dist/${BINARY} /usr/bin/${BINARY}
 
 COPY ./scripts/healthcheck.sh /usr/bin/healthcheck
@@ -59,5 +57,5 @@ HEALTHCHECK --interval=30s --timeout=30s --start-period=10s --retries=1 \
 EXPOSE 3000
 
 ## Set entrypoint.
-ENV BINARY=$BINARY GOENV="production"
+ENV BINARY=$BINARY GOENV=production
 ENTRYPOINT "$BINARY"
