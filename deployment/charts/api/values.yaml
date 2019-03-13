@@ -20,7 +20,7 @@ deployment:
   strategy:
     type: RollingUpdate
     rollingUpdate:
-      maxSurge: 1
+      maxSurge: 50%
       maxUnavailable: 25%
   minReadySeconds: 5
 
@@ -117,7 +117,7 @@ jobserver:
     strategy:
       type: RollingUpdate
       rollingUpdate:
-        maxSurge: 1
+        maxSurge: 50%
         maxUnavailable: 25%
     minReadySeconds: 5
     resources: {}
@@ -140,7 +140,7 @@ jobserver:
       strategy:
         type: RollingUpdate
         rollingUpdate:
-          maxSurge: 1
+          maxSurge: 50%
           maxUnavailable: 25%
       minReadySeconds: 5
       resources: {}
