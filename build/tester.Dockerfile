@@ -6,4 +6,4 @@ RUN GO111MODULE=off go get \
       golang.org/x/tools/cmd/goimports
 
 ENV GO111MODULE=on GOENV=production
-CMD ["make", "review"]
+CMD ["make", "review", "TARGS=-v -race"]

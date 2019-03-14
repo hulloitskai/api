@@ -6,10 +6,10 @@ import (
 
 	errors "golang.org/x/xerrors"
 
-	"github.com/mongodb/mongo-go-driver/bson"
-	"github.com/mongodb/mongo-go-driver/bson/primitive"
-	"github.com/mongodb/mongo-go-driver/mongo"
-	"github.com/mongodb/mongo-go-driver/mongo/options"
+	"go.mongodb.org/mongo-driver/bson"
+	"go.mongodb.org/mongo-driver/bson/primitive"
+	"go.mongodb.org/mongo-driver/mongo"
+	"go.mongodb.org/mongo-driver/mongo/options"
 
 	"github.com/stevenxie/api"
 	"github.com/stevenxie/api/internal/util"
@@ -37,10 +37,9 @@ func (ms *MoodService) SetTimeout(timeout time.Duration) {
 // init initializes the moods collection, and associated indexes.
 func (ms *MoodService) init() error {
 	var (
-		unique = true
-		model  = mongo.IndexModel{
+		model = mongo.IndexModel{
 			Keys:    bson.D{{Key: "extId", Value: -1}},
-			Options: &options.IndexOptions{Unique: &unique},
+			Options: options.Index().SetUnique(true),
 		}
 		ctx, cancel = ms.context()
 	)

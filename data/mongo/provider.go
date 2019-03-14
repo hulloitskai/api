@@ -4,10 +4,12 @@ import (
 	"context"
 	"time"
 
+	"go.mongodb.org/mongo-driver/mongo/options"
+
 	errors "golang.org/x/xerrors"
 
-	"github.com/mongodb/mongo-go-driver/mongo"
 	"github.com/stevenxie/api/internal/util"
+	"go.mongodb.org/mongo-driver/mongo"
 )
 
 // A Provider provides various services that use Mongo as an underlying data
@@ -38,7 +40,7 @@ func NewProvider(uri, db string) (*Provider, error) {
 	}
 
 	// Create Mongo client.
-	client, err := mongo.NewClient(uri)
+	client, err := mongo.NewClient(options.Client().ApplyURI(uri))
 	if err != nil {
 		return nil, err
 	}
