@@ -19,7 +19,7 @@ WORKDIR /build
 RUN go version && make install
 
 ## Create production binary at '/build/dist/$BINARY'
-RUN make build BDIR="./cmd/jobserver" BARGS="-o ./dist/${BINARY}"
+RUN make build "${BINARY}"
 
 ## Compress binary with UPX.
 RUN upx -9 "./dist/${BINARY}"

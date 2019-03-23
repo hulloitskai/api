@@ -22,4 +22,4 @@ fi
 mkdir $HOME/.kube
 curl -o $HOME/.kube/config https://${GH_TOKEN}@raw.githubusercontent.com/${GH_KUBECONFIG_PATH}
 
-make ci-deploy DEPLOYS="$DEPLOYMENTS"
+make ci-deploy $DEPLOYMENTS
