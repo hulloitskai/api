@@ -27,8 +27,8 @@ spec:
       app.kubernetes.io/name: {{ $name }}
       app.kubernetes.io/instance: {{ .Release.Name }}
       {{- $labels | nindent 6 }}
-  strategy: {{- toYaml .Values.deployment.strategy | nindent 4 }}
-  minReadySeconds: {{ .Values.deployment.minReadySeconds }}
+  strategy: {{- toYaml .Values.varnish.deployment.strategy | nindent 4 }}
+  minReadySeconds: {{ .Values.varnish.deployment.minReadySeconds }}
   template:
     metadata:
       labels:

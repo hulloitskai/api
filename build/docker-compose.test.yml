@@ -21,7 +21,17 @@ services:
 
   varnish_test:
     image: "cooptilleuls/varnish:6.0.0-alpine"
-    command: ["varnishd", "-Cf", "/usr/local/etc/varnish/default.vcl"]
+    entrypoint: sh
+    command:
+      - -c
+      - |
+        TMPFILE="$$(mktemp)" && \
+        trap 'rm -f $$TMPFILE' 0 && \
+        if ! varnishd -Cf "$$CONFIGFILE" 2> $$TMPFILE 1> /dev/null; then \
+          cat $$TMPFILE && exit 1;
+        fi
+    environment:
+      CONFIGFILE: /usr/local/etc/varnish/default.vcl
     container_name: varnish_test
     volumes:
       - type: bind

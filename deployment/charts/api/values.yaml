@@ -17,7 +17,7 @@ deployment:
   nodeSelector: {}
   tolerations: []
   affinity: {}
-  strategy:
+  strategy: &deploymentStrategy
     type: RollingUpdate
     rollingUpdate:
       maxSurge: 50%
@@ -54,6 +54,8 @@ varnish:
     replicaCount: 1
     labels:
       tier: proxy
+    strategy: *deploymentStrategy
+    minReadySeconds: 5
     resources: {}
     nodeSelector: {}
     tolerations: []
@@ -114,11 +116,7 @@ jobserver:
     image: stevenxie/api-jobs
     imagePullPolicy: Always
     labels: []
-    strategy:
-      type: RollingUpdate
-      rollingUpdate:
-        maxSurge: 50%
-        maxUnavailable: 25%
+    strategy: *deploymentStrategy
     minReadySeconds: 5
     resources: {}
     nodeSelector: {}
@@ -137,11 +135,7 @@ jobserver:
       port: 80
       labels:
         tier: frontend
-      strategy:
-        type: RollingUpdate
-        rollingUpdate:
-          maxSurge: 50%
-          maxUnavailable: 25%
+      strategy: *deploymentStrategy
       minReadySeconds: 5
       resources: {}
       nodeSelector: {}
