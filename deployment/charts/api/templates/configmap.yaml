@@ -13,4 +13,5 @@ metadata:
     helm.sh/chart: {{ include "chart.chart" . }}
 
 data:
-  config.yml: | {{- .Values.config | nindent 4 -}}
+  config.yml: |
+    {{- .Values.config | toYaml | nindent 4 }}
