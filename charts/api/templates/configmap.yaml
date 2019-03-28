@@ -1,9 +1,8 @@
-{{- $name := include "chart.name" . }}
+{{- $name := include "chart.name" . -}}
 {{- $fullName := include "chart.fullname" . -}}
 
 apiVersion: v1
-kind: Secret
-type: Opaque
+kind: ConfigMap
 
 metadata:
   name: {{ $fullName }}
@@ -14,6 +13,7 @@ metadata:
     helm.sh/chart: {{ include "chart.chart" . }}
 
 data:
-{{- range $key, $val := .Values.secrets }}
-  {{ $key }}: {{ $val | b64enc }}
+{{- with .Values.config }}
+  config.yml: |
+    {{- . | toYaml | nindent 4 }}
 {{- end }}

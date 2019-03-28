@@ -5,32 +5,32 @@
 secrets: {}
 config: {}
 
+image:
+  repository: stevenxie/api
+  tag: latest
+  pullPolicy: Always
+
+replicaCount: 1
+resources: {}
+nodeSelector: {}
+tolerations: []
+affinity: {}
 
 deployment:
-  image: stevenxie/api
-  imagePullPolicy: Always
   port: 3000
-  replicaCount: 1
-  labels:
+  labels: &labels
     tier: backend
-  resources: {}
-  nodeSelector: {}
-  tolerations: []
-  affinity: {}
-  strategy: &deploymentStrategy
+  strategy: &strategy
     type: RollingUpdate
     rollingUpdate:
       maxSurge: 50%
       maxUnavailable: 25%
   minReadySeconds: 5
 
-
 service:
   type: ClusterIP
   port: 3000
-  labels:
-    tier: backend
-
+  labels: *labels
 
 ingress:
   enabled: true
@@ -43,29 +43,32 @@ ingress:
 
 varnish:
   enabled: true
+  image:
+    repository: cooptilleuls/varnish
+    tag: 6.0.0-alpine
+    pullPolicy: IfNotPresent
+
+  replicaCount: 1
+  resources: {}
+  nodeSelector: {}
+  tolerations: []
+  affinity: {}
+
   storage:
     size: 100M
     hostPath: /tmp/api-varnish_storage.bin
 
   deployment:
-    image: cooptilleuls/varnish:6.0.0-alpine
-    imagePullPolicy: IfNotPresent
     port: 80
-    replicaCount: 1
-    labels:
+    labels: &varnish-labels
       tier: proxy
-    strategy: *deploymentStrategy
+    strategy: *strategy
     minReadySeconds: 5
-    resources: {}
-    nodeSelector: {}
-    tolerations: []
-    affinity: {}
 
   service:
     type: ClusterIP
     port: 80
-    labels:
-      tier: proxy
+    labels: *varnish-labels
 
   config: |-
     vcl 4.0;
@@ -112,38 +115,46 @@ varnish:
 
 jobserver:
   enabled: true
+
+  image:
+    repository: stevenxie/api-jobs
+    tag: latest
+    pullPolicy: Always
+
+  resources: {}
+  nodeSelector: {}
+  affinity: {}
+  tolerations: {}
+
   deployment:
-    image: stevenxie/api-jobs
-    imagePullPolicy: Always
     labels: []
-    strategy: *deploymentStrategy
+    strategy: *strategy
     minReadySeconds: 5
-    resources: {}
-    nodeSelector: {}
-    affinity: {}
-    tolerations: {}
-    config: ""
 
-  ui:
-    enabled: false
-    namespace: api
-    redisAddr: ":6432"
+jobserver-ui:
+  enabled: false
+  namespace: api
+  redisAddr: ":6432"
 
-    deployment:
-      image: stevenxie/api-jobs-ui
-      imagePullPolicy: Always
-      port: 80
-      labels:
-        tier: frontend
-      strategy: *deploymentStrategy
-      minReadySeconds: 5
-      resources: {}
-      nodeSelector: {}
-      affinity: {}
-      tolerations: {}
+  resources: {}
+  nodeSelector: {}
+  affinity: {}
+  tolerations: {}
 
-    service:
-      type: ClusterIP
-      port: 80
-      labels:
-        tier: frontend
+  image:
+    repository: stevenxie/api-jobs-ui
+    tag: latest
+    pullPolicy: Always
+
+  deployment:
+    port: 80
+    labels: &jobserver-ui-labels
+      tier: frontend
+    strategy: *strategy
+    minReadySeconds: 5
+
+  service:
+    type: ClusterIP
+    port: 80
+    labels: *jobserver-ui-labels
+

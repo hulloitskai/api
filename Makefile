@@ -81,9 +81,9 @@ ci-deploy:
 ## git-secret:
 .PHONY: secrets-hide secrets-reveal
 secrets-hide: ## Hides modified secret files using git-secret.
-	@echo "Hiding modified secret files..." && git secret hide -m
+	@echo "Hiding modified secret files..." && git secret hide -m $(__ARGS)
 secrets-reveal: ## Reveals secret files that were hidden using git-secret.
-	@echo "Revealing hidden secret files..." && git secret reveal
+	@echo "Revealing hidden secret files..." && git secret reveal $(__ARGS)
 
 
 ## Go:

@@ -1,5 +1,9 @@
 {{- $name := include "varnish.name" . }}
 {{- $fullName := include "varnish.fullname" . }}
+{{- $component := .Values.varnish }}
+{{- $image := $component.image }}
+{{- $storage := $component.storage }}
+{{- $deploy := $component.deployment }}
 {{- define "varnish-deploy-labels" }}
   {{- range $key, $val := .Values.varnish.deployment.labels }}
     {{- $key }}: {{ $val | quote }}
@@ -7,7 +11,7 @@
 {{- end }}
 {{- $labels := include "varnish-deploy-labels" . -}}
 
-{{- if .Values.varnish.enabled -}}
+{{- if $component.enabled -}}
 apiVersion: apps/v1
 kind: Deployment
 
@@ -21,14 +25,15 @@ metadata:
     {{- $labels | nindent 4 }}
 
 spec:
-  replicas: {{ .Values.varnish.deployment.replicaCount }}
+  replicas: {{ $deploy.replicaCount }}
   selector:
     matchLabels:
       app.kubernetes.io/name: {{ $name }}
       app.kubernetes.io/instance: {{ .Release.Name }}
       {{- $labels | nindent 6 }}
-  strategy: {{- toYaml .Values.varnish.deployment.strategy | nindent 4 }}
-  minReadySeconds: {{ .Values.varnish.deployment.minReadySeconds }}
+  strategy:
+    {{- toYaml $deploy.strategy | nindent 4 }}
+  minReadySeconds: {{ $deploy.minReadySeconds }}
   template:
     metadata:
       labels:
@@ -38,8 +43,8 @@ spec:
     spec:
       containers:
         - name: varnish
-          image: {{ .Values.varnish.deployment.image | quote }}
-          imagePullPolicy: {{ .Values.varnish.deployment.imagePullPolicy }}
+          image: "{{ $image.repository }}:{{ $image.tag }}"
+          imagePullPolicy: {{ $image.pullPolicy }}
           args:
             - varnishd
             - -Ff
@@ -53,10 +58,11 @@ spec:
               mountPath: /var/lib/varnish/varnish_storage.bin
           ports:
             - name: varnish
-              containerPort: {{ .Values.varnish.deployment.port }}
+              containerPort: {{ $deploy.port }}
               protocol: TCP
-          {{- with .Values.varnish.deployment.resources }}
-          resources: {{- toYaml . | nindent 12 }}
+          {{- with $component.resources }}
+          resources:
+            {{- toYaml . | nindent 12 }}
           {{- end }}
       volumes:
         - name: config
@@ -64,15 +70,18 @@ spec:
             name: {{ $fullName }}
         - name: storage
           hostPath:
-            path: {{ .Values.varnish.storage.hostPath }}
+            path: {{ $storage.hostPath }}
             type: FileOrCreate
-      {{- with .Values.varnish.deployment.nodeSelector }}
-      nodeSelector: {{- toYaml . | nindent 8 }}
+      {{- with $component.nodeSelector }}
+      nodeSelector:
+        {{- toYaml . | nindent 8 }}
       {{- end }}
-      {{- with .Values.varnish.deployment.affinity }}
-      affinity: {{- toYaml . | nindent 8 }}
+      {{- with $component.affinity }}
+      affinity:
+        {{- toYaml . | nindent 8 }}
       {{- end }}
-      {{- with .Values.varnish.deployment.tolerations }}
-      tolerations: {{- toYaml . | nindent 8 }}
+      {{- with $component.tolerations }}
+      tolerations:
+        {{- toYaml . | nindent 8 }}
       {{- end }}
 {{- end }}

@@ -22,7 +22,7 @@ metadata:
     {{- $labels | nindent 4 }}
 
 spec:
-  type: {{ .Values.service.type }}
+  type: {{ $service.type }}
   ports:
     - name: varnish
       protocol: TCP

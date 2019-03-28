@@ -1,15 +1,17 @@
-{{- $name := include "jobs.name" . }}
-{{- $fullName := include "jobs.fullname" . }}
-{{- $fullChartName := include "chart.fullname" . }}
-{{- $deploy := .Values.jobserver.deployment }}
-{{- define "jobs-labels" }}
+{{- $name := include "jobs.name" . -}}
+{{- $fullName := include "jobs.fullname" . -}}
+{{- $fullChartName := include "chart.fullname" . -}}
+{{- $component := .Values.jobserver -}}
+{{- $image := $component.image -}}
+{{- $deploy := $component.deployment -}}
+{{- define "jobs-deploy-labels" -}}
   {{- range $key, $val := .Values.jobserver.deployment.labels }}
     {{- $key }}: {{ $val | quote }}
   {{- end }}
-{{- end }}
-{{- $labels := include "jobs-labels" . -}}
+{{- end -}}
+{{- $labels := include "jobs-deploy-labels" . -}}
 
-{{- if .Values.jobserver.enabled }}
+{{- if $component.enabled -}}
 apiVersion: apps/v1
 kind: Deployment
 
@@ -29,7 +31,8 @@ spec:
       app.kubernetes.io/name: {{ $name }}
       app.kubernetes.io/instance: {{ .Release.Name }}
       {{- $labels | nindent 6 }}
-  strategy: {{- toYaml $deploy.strategy | nindent 4 }}
+  strategy:
+    {{- toYaml $deploy.strategy | nindent 4 }}
   minReadySeconds: {{ $deploy.minReadySeconds }}
   template:
     metadata:
@@ -40,28 +43,32 @@ spec:
     spec:
       containers:
         - name: jobs
-          image: {{ $deploy.image }}
-          imagePullPolicy: {{ $deploy.imagePullPolicy }}
+          image: "{{ $image.repository }}:{{ $image.tag }}"
+          imagePullPolicy: {{ $image.pullPolicy }}
           envFrom:
             - secretRef:
                 name: {{ $fullChartName }}
           volumeMounts:
             - name: config
               mountPath: /etc/api
-          {{- with $deploy.resources }}
-          resources: {{- toYaml . | nindent 12 }}
+          {{- with $component.resources }}
+          resources:
+            {{- toYaml . | nindent 12 }}
           {{- end }}
       volumes:
         - name: config
           configMap:
             name: {{ $fullChartName }}
       {{- with $deploy.nodeSelector }}
-      nodeSelector: {{- toYaml . | nindent 8 }}
+      nodeSelector:
+        {{- toYaml . | nindent 8 }}
       {{- end }}
       {{- with $deploy.affinity }}
-      affinity: {{- toYaml . | nindent 8 -}}
+      affinity:
+        {{- toYaml . | nindent 8 }}
       {{- end }}
       {{- with $deploy.tolerations }}
-      tolerations: {{- toYaml . | nindent 8 }}
+      tolerations:
+        {{- toYaml . | nindent 8 }}
       {{- end }}
 {{- end }}

@@ -1,7 +1,9 @@
-{{- $name:= include "chart.name" . }}
+{{- $name := include "chart.name" . -}}
 {{- $fullName := include "chart.fullname" . -}}
+{{- $ingress := .Values.ingress -}}
+{{- $varnish := .Values.varnish -}}
 
-{{- if .Values.ingress.enabled }}
+{{- if $ingress.enabled -}}
 apiVersion: extensions/v1beta1
 kind: Ingress
 
@@ -12,10 +14,10 @@ metadata:
     app.kubernetes.io/instance: {{ .Release.Name }}
     app.kubernetes.io/managed-by: {{ .Release.Service }}
     helm.sh/chart: {{ include "chart.chart" . }}
-  {{- range $key, $val := .Values.ingress.labels }}
+  {{- range $key, $val := $ingress.labels }}
     {{ $key }}: {{ $val | quote }}
   {{- end }}
-  {{- with .Values.ingress.annotations }}
+  {{- with $ingress.annotations }}
   annotations:
   {{- range $key, $val := . }}
     {{ $key }}: {{ $val | quote }}
@@ -23,16 +25,9 @@ metadata:
   {{- end }}
 
 spec:
-{{- if .Values.ingress.tls }}
+{{- with $ingress.tls }}
   tls:
-  {{- range .Values.ingress.tls }}
-    - hosts:
-      {{- range .hosts }}
-        - {{ . | quote }}
-      {{- end }}
-      secretName: {{ .secretName }}
-  {{- end }}
-  {{- range .Values.ingress.tls }}
+  {{- range . }}
     - hosts:
       {{- range .hosts }}
         - {{ . | quote }}
@@ -41,20 +36,20 @@ spec:
   {{- end }}
 {{- end }}
   rules:
-    - host: {{ .Values.ingress.host | quote }}
+    - host: {{ $ingress.host | quote }}
       http:
         paths:
-          {{- if .Values.ingress.path }}
-          - path: {{ .Values.ingress.path }}
+        {{- with $ingress.path }}
+          - path: {{ . }}
             backend:
-          {{- else }}
+        {{- else }}
           - backend:
-          {{- end }}
-              {{- if .Values.varnish.enabled }}
+        {{- end }}
+            {{- if $varnish.enabled }}
               serviceName: {{ include "varnish.fullname" . }}
               servicePort: varnish
-              {{- else }}
+            {{- else }}
               serviceName: {{ include "chart.fullname" . }}
               servicePort: api
-              {{- end }}
+            {{- end }}
 {{- end }}

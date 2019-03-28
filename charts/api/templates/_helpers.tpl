@@ -30,40 +30,39 @@ If release name contains chart name it will be used as a full name.
 {{- end -}}
 
 {{/* Create the name for the Varnish cache proxy. */}}
-{{- define "varnish.name" }}
-	{{- $name := include "chart.name" . }}
-	{{- printf "%s-varnish" $name }}
+{{- define "varnish.name" -}}
+	{{- $name := include "chart.name" . -}}
+	{{- printf "%s-varnish" $name -}}
 {{- end -}}
 {{- define "varnish.fullname" -}}
-	{{- $fullName := include "chart.fullname" . }}
-	{{- printf "%s-varnish" $fullName }}
+	{{- $fullName := include "chart.fullname" . -}}
+	{{- printf "%s-varnish" $fullName -}}
 {{- end -}}
 
 {{/* Create the name for the frontend components. */}}
 {{- define "frontend.name" -}}
-	{{- $name := include "chart.name" . }}
-	{{- printf "%s-frontend" $name }}
+	{{- $name := include "chart.name" . -}}
+	{{- printf "%s-frontend" $name -}}
 {{- end -}}
 {{- define "frontend.fullname" -}}
-	{{- $fullName := include "chart.fullname" . }}
-	{{- printf "%s-frontend" $fullName }}
+	{{- $fullName := include "chart.fullname" . -}}
+	{{- printf "%s-frontend" $fullName -}}
 {{- end -}}
 
 {{/* Name jobserver components. */}}
 {{- define "jobs.name" -}}
-  {{- $name := include "chart.name" . }}
-  {{- printf "%s-jobs" $name }}
+  {{- $name := include "chart.name" . -}}
+  {{- printf "%s-jobs" $name -}}
 {{- end -}}
 {{- define "jobs.fullname" -}}
-  {{- $fullName := include "chart.fullname" . }}
-  {{- printf "%s-jobs" $fullName }}
+  {{- $fullName := include "chart.fullname" . -}}
+  {{- printf "%s-jobs" $fullName -}}
 {{- end -}}
 {{- define "jobs-ui.name" -}}
-  {{- $name := include "chart.name" . }}
-  {{- printf "%s-jobs-ui" $name }}
+  {{- $name := include "chart.name" . -}}
+  {{- printf "%s-jobs-ui" $name -}}
 {{- end -}}
 {{- define "jobs-ui.fullname" -}}
-  {{- $fullName := include "chart.fullname" . }}
-  {{- printf "%s-jobs-ui" $fullName }}
+  {{- $fullName := include "chart.fullname" . -}}
+  {{- printf "%s-jobs-ui" $fullName -}}
 {{- end -}}
-

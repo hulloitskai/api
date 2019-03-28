@@ -8,9 +8,9 @@ The API is is located at the path: {{ .Values.ingress.path | default "/" }}
 API has been started.
 You can find out the port numbers being used by API by running:
 
-    {{- if .Values.varnish.enabled }}
+    {{- if .Values.varnish.enabled -}}
     $ kubectl describe svc {{ include "varnish.fullname" . }} --namespace {{ .Release.Namespace }}
-    {{- else }}
+    {{- else -}}
     $ kubectl describe svc {{ include "chart.fullname" . }} --namespace {{ .Release.Namespace }}
-    {{- end }}
+    {{- end -}}
 {{- end }}

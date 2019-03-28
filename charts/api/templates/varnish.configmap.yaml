@@ -1,7 +1,8 @@
-{{- if .Values.varnish.enabled }}
-{{- $name := include "varnish.name" . }}
+{{- $name := include "varnish.name" . -}}
 {{- $fullName := include "varnish.fullname" . -}}
+{{- $varnish := .Values.varnish -}}
 
+{{- if $varnish.enabled }}
 apiVersion: v1
 kind: ConfigMap
 
@@ -14,5 +15,8 @@ metadata:
     helm.sh/chart: {{ include "chart.chart" . }}
 
 data:
-  default.vcl: | {{- .Values.varnish.config | nindent 4 -}}
-{{- end}}
+  {{- with $varnish.config }}
+  default.vcl: |
+    {{- . | nindent 4 }}
+  {{- end }}}
+{{- end }}

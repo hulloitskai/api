@@ -1,11 +1,13 @@
-{{- $name := include "chart.name" . }}
-{{- $fullName := include "chart.fullname" . }}
-{{- $deploy := .Values.deployment }}
-{{- define "deploy-labels" }}
+{{- $name := include "chart.name" . -}}
+{{- $fullName := include "chart.fullname" . -}}
+{{- $component := .Values -}}
+{{- $deploy := $component.deployment -}}
+{{- $image := $component.image -}}
+{{- define "deploy-labels" -}}
   {{- range $key, $val := .Values.deployment.labels }}
     {{- $key }}: {{ $val | quote }}
   {{- end }}
-{{- end }}
+{{- end -}}
 {{- $labels := include "deploy-labels" . -}}
 
 apiVersion: apps/v1
@@ -27,7 +29,8 @@ spec:
       app.kubernetes.io/name: {{ $name }}
       app.kubernetes.io/instance: {{ .Release.Name }}
       {{- $labels | nindent 6 }}
-  strategy: {{- toYaml $deploy.strategy | nindent 4 -}}
+  strategy:
+    {{- toYaml $deploy.strategy | nindent 4 }}
   minReadySeconds: {{ $deploy.minReadySeconds }}
   template:
     metadata:
@@ -38,8 +41,8 @@ spec:
     spec:
       containers:
         - name: api
-          image: {{ $deploy.image | quote }}
-          imagePullPolicy: {{ $deploy.imagePullPolicy }}
+          image: "{{ $image.repository }}:{{ $image.tag }}"
+          imagePullPolicy: {{ $image.pullPolicy }}
           envFrom:
             - secretRef:
                 name: {{ $fullName }}
@@ -60,23 +63,23 @@ spec:
               path: /
               port: api
               initialDelaySeconds: 10
-          {{- with $deploy.resources }}
+          {{- with $component.resources }}
           resources:
-            {{ toYaml . | nindent 12 }}
+            {{- toYaml . | nindent 12 }}
           {{- end }}
       volumes:
         - name: config
           configMap:
             name: {{ $fullName }}
-      {{- with $deploy.nodeSelector }}
+      {{- with $component.nodeSelector }}
       nodeSelector:
         {{- toYaml . | nindent 8 }}
       {{- end }}
-      {{- with $deploy.affinity }}
+      {{- with $component.affinity }}
       affinity:
-        {{- toYaml . | nindent 8 -}}
+        {{- toYaml . | nindent 8 }}
       {{- end }}
-      {{- with $deploy.tolerations }}
+      {{- with $component.tolerations }}
       tolerations:
-        {{ toYaml . | nindent 8 }}
+        {{- toYaml . | nindent 8 }}
       {{- end }}
