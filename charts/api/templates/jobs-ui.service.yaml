@@ -17,7 +17,7 @@ metadata:
   name: {{ $fullName }}
   labels:
     app.kubernetes.io/name: {{ $name }}
-    helm.sh/chart: {{ include "chart.chart" . }}
+    helm.sh/chart: {{ include "api.chart" . }}
     app.kubernetes.io/instance: {{ .Release.Name }}
     app.kubernetes.io/managed-by: {{ .Release.Service }}
     {{- $labels | nindent 4 }}

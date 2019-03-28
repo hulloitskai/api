@@ -1,5 +1,5 @@
-{{- $name:= include "chart.name" . -}}
-{{- $fullName := include "chart.fullname" . -}}
+{{- $name:= include "api.name" . -}}
+{{- $fullName := include "api.fullname" . -}}
 {{- $service := .Values.service -}}
 {{- define "service-labels" -}}
   {{- range $key, $val := .Values.service.labels }}
@@ -15,7 +15,7 @@ metadata:
   name: {{ $fullName }}
   labels:
     app.kubernetes.io/name: {{ $name }}
-    helm.sh/chart: {{ include "chart.chart" . }}
+    helm.sh/chart: {{ include "api.chart" . }}
     app.kubernetes.io/instance: {{ .Release.Name }}
     app.kubernetes.io/managed-by: {{ .Release.Service }}
     {{- $labels | nindent 4 }}

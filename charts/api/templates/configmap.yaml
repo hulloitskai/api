@@ -1,5 +1,5 @@
-{{- $name := include "chart.name" . -}}
-{{- $fullName := include "chart.fullname" . -}}
+{{- $name := include "api.name" . -}}
+{{- $fullName := include "api.fullname" . -}}
 
 apiVersion: v1
 kind: ConfigMap
@@ -10,7 +10,7 @@ metadata:
     app.kubernetes.io/name: {{ $name }}
     app.kubernetes.io/instance: {{ .Release.Name }}
     app.kubernetes.io/managed-by: {{ .Release.Service }}
-    helm.sh/chart: {{ include "chart.chart" . }}
+    helm.sh/chart: {{ include "api.chart" . }}
 
 data:
 {{- with .Values.config }}

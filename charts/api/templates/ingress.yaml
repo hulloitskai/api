@@ -1,5 +1,5 @@
-{{- $name := include "chart.name" . -}}
-{{- $fullName := include "chart.fullname" . -}}
+{{- $name := include "api.name" . -}}
+{{- $fullName := include "api.fullname" . -}}
 {{- $ingress := .Values.ingress -}}
 {{- $varnish := .Values.varnish -}}
 
@@ -13,7 +13,7 @@ metadata:
     app.kubernetes.io/name: {{ $name }}
     app.kubernetes.io/instance: {{ .Release.Name }}
     app.kubernetes.io/managed-by: {{ .Release.Service }}
-    helm.sh/chart: {{ include "chart.chart" . }}
+    helm.sh/chart: {{ include "api.chart" . }}
   {{- range $key, $val := $ingress.labels }}
     {{ $key }}: {{ $val | quote }}
   {{- end }}
@@ -49,7 +49,7 @@ spec:
               serviceName: {{ include "varnish.fullname" . }}
               servicePort: varnish
             {{- else }}
-              serviceName: {{ include "chart.fullname" . }}
+              serviceName: {{ include "api.fullname" . }}
               servicePort: api
             {{- end }}
 {{- end }}

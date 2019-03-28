@@ -1,14 +1,14 @@
-{{- $name := include "varnish.name" . }}
-{{- $fullName := include "varnish.fullname" . }}
-{{- $component := .Values.varnish }}
-{{- $image := $component.image }}
-{{- $storage := $component.storage }}
-{{- $deploy := $component.deployment }}
-{{- define "varnish-deploy-labels" }}
+{{- $name := include "varnish.name" . -}}
+{{- $fullName := include "varnish.fullname" . -}}
+{{- $component := .Values.varnish -}}
+{{- $image := $component.image -}}
+{{- $storage := $component.storage -}}
+{{- $deploy := $component.deployment -}}
+{{- define "varnish-deploy-labels" -}}
   {{- range $key, $val := .Values.varnish.deployment.labels }}
     {{- $key }}: {{ $val | quote }}
   {{- end }}
-{{- end }}
+{{- end -}}
 {{- $labels := include "varnish-deploy-labels" . -}}
 
 {{- if $component.enabled -}}
@@ -21,7 +21,7 @@ metadata:
     app.kubernetes.io/name: {{ $name }}
     app.kubernetes.io/instance: {{ .Release.Name }}
     app.kubernetes.io/managed-by: {{ .Release.Service }}
-    helm.sh/chart: {{ include "chart.chart" . }}
+    helm.sh/chart: {{ include "api.chart" . }}
     {{- $labels | nindent 4 }}
 
 spec:
