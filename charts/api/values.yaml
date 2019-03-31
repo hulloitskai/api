@@ -1,125 +1,75 @@
 # Default values for chart.
 # This is a YAML-formatted file.
-# Declare variables to be passed into your templates.
+
+config: {}
+  # mongo:
+  #   db: somedb
+  # airtable:
+  #   baseId: somebaseid
+  #   moodSource:
+  #     limit: 15
+  # jobserver:
+  #   redisAddr: redis-master:6379
+  #   fetchMoodsCron: 0 0-59/5 * * * *
 
 secrets: {}
-config: {}
+  # AIRTABLE_API_KEY: mysecretkey
+  # MONGO_URI: mysecreturi
+
+replicaCount: 1
 
 image:
   repository: stevenxie/api
-  tag: latest
-  pullPolicy: Always
+  tag: 0.3.4
+  pullPolicy: IfNotPresent
 
-replicaCount: 1
 resources: {}
+  # We usually recommend not to specify default resources and to leave this as a conscious
+  # choice for the user. This also increases chances charts run on environments with little
+  # resources, such as Minikube. If you do want to specify resources, uncomment the following
+  # lines, adjust them as necessary, and remove the curly braces after 'resources:'.
+  # limits:
+  #   cpu: 100m
+  #   memory: 128Mi
+  # requests:
+  #   cpu: 100m
+  #   memory: 128Mi
+
 nodeSelector: {}
 tolerations: []
 affinity: {}
 
 deployment:
   port: 3000
-  labels: &labels
-    tier: backend
-  strategy: &strategy
-    type: RollingUpdate
-    rollingUpdate:
-      maxSurge: 50%
-      maxUnavailable: 25%
-  minReadySeconds: 5
+  strategy: {}
 
 service:
   type: ClusterIP
   port: 3000
-  labels: *labels
 
 ingress:
-  enabled: true
-  host: api.example.127.0.0.1.xip.io
+  enabled: false
   annotations: {}
-    # ingress.kubernetes.io/custom-response-headers: "X-Service:merlin"
-  labels: []
+    # ingress.kubernetes.io/custom-response-headers: "X-Service:api"
+    # kubernetes.io/ingress.class: nginx
+    # kubernetes.io/tls-acme: "true"
+  hosts:
+    - host: api.example.127.0.0.1.xip.io
+      paths: []
   tls: []
-
-
-varnish:
-  enabled: true
-  image:
-    repository: cooptilleuls/varnish
-    tag: 6.0.0-alpine
-    pullPolicy: IfNotPresent
-
-  replicaCount: 1
-  resources: {}
-  nodeSelector: {}
-  tolerations: []
-  affinity: {}
-
-  storage:
-    size: 100M
-    hostPath: /tmp/api-varnish_storage.bin
-
-  deployment:
-    port: 80
-    labels: &varnish-labels
-      tier: proxy
-    strategy: *strategy
-    minReadySeconds: 5
-
-  service:
-    type: ClusterIP
-    port: 80
-    labels: *varnish-labels
-
-  config: |-
-    vcl 4.0;
-
-    backend default {
-      .host = "api";
-      .port = "3000";
-    }
-
-    sub vcl_backend_response {
-      set beresp.ttl = 120s;
-    }
-
-    sub vcl_recv {
-      unset req.http.X-Body-Len;
-
-      ## Remove has_js and Cloudflare/Google Analytics __* cookies, and
-      ## normalize cookies.
-      set req.http.Cookie = regsuball(req.http.Cookie,
-        "(^|;\s*)(_[_a-z]+|has_js)=[^;]*", "");
-      set req.http.Cookie = regsub(req.http.Cookie, "^;\s*", "");
-      if (req.http.Cookie ~ "^ *$") {
-        unset req.http.Cookie;
-      }
-
-      if (req.method != "GET" && req.method != "HEAD") {
-        return (pass);
-      }
-
-      if (req.http.Authorization) {
-        return (pass);
-      }
-
-      if (req.http.X-Force-Backend) {
-        return (pass);
-      }
-    }
-
-    sub vcl_deliver {
-      unset resp.http.Via;
-      return (deliver);
-    }
+  #  - secretName: chart-example-tls
+  #    hosts:
+  #      - chart-example.local
 
 
 jobserver:
   enabled: true
+  replicas: 1
 
   image:
     repository: stevenxie/api-jobs
-    tag: latest
-    pullPolicy: Always
+    tag: 0.3.4
+    pullPolicy: IfNotPresent
 
   resources: {}
   nodeSelector: {}
@@ -128,33 +78,31 @@ jobserver:
 
   deployment:
     labels: []
-    strategy: *strategy
-    minReadySeconds: 5
+    strategy: {}
+
 
 jobserver-ui:
   enabled: false
+  replicas: 1
+
   namespace: api
   redisAddr: ":6432"
+
+  image:
+    repository: stevenxie/api-jobs-ui
+    tag: 0.3.4
+    pullPolicy: IfNotPresent
 
   resources: {}
   nodeSelector: {}
   affinity: {}
   tolerations: {}
 
-  image:
-    repository: stevenxie/api-jobs-ui
-    tag: latest
-    pullPolicy: Always
-
   deployment:
     port: 80
-    labels: &jobserver-ui-labels
-      tier: frontend
-    strategy: *strategy
-    minReadySeconds: 5
+    strategy: {}
 
   service:
     type: ClusterIP
     port: 80
-    labels: *jobserver-ui-labels
 

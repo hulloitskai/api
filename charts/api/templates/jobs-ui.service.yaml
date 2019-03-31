@@ -1,26 +1,19 @@
-{{- $name := include "jobs-ui.name" . -}}
-{{- $fullName := include "jobs-ui.fullname" . -}}
+{{- $name := include "api.name" . -}}
+{{- $fullName := include "api.fullname" . -}}
 {{- $component := index .Values "jobserver-ui" -}}
 {{- $service := $component.service -}}
-{{- define "jobs-ui-service-labels" -}}
-  {{- range $key, $val := index .Values "jobserver-ui" "service" "labels" }}
-    {{- $key }}: {{ $val | quote }}
-  {{- end }}
-{{- end -}}
-{{- $labels := include "jobs-ui-service-labels" . -}}
 
 {{- if $component.enabled -}}
 apiVersion: v1
 kind: Service
 
 metadata:
-  name: {{ $fullName }}
+  name: {{ $fullName }}-jobserver-ui
   labels:
     app.kubernetes.io/name: {{ $name }}
     helm.sh/chart: {{ include "api.chart" . }}
     app.kubernetes.io/instance: {{ .Release.Name }}
     app.kubernetes.io/managed-by: {{ .Release.Service }}
-    {{- $labels | nindent 4 }}
 
 spec:
   type: {{ $service.type }}
@@ -31,5 +24,4 @@ spec:
   selector:
     app.kubernetes.io/name: {{ $name }}
     app.kubernetes.io/instance: {{ .Release.Name }}
-    {{- $labels | nindent 4 }}
 {{- end }}

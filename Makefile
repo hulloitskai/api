@@ -65,13 +65,16 @@ help:
 __KB = kubectl
 
 ci-install:
-	@$(MAKE) DKENV=test dk-pull
+	@$(MAKE) DKENV=test dk-pull $(__ARGS)
 ci-test:
 	@$(MAKE) dk-test -- $(__ARGS) && \
-	 $(MAKE) DKENV=ci dk-up -- --no-start && \
-	 $(MAKE) DKENV=ci dk-tags
+	 $(MAKE) DKENV=test dk-tags && \
+	 $(MAKE) DKENV=ci dk-pull && \
+	 $(MAKE) DKENV=ci dk-build
 ci-deploy:
-	@$(MAKE) dk-push DKENV=ci && \
+	@$(MAKE) DKENV=ci dk-push && \
+	 $(MAKE) DKENV=test dk-push && \
+	 if [ -z "$(__ARGS)" ]; then exit 0; fi && \
 	 for deploy in $(__ARGS); do \
 	   $(__KB) patch deployment "$$deploy" \
 	     -p "{\"spec\":{\"template\":{\"metadata\":{\"annotations\":{\"date\":\"$$(date +'%s')\"}}}}}"; \
@@ -168,11 +171,8 @@ go-bench: ## Run benchmarks.
 DKDIR ?= .
 
 __DKFILE = $(DKDIR)/docker-compose.yml
-ifeq ($(DKENV),test)
-	__DKFILE = $(DKDIR)/docker-compose.test.yml
-endif
-ifeq ($(DKENV),ci)
-	__DKFILE = $(DKDIR)/docker-compose.build.yml
+ifneq ($(DKENV),)
+	__DKFILE = $(DKDIR)/docker-compose.$(DKENV).yml
 endif
 
 __DK        = docker

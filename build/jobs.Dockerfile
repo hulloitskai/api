@@ -4,7 +4,7 @@
 
 FROM golang:1-alpine AS builder
 
-ARG BINARY="jobserver"
+ARG BINARY=jobserver
 
 ## Install dependencies.
 RUN apk add --update upx gcc musl-dev git make
@@ -31,9 +31,9 @@ RUN upx -9 "./dist/${BINARY}"
 
 FROM alpine:3.8 as production
 
-ARG BINARY="jobserver"
-ARG BUILD_VERSION="unset"
-ENV GOENV="production"
+ARG BINARY=jobserver
+ARG BUILD_VERSION=unset
+ENV GOENV=production
 
 ## Labels:
 LABEL maintainer="Steven Xie <dev@stevenxie.me>"

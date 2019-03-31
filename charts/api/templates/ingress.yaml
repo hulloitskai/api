@@ -1,7 +1,5 @@
-{{- $name := include "api.name" . -}}
 {{- $fullName := include "api.fullname" . -}}
 {{- $ingress := .Values.ingress -}}
-{{- $varnish := .Values.varnish -}}
 
 {{- if $ingress.enabled -}}
 apiVersion: extensions/v1beta1
@@ -10,18 +8,13 @@ kind: Ingress
 metadata:
   name: {{ $fullName }}
   labels:
-    app.kubernetes.io/name: {{ $name }}
+    app.kubernetes.io/name: {{ include "api.name" . }}
     app.kubernetes.io/instance: {{ .Release.Name }}
     app.kubernetes.io/managed-by: {{ .Release.Service }}
     helm.sh/chart: {{ include "api.chart" . }}
-  {{- range $key, $val := $ingress.labels }}
-    {{ $key }}: {{ $val | quote }}
-  {{- end }}
   {{- with $ingress.annotations }}
   annotations:
-  {{- range $key, $val := . }}
-    {{ $key }}: {{ $val | quote }}
-  {{- end }}
+    {{- toYaml . | nindent 4 }}
   {{- end }}
 
 spec:
@@ -36,20 +29,15 @@ spec:
   {{- end }}
 {{- end }}
   rules:
-    - host: {{ $ingress.host | quote }}
+  {{- range $ingress.hosts }}
+    - host: {{ .host | quote }}
       http:
         paths:
-        {{- with $ingress.path }}
+        {{- range .paths }}
           - path: {{ . }}
             backend:
-        {{- else }}
-          - backend:
+              serviceName: {{ $fullName }}
+              servicePort: http
         {{- end }}
-            {{- if $varnish.enabled }}
-              serviceName: {{ include "varnish.fullname" . }}
-              servicePort: varnish
-            {{- else }}
-              serviceName: {{ include "api.fullname" . }}
-              servicePort: api
-            {{- end }}
+  {{- end }}
 {{- end }}

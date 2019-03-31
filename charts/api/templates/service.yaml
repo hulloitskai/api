@@ -1,32 +1,23 @@
-{{- $name:= include "api.name" . -}}
-{{- $fullName := include "api.fullname" . -}}
+{{- $name := include "api.name" . -}}
 {{- $service := .Values.service -}}
-{{- define "service-labels" -}}
-  {{- range $key, $val := .Values.service.labels }}
-    {{- $key }}: {{ $val | quote }}
-  {{- end }}
-{{- end -}}
-{{- $labels := include "service-labels" . -}}
 
 apiVersion: v1
 kind: Service
 
 metadata:
-  name: {{ $fullName }}
+  name: {{ include "api.fullname" . }}
   labels:
     app.kubernetes.io/name: {{ $name }}
     helm.sh/chart: {{ include "api.chart" . }}
     app.kubernetes.io/instance: {{ .Release.Name }}
     app.kubernetes.io/managed-by: {{ .Release.Service }}
-    {{- $labels | nindent 4 }}
 
 spec:
   type: {{ $service.type }}
   ports:
-    - name: api
+    - name: http
       protocol: TCP
       port: {{ $service.port }}
   selector:
     app.kubernetes.io/name: {{ $name }}
     app.kubernetes.io/instance: {{ .Release.Name }}
-    {{- $labels | nindent 4 }}

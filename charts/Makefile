@@ -32,7 +32,7 @@ help:
 .PHONY: charts-version charts-lint charts-package charts-clean
 
 CVER = unset
-ifneq ($(VERSION),unset)
+ifneq ($(VERSION),latest)
 	CVER = $(shell git describe --abbrev=0 --tags | cut -c 2-)
 endif
 __CDIRS = $(shell \
@@ -42,8 +42,7 @@ __CDIRS = $(shell \
 	    vcdirs="$$vcdirs $$cdir"; \
 	  fi; \
 	done && \
-	echo "$$vcdirs" \
-)
+	echo "$$vcdirs")
 
 charts-version: ## Set chart appVersion string to the current project version.
 	@echo "Updating 'appVersion' in 'Chart.yaml' files..." && \

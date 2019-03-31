@@ -4,7 +4,7 @@
 
 FROM golang:1-alpine AS builder
 
-ARG BINARY="workwebui"
+ARG BINARY=workwebui
 
 ## Install dependencies.
 RUN apk add --update upx gcc musl-dev git
@@ -25,9 +25,9 @@ RUN upx -9 "/build/dist/${BINARY}"
 
 FROM alpine:3.8 as production
 
-ARG BINARY="workwebui"
-ARG BUILD_VERSION="unset"
-ENV GOENV="production"
+ARG BINARY=workwebui
+ARG BUILD_VERSION=unset
+ENV GOENV=production
 
 ## Labels:
 LABEL maintainer="Steven Xie <dev@stevenxie.me>"

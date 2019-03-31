@@ -3,12 +3,6 @@
 {{- $component := .Values -}}
 {{- $deploy := $component.deployment -}}
 {{- $image := $component.image -}}
-{{- define "deploy-labels" -}}
-  {{- range $key, $val := .Values.deployment.labels }}
-    {{- $key }}: {{ $val | quote }}
-  {{- end }}
-{{- end -}}
-{{- $labels := include "deploy-labels" . -}}
 
 apiVersion: apps/v1
 kind: Deployment
@@ -20,7 +14,6 @@ metadata:
     app.kubernetes.io/instance: {{ .Release.Name }}
     app.kubernetes.io/managed-by: {{ .Release.Service }}
     helm.sh/chart: {{ include "api.chart" . }}
-    {{- $labels | nindent 4 }}
 
 spec:
   replicas: {{ $deploy.replicaCount }}
@@ -28,16 +21,11 @@ spec:
     matchLabels:
       app.kubernetes.io/name: {{ $name }}
       app.kubernetes.io/instance: {{ .Release.Name }}
-      {{- $labels | nindent 6 }}
-  strategy:
-    {{- toYaml $deploy.strategy | nindent 4 }}
-  minReadySeconds: {{ $deploy.minReadySeconds }}
   template:
     metadata:
       labels:
         app.kubernetes.io/name: {{ $name }}
         app.kubernetes.io/instance: {{ .Release.Name }}
-        {{- $labels | nindent 8 }}
     spec:
       containers:
         - name: api
@@ -50,18 +38,18 @@ spec:
             - name: config
               mountPath: /etc/api
           ports:
-            - name: api
+            - name: http
               containerPort: {{ $deploy.port }}
               protocol: TCP
           livenessProbe:
             httpGet:
               path: /
-              port: api
+              port: http
               initialDelaySeconds: 10
           readinessProbe:
             httpGet:
               path: /
-              port: api
+              port: http
               initialDelaySeconds: 10
           {{- with $component.resources }}
           resources:
@@ -83,3 +71,10 @@ spec:
       tolerations:
         {{- toYaml . | nindent 8 }}
       {{- end }}
+  {{- with $deploy.strategy }}
+  strategy:
+    {{- toYaml . | nindent 4 }}
+  {{- end }}
+  {{- with $deploy.minReadySeconds }}
+  minReadySeconds: {{ . }}
+  {{- end }}

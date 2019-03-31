@@ -1,28 +1,20 @@
-{{- $name := include "jobs.name" . -}}
-{{- $fullName := include "jobs.fullname" . -}}
-{{- $fullChartName := include "api.fullname" . -}}
+{{- $name := include "api.name" . -}}
+{{- $fullName := include "api.fullname" . -}}
 {{- $component := .Values.jobserver -}}
 {{- $image := $component.image -}}
 {{- $deploy := $component.deployment -}}
-{{- define "jobs-deploy-labels" -}}
-  {{- range $key, $val := .Values.jobserver.deployment.labels }}
-    {{- $key }}: {{ $val | quote }}
-  {{- end }}
-{{- end -}}
-{{- $labels := include "jobs-deploy-labels" . -}}
 
 {{- if $component.enabled -}}
 apiVersion: apps/v1
 kind: Deployment
 
 metadata:
-  name: {{ $fullName }}
+  name: {{ $fullName }}-jobserver
   labels:
     app.kubernetes.io/name: {{ $name }}
     app.kubernetes.io/instance: {{ .Release.Name }}
     app.kubernetes.io/managed-by: {{ .Release.Service }}
     helm.sh/chart: {{ include "api.chart" . }}
-    {{- $labels | nindent 4 }}
 
 spec:
   replicas: 1
@@ -30,7 +22,6 @@ spec:
     matchLabels:
       app.kubernetes.io/name: {{ $name }}
       app.kubernetes.io/instance: {{ .Release.Name }}
-      {{- $labels | nindent 6 }}
   strategy:
     {{- toYaml $deploy.strategy | nindent 4 }}
   minReadySeconds: {{ $deploy.minReadySeconds }}
@@ -39,7 +30,6 @@ spec:
       labels:
         app.kubernetes.io/name: {{ $name }}
         app.kubernetes.io/instance: {{ .Release.Name }}
-        {{- $labels | nindent 8 }}
     spec:
       containers:
         - name: jobs
@@ -47,7 +37,7 @@ spec:
           imagePullPolicy: {{ $image.pullPolicy }}
           envFrom:
             - secretRef:
-                name: {{ $fullChartName }}
+                name: {{ $fullName }}
           volumeMounts:
             - name: config
               mountPath: /etc/api
@@ -58,7 +48,7 @@ spec:
       volumes:
         - name: config
           configMap:
-            name: {{ $fullChartName }}
+            name: {{ $fullName }}
       {{- with $deploy.nodeSelector }}
       nodeSelector:
         {{- toYaml . | nindent 8 }}

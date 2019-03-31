@@ -1,35 +1,28 @@
-{{- $name := include "jobs-ui.name" . -}}
-{{- $fullName := include "jobs-ui.fullname" . -}}
+{{- $name := include "api.name" . -}}
+{{- $fullName := include "api.fullname" . -}}
+
 {{- $component := index .Values "jobserver-ui" -}}
 {{- $image := $component.image -}}
 {{- $deploy := $component.deployment -}}
-{{- define "jobs-ui-deploy-labels" -}}
-  {{- range $key, $val := index .Values "jobserver-ui" "deployment" "labels" }}
-    {{- $key }}: {{ $val | quote }}
-  {{- end }}
-{{- end -}}
-{{- $labels := include "jobs-ui-deploy-labels" . -}}
 
 {{- if $component.enabled -}}
 apiVersion: apps/v1
 kind: Deployment
 
 metadata:
-  name: {{ $fullName }}
+  name: {{ $fullName }}-jobserver-ui
   labels:
     app.kubernetes.io/name: {{ $name }}
     app.kubernetes.io/instance: {{ .Release.Name }}
     app.kubernetes.io/managed-by: {{ .Release.Service }}
     helm.sh/chart: {{ include "api.chart" . }}
-    {{- $labels | nindent 4 }}
 
 spec:
-  replicas: 1
+  replicas: {{ $component.replicas }}
   selector:
     matchLabels:
       app.kubernetes.io/name: {{ $name }}
       app.kubernetes.io/instance: {{ .Release.Name }}
-      {{- $labels | nindent 6 }}
   strategy:
     {{- toYaml $deploy.strategy | nindent 4 }}
   minReadySeconds: {{ $deploy.minReadySeconds }}
@@ -38,7 +31,6 @@ spec:
       labels:
         app.kubernetes.io/name: {{ $name }}
         app.kubernetes.io/instance: {{ .Release.Name }}
-        {{- $labels | nindent 8 }}
     spec:
       containers:
         - name: jobs

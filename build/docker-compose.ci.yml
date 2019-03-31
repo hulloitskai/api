@@ -1,5 +1,4 @@
-## This docker-compose config file is used to define build processes for the
-## images in this repository.
+## This docker-compose file is used to define CI build procedures.
 
 version: "3.7"
 
@@ -10,21 +9,13 @@ services:
       context: ..
       dockerfile: ./build/api.Dockerfile
       args:
-        BUILD_VERSION: "${VERSION}"
+        BUILD_VERSION: "$VERSION"
       cache_from:
         - stevenxie/api:latest
         - alpine:3.8
     container_name: api
-
-  api_test:
-    image: "stevenxie/api-tester:latest"
-    build:
-      context: ..
-      dockerfile: ./build/tester.Dockerfile
-      cache_from:
-        - stevenxie/api-tester:latest
-        - golang:1
-    container_name: api_test
+    environment:
+      - GOENV=development
 
   jobs:
     image: "stevenxie/api-jobs:${VERSION}"
@@ -32,11 +23,10 @@ services:
       context: ..
       dockerfile: ./build/jobs.Dockerfile
       args:
-        BUILD_VERSION: "${VERSION}"
+        BUILD_VERSION: "$VERSION"
       cache_from:
         - stevenxie/api-jobs:latest
         - alpine:3.8
-    container_name: jobs
 
   jobs-ui:
     image: "stevenxie/api-jobs-ui:${VERSION}"
@@ -44,8 +34,7 @@ services:
       context: ..
       dockerfile: ./build/jobs-ui.Dockerfile
       args:
-        BUILD_VERSION: "${VERSION}"
+        BUILD_VERSION: "$VERSION"
       cache_from:
         - stevenxie/api-jobs-ui:latest
         - alpine:3.8
-    container_name: jobs-ui
