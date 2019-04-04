@@ -2,7 +2,7 @@
 ## BUILDER IMAGE
 ##################################################
 
-FROM golang:1-alpine AS builder
+FROM golang:1.12-alpine AS builder
 
 ARG BINARY=workwebui
 
@@ -38,7 +38,7 @@ LABEL org.label-schema.vcs-url="https://github.com/stevenxie/api"
 LABEL org.label-schema.version="$BUILD_VERSION"
 
 ## Install dependencies.
-RUN apk add --no-cache ca-certificates
+RUN apk add --update ca-certificates
 
 ## Copy production artifacts to /usr/bin/.
 COPY --from=builder /build/dist/${BINARY} /usr/bin/${BINARY}

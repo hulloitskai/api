@@ -1,9 +1,10 @@
 ## ----- VARIABLES -----
 ## Program version.
-VERSION ?= latest
-__GIT_DESC = git describe --tags
-ifneq ($(shell $(__GIT_DESC) 2> /dev/null),)
-	VERSION = $(shell $(__GIT_DESC) | cut -c 2-)
+__TAG = $(shell git describe --tags 2> /dev/null)
+ifneq ($(__TAG),)
+	VERSION ?= $(shell echo "$(__TAG)" | cut -c 2-)
+else
+	VERSION ?= latest
 endif
 
 ## Go module name.
@@ -61,24 +62,30 @@ help:
 
 
 ## CI:
-.PHONY: ci-install ci-test ci-deploy
-__KB = kubectl
+.PHONY: ci-install ci-test ci-build ci-deploy
+
+BRANCH        ?= $(shell git rev-parse --abbrev-ref HEAD)
+RELEASEBRANCH ?= master
 
 ci-install:
-	@$(MAKE) DKENV=test dk-pull $(__ARGS)
+	@$(MAKE) DKFILE=build dk-pull && \
+	 $(MAKE) DKFILE=test  dk-pull
 ci-test:
-	@$(MAKE) dk-test -- $(__ARGS) && \
-	 $(MAKE) DKENV=test dk-tags && \
-	 $(MAKE) DKENV=ci dk-pull && \
-	 $(MAKE) DKENV=ci dk-build
+	@$(MAKE) dk-test -- $(__ARGS)
+ci-build:
+	@$(MAKE) DKFILE=build dk-build
+ci-deploy: SHELL := bash
 ci-deploy:
-	@$(MAKE) DKENV=ci dk-push && \
-	 $(MAKE) DKENV=test dk-push && \
-	 if [ -z "$(__ARGS)" ]; then exit 0; fi && \
-	 for deploy in $(__ARGS); do \
-	   $(__KB) patch deployment "$$deploy" \
-	     -p "{\"spec\":{\"template\":{\"metadata\":{\"annotations\":{\"date\":\"$$(date +'%s')\"}}}}}"; \
-	 done
+	@if [ "$(BRANCH)" == "$(RELEASEBRANCH)" ]; then \
+	   VERSIONS="$(VERSION) latest"; \
+	 else \
+	   VERSIONS="$(BRANCH)-$$(git describe --always)"; \
+	 fi && \
+	 for VERSION in $$VERSIONS; do \
+	   $(MAKE) DKFILE=build dk-tag $$VERSION && \
+	   $(MAKE) DKFILE=build VERSION="$$VERSION" dk-push; \
+	 done && \
+	 $(MAKE) DKFILE=test dk-push
 
 
 ## git-secret:
@@ -165,14 +172,14 @@ go-bench: ## Run benchmarks.
 
 
 ## Docker:
-.PHONY: dk-pull dk-push dk-build dk-build-push dk-clean dk-tags dk-up \
+.PHONY: dk-pull dk-push dk-build dk-build-push dk-clean dk-tag dk-up \
         dk-build-up dk-down dk-logs dk-test
 
 DKDIR ?= .
 
 __DKFILE = $(DKDIR)/docker-compose.yml
-ifneq ($(DKENV),)
-	__DKFILE = $(DKDIR)/docker-compose.$(DKENV).yml
+ifneq ($(DKFILE),)
+	__DKFILE = $(DKDIR)/docker-compose.$(DKFILE).yml
 endif
 
 __DK        = docker
@@ -184,30 +191,25 @@ dk-pull: ## Pull latest Docker images from registry.
 	@echo "Pulling latest images from registry..." && \
 	 $(__DKCMP_LST) pull $(__ARGS)
 dk-push: ## Push new Docker images to registry.
-	@if git describe --exact-match --tags > /dev/null 2>&1; then \
-	   echo "Pushing versioned images to registry (:$(VERSION))..." && \
-	   $(__DKCMP_VER) push $(__ARGS); \
-	 fi && \
-	 echo "Pushing latest images to registry (:latest)..." && \
-	 $(__DKCMP_LST) push $(__ARGS) && \
+	@echo "Pushing images to registry (:$(VERSION))..." && \
+	 $(__DKCMP_VER) push $(__ARGS) && \
 	 echo done
 
 dk-build: ## Build and tag Docker images.
 	@echo "Building images..." && \
 	 $(__DKCMP_VER) build --parallel --compress $(__ARGS) && \
-	 echo done && \
-	 $(MAKE) dk-tags
+	 echo done
 dk-clean: ## Clean up unused Docker data.
 	@echo "Cleaning unused data..." && $(__DK) system prune $(__ARGS)
-dk-tags: ## Tag versioned Docker images with ':latest'.
-	@echo "Tagging versioned images with ':latest'..." && \
-	 images="$$($(__DKCMP_VER) config | egrep image | awk '{print $$2}')" && \
-	 for image in $$images; do \
-	   if [ -z "$$($(__DK) images -q "$$image" 2> /dev/null)" ]; then \
+dk-tag: ## Re-tag Docker images with other names.
+	@TAG=latest && if [ -n "$(__ARGS)" ]; then TAG="$(__ARGS)"; fi && \
+	 echo "Tagging versioned images with ':$$TAG'..." && \
+	 IMAGES="$$($(__DKCMP_VER) config | grep image | awk '{print $$2}')" && \
+	 for IMG in $$IMAGES; do \
+	   if [ -z "$$($(__DK) images -q "$$IMG" 2> /dev/null)" ]; then \
 	     continue; \
 	   fi && \
-	   echo "$$image" | sed -e 's/:.*$$/:latest/' | \
-	     xargs $(__DK) tag "$$image"; \
+	   echo "$$IMG" | sed -e "s/:.*$$/:$$TAG/" | xargs $(__DK) tag "$$IMG"; \
 	 done && \
 	 echo done
 dk-build-push: dk-build dk-push ## Build and push new Docker images.

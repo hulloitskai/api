@@ -7,7 +7,7 @@ services:
   api_test:
     image: "stevenxie/api-tester:latest"
     build:
-      context: ..
+      context: ../
       dockerfile: ./build/tester.Dockerfile
       cache_from:
         - stevenxie/api-tester:latest

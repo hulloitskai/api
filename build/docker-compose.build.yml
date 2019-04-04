@@ -1,4 +1,8 @@
-## This docker-compose file is used to define CI build procedures.
+## This docker-compose config file is used to define build processes for the
+## images in this repository, and for development deployment.
+##
+## It is not meant for use in production deployments. See the deployment/
+## directory for production deployment configurations.
 
 version: "3.7"
 
@@ -6,7 +10,7 @@ services:
   api:
     image: "stevenxie/api:${VERSION}"
     build:
-      context: ..
+      context: ../
       dockerfile: ./build/api.Dockerfile
       args:
         BUILD_VERSION: "$VERSION"

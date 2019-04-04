@@ -6,7 +6,7 @@ services:
   api:
     image: "stevenxie/api:${VERSION}"
     build:
-      context: ..
+      context: ../
       dockerfile: ./build/api.Dockerfile
       args:
         BUILD_VERSION: "$VERSION"

@@ -1,4 +1,7 @@
-FROM golang:1 AS tester
+FROM golang:1.12-alpine AS tester
+
+## Install dependencies.
+RUN apk add --update git make gcc musl-dev
 
 ## Install code checking tools.
 RUN GO111MODULE=off go get \
