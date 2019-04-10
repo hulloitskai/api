@@ -11,6 +11,11 @@ metadata:
     helm.sh/chart: {{ include "api.chart" . }}
     app.kubernetes.io/instance: {{ .Release.Name }}
     app.kubernetes.io/managed-by: {{ .Release.Service }}
+  {{- with $service.annotations }}
+  annotations:
+    {{- toYaml . | nindent 4 }}
+  {{- end }}
+
 
 spec:
   type: {{ $service.type }}

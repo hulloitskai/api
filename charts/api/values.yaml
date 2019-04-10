@@ -46,6 +46,7 @@ deployment:
 service:
   type: ClusterIP
   port: 3000
+  annotations: {}
 
 ingress:
   enabled: false
@@ -105,4 +106,5 @@ jobserver-ui:
   service:
     type: ClusterIP
     port: 80
+    annotations: {}
 

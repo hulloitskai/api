@@ -28,7 +28,7 @@ spec:
         app.kubernetes.io/instance: {{ .Release.Name }}
     spec:
       containers:
-        - name: api
+        - name: {{ .Chart.Name }}
           image: "{{ $image.repository }}:{{ $image.tag }}"
           imagePullPolicy: {{ $image.pullPolicy }}
           envFrom:

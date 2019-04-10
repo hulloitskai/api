@@ -11,7 +11,7 @@ kind: Deployment
 metadata:
   name: {{ $fullName }}-jobserver
   labels:
-    app.kubernetes.io/name: {{ $name }}
+    app.kubernetes.io/name: {{ $name }}-jobserver
     app.kubernetes.io/instance: {{ .Release.Name }}
     app.kubernetes.io/managed-by: {{ .Release.Service }}
     helm.sh/chart: {{ include "api.chart" . }}
@@ -20,7 +20,7 @@ spec:
   replicas: 1
   selector:
     matchLabels:
-      app.kubernetes.io/name: {{ $name }}
+      app.kubernetes.io/name: {{ $name }}-jobserver
       app.kubernetes.io/instance: {{ .Release.Name }}
   strategy:
     {{- toYaml $deploy.strategy | nindent 4 }}

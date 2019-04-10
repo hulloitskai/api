@@ -10,10 +10,14 @@ kind: Service
 metadata:
   name: {{ $fullName }}-jobserver-ui
   labels:
-    app.kubernetes.io/name: {{ $name }}
+    app.kubernetes.io/name: {{ $name }}-jobserver-ui
     helm.sh/chart: {{ include "api.chart" . }}
     app.kubernetes.io/instance: {{ .Release.Name }}
     app.kubernetes.io/managed-by: {{ .Release.Service }}
+  {{- with $service.annotations }}
+  annotations:
+    {{- toYaml . | nindent 4 }}
+  {{- end }}
 
 spec:
   type: {{ $service.type }}
@@ -22,6 +26,6 @@ spec:
       protocol: TCP
       port: {{ $service.port }}
   selector:
-    app.kubernetes.io/name: {{ $name }}
+    app.kubernetes.io/name: {{ $name }}-jobserver-ui
     app.kubernetes.io/instance: {{ .Release.Name }}
 {{- end }}
