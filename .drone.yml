@@ -1,0 +1,67 @@
+kind: pipeline
+name: default
+
+steps:
+  - name: install
+    image: golang:1.12
+    commands: ["go mod download"]
+
+  - name: lint
+    image: golangci/golangci-lint:v1.16.0
+    commands: ["golangci-lint run ./..."]
+
+  - name: info
+    image: alpine/git
+    commands:
+      - git describe --tags 2> /dev/null | cut -c 2- > /info/version
+      - git rev-parse HEAD 2> /dev/null > /info/commit
+      - git rev-parse --abbrev-ref HEAD 2> /dev/null > /info/branch
+      - head -1 < go.mod | awk '{print $2}' 2> /dev/null > /info/module
+      - tail -n +1 /info/*
+    volumes:
+      - name: info
+        path: /info
+
+  - name: test
+    image: golang:1.12
+    commands:
+      - export MOD="$(cat /info/module)"
+      - |
+        [ -s /info/version ] && \
+          export VER="$(cat /info/version)" || \
+          export VER="$(cat /info/commit)"
+      - |
+        go test \
+          -ldflags "-X ${MOD}/internal/info.Version=${VER}" \
+          -race \
+          ./...
+    volumes:
+      - name: info
+        path: /info
+
+  - name: build
+    image: gcr.io/kaniko-project/executor:debug
+    commands:
+      - |
+        if [ $(cat /info/branch) == master ] && [ -s /info/version ]; then
+          export TAG=$(cat /info/version)
+        else
+          export TAG=$(cat /info/branch)-$(cat /info/commit)
+        fi
+      - |
+        kaniko --context=. \
+               --dockerfile=./deploy/Dockerfile \
+               --destination=stevenxie/api:${TAG} \
+               --destination=stevenxie/api:latest \
+    volumes:
+      - name: info
+        path: /info
+      - name: docker-config
+        path: /kaniko/.docker
+
+volumes:
+  - name: info
+    temp: {}
+  - name: docker-config
+    host:
+      path: /secrets/docker-config

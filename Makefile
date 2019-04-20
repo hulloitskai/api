@@ -155,14 +155,13 @@ go-lint:
 go-review:
 	@$(MAKE) go-lint && $(MAKE) go-test -- $(__ARGS)
 
-GOCOVERFILE   ?= coverage.out
 GOTESTTIMEOUT ?= 20s
 GOTESTFLAGS   ?= -race
 
 __GOTEST = \
   go test \
-	  -coverprofile="$(GOCOVERFILE)" -covermode=atomic \
-    -timeout="$(GOTESTTIMEOUT)" \
+	  -covermode=atomic \
+	  -timeout="$(GOTESTTIMEOUT)" \
 	  $(GOBUILDFLAGS) $(GOTESTFLAGS)
 go-test:
 	@echo "Running tests with 'go test':" && $(__GOTEST) ./... $(__ARGS)

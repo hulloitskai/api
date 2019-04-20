@@ -59,7 +59,7 @@ func (mh *MoodsHandler) ListMoods(w http.ResponseWriter, r *http.Request,
 			jerr = jsonErrorFrom(err, code)
 		)
 		w.WriteHeader(code)
-		rw.WriteJSON(&jerr)
+		_ = rw.WriteJSON(&jerr)
 		return
 	}
 
@@ -77,7 +77,7 @@ func (mh *MoodsHandler) ListMoods(w http.ResponseWriter, r *http.Request,
 			jerr = jsonErrorFrom(err, code)
 		)
 		w.WriteHeader(code)
-		rw.WriteJSON(&jerr)
+		_ = rw.WriteJSON(&jerr)
 		return
 	}
 
@@ -89,12 +89,12 @@ func (mh *MoodsHandler) ListMoods(w http.ResponseWriter, r *http.Request,
 			jerr = jsonErrorFrom(err, code)
 		)
 		w.WriteHeader(code)
-		rw.WriteJSON(&jerr)
+		_ = rw.WriteJSON(&jerr)
 		return
 	}
 
 	// Write response.
-	rw.WriteJSON(moods)
+	_ = rw.WriteJSON(moods)
 }
 
 // GetMood gets a mood with a particular id.
@@ -113,10 +113,10 @@ func (mh *MoodsHandler) GetMood(w http.ResponseWriter, r *http.Request,
 			jerr = jsonErrorFrom(err, code)
 		)
 		w.WriteHeader(code)
-		rw.WriteJSON(&jerr)
+		_ = rw.WriteJSON(&jerr)
 		return
 	}
 
 	// Write response.
-	rw.WriteJSON(mood)
+	_ = rw.WriteJSON(mood)
 }

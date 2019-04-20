@@ -55,5 +55,5 @@ func (ih *InfoHandler) info() *apiInfo {
 func (ih *InfoHandler) GetInfo(w http.ResponseWriter, _ *http.Request,
 	_ httprouter.Params) {
 	rw := responseWriter{w, ih.l}
-	rw.WriteJSON(ih.info())
+	_ = rw.WriteJSON(ih.info())
 }
