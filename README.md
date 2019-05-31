@@ -3,6 +3,7 @@
 _A personal API._
 
 [![GitHub Tag][tag-img]][tag]
+[![Drone][drone-img]][drone]
 [![Go Report Card][grp-img]][grp]
 [![Microbadger][microbadger-img]][microbadger]
 
@@ -12,8 +13,8 @@ Why... not?
 
 [tag]: https://github.com/stevenxie/api/releases
 [tag-img]: https://img.shields.io/github/tag/stevenxie/api.svg
-[travis]: https://travis-ci.com/stevenxie/api
-[travis-img]: https://travis-ci.com/stevenxie/api.svg?branch=master
+[drone]: https://ci.stevenxie.me/stevenxie/api
+[drone-img]: https://ci.stevenxie.me/api/badges/stevenxie/api/status.svg
 [grp]: https://goreportcard.com/report/github.com/stevenxie/api
 [grp-img]: https://goreportcard.com/badge/github.com/stevenxie/api
 [microbadger]: https://microbadger.com/images/stevenxie/api

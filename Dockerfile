@@ -1,6 +1,9 @@
-FROM busybox:1.30
+FROM alpine:3.9
+
+# Install system dependencies.
+RUN apk add --update ca-certificates
 
 # Copy built binary.
-COPY ./apisrv /bin/apisrv
+COPY ./dist/apisrv /bin/apisrv
 
 ENTRYPOINT ["apisrv"]

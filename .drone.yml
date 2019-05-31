@@ -2,10 +2,6 @@ kind: pipeline
 name: default
 
 steps:
-  - name: install
-    image: golang:1.12
-    commands: ["go mod download"]
-
   - name: lint
     image: stevenxie/revive
     commands: ["revive -config .revive.toml ./..."]
@@ -31,9 +27,12 @@ steps:
         [ -s /info/version ] && \
           export VER="$(cat /info/version)" || \
           export VER="$(cat /info/commit)"
-      - export LDFLAGS="-X ${MOD}/internal/info.Version=${VER}"
+      - export LDFLAGS="-X $${MOD}/internal/info.Version=$${VER}"
+      - echo "LDFLAGS=$${LDFLAGS}" 1>&2
       - go test -ldflags "$LDFLAGS" -race ./...
-      - go build -ldflags "$LDFLAGS" ./cmd/apisrv
+      - |
+        CGO_ENABLED=0 \
+        go build -ldflags "$LDFLAGS" -o ./dist/apisrv ./cmd/apisrv
     volumes:
       - name: info
         path: /info
@@ -55,6 +54,9 @@ steps:
       username: stevenxie
       password:
         from_secret: docker_pass
+    volumes:
+      - name: info
+        path: /i
 
 
 volumes:
