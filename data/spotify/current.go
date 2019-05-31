@@ -1,9 +1,11 @@
 package spotify
 
 import (
+	"io"
 	"time"
 
 	"github.com/stevenxie/api/pkg/music"
+	errors "golang.org/x/xerrors"
 )
 
 const extURLKeySpotify = "spotify"
@@ -12,6 +14,9 @@ const extURLKeySpotify = "spotify"
 func (c *Client) CurrentlyPlaying() (*music.CurrentlyPlaying, error) {
 	cp, err := c.sc.PlayerCurrentlyPlaying()
 	if err != nil {
+		if errors.Is(err, io.EOF) { // if EOF, return nill (no current playing song)
+			return nil, nil
+		}
 		return nil, err
 	}
 
