@@ -62,3 +62,7 @@ steps:
 volumes:
   - name: info
     temp: {}
+
+trigger:
+  event:
+    exclude: ["tag"]
