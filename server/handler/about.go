@@ -9,7 +9,7 @@ import (
 )
 
 // AboutHandler responds with personal data.
-func AboutHandler(l zerolog.Logger, svc about.InfoService) echo.HandlerFunc {
+func AboutHandler(svc about.InfoService, l zerolog.Logger) echo.HandlerFunc {
 	return func(c echo.Context) error {
 		info, err := svc.Info()
 		if err != nil {

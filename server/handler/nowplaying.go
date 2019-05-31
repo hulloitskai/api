@@ -11,8 +11,8 @@ import (
 // NowPlayingHandler handles requests for the currently playing track on my
 // Spotify account.
 func NowPlayingHandler(
-	l zerolog.Logger,
 	svc music.CurrentlyPlayingService,
+	l zerolog.Logger,
 ) echo.HandlerFunc {
 	return func(c echo.Context) error {
 		cplaying, err := svc.CurrentlyPlaying()

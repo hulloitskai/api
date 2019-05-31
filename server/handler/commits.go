@@ -13,8 +13,8 @@ import (
 
 // RecentCommitsHandler handles requests for recent commits that I've made.
 func RecentCommitsHandler(
-	l zerolog.Logger,
 	svc git.RecentCommitsService,
+	l zerolog.Logger,
 ) echo.HandlerFunc {
 	return func(c echo.Context) error {
 		limit := 5

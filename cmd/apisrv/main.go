@@ -1,8 +1,11 @@
 package main
 
 import (
+	"context"
 	"fmt"
 	"os"
+
+	"github.com/stevenxie/api/pkg/git"
 
 	errors "golang.org/x/xerrors"
 
@@ -62,20 +65,30 @@ func run(c *cli.Context) error {
 		return errors.Errorf("loading config: %w", err)
 	}
 
-	// Construct services.
+	// Construct services:
 	logger.Info().Msg("Constructing services...")
+
+	// Create recent commits cache and info store.
 	githubClient, err := github.New()
 	if err != nil {
 		return errors.Errorf("creating GitHub client: %w", err)
 	}
-
+	// TODO: Construct cache with a context that corresponds to the server
+	// lifetime.
+	recentCommitsWithCache := git.WithUpdatingCache(
+		context.Background(),
+		githubClient,
+		logger.With().Str("service", "recent_commits").Logger(),
+	)
 	infoStore := cfg.BuildInfoStore(githubClient)
 
+	// Create Spotify client.
 	spotifyClient, err := spotify.New()
 	if err != nil {
 		return errors.Errorf("creating Spotify client: %w", err)
 	}
 
+	// Create RescueTime client.
 	rtClient, err := rescuetime.New()
 	if err != nil {
 		return errors.Errorf("creating RescueTime client: %w", err)
@@ -85,7 +98,13 @@ func run(c *cli.Context) error {
 	logger.Info().Msg("Initializing server...")
 	var (
 		port = c.Int("port")
-		srv  = server.New(infoStore, rtClient, githubClient, spotifyClient, logger)
+		srv  = server.New(
+			infoStore,
+			rtClient,
+			recentCommitsWithCache,
+			spotifyClient,
+			logger,
+		)
 	)
 	// TODO: Shut down server gracefully.
 	if err = srv.ListenAndServe(fmt.Sprintf(":%d", port)); err != nil {

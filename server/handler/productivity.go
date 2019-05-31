@@ -8,8 +8,8 @@ import (
 
 // ProductivityHandler handles requests for productivity metrics.
 func ProductivityHandler(
-	l zerolog.Logger,
 	svc metrics.ProductivityService,
+	l zerolog.Logger,
 ) echo.HandlerFunc {
 	return func(c echo.Context) error {
 		prod, err := svc.CurrentProductivity()
