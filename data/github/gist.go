@@ -20,10 +20,6 @@ func (c *Client) GetGistFile(id, file string) ([]byte, error) {
 	}
 	defer res.Body.Close()
 
-	// raw, _ := ioutil.ReadAll(res.Body)
-	// fmt.Printf("%s\n", raw)
-	// return nil, nil
-
 	// Decode response as JSON.
 	var data struct {
 		Files map[string]struct {

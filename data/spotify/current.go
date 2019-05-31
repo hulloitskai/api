@@ -3,13 +3,13 @@ package spotify
 import (
 	"time"
 
-	"github.com/stevenxie/api/pkg/spotify"
+	"github.com/stevenxie/api/pkg/music"
 )
 
 const extURLKeySpotify = "spotify"
 
-// GetCurrentlyPlaying returns the currently playing track.
-func (c *Client) GetCurrentlyPlaying() (*spotify.CurrentlyPlaying, error) {
+// CurrentlyPlaying returns the currently playing track.
+func (c *Client) CurrentlyPlaying() (*music.CurrentlyPlaying, error) {
 	cp, err := c.sc.PlayerCurrentlyPlaying()
 	if err != nil {
 		return nil, err
@@ -18,7 +18,7 @@ func (c *Client) GetCurrentlyPlaying() (*spotify.CurrentlyPlaying, error) {
 	// Derive track album.
 	var (
 		sa    = &cp.Item.Album
-		album = &spotify.Album{
+		album = &music.Album{
 			Name:   sa.Name,
 			URL:    extSpotifyURL(sa.ExternalURLs),
 			Images: sa.Images,
@@ -26,15 +26,15 @@ func (c *Client) GetCurrentlyPlaying() (*spotify.CurrentlyPlaying, error) {
 	)
 
 	// Derive track artists.
-	artists := make([]*spotify.Artist, len(cp.Item.Artists))
+	artists := make([]*music.Artist, len(cp.Item.Artists))
 	for i, a := range cp.Item.Artists {
-		artists[i] = &spotify.Artist{
+		artists[i] = &music.Artist{
 			Name: a.Name,
 			URL:  extSpotifyURL(a.ExternalURLs),
 		}
 	}
 
-	return &spotify.CurrentlyPlaying{
+	return &music.CurrentlyPlaying{
 		Name: cp.Item.Name,
 		Timestamp: time.Unix(
 			cp.Timestamp/1000,

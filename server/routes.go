@@ -18,6 +18,10 @@ func (srv *Server) registerRoutes() error {
 		"/nowplaying",
 		handler.NowPlayingHandler(srv.hlogger("nowplaying"), srv.currentlyPlaying),
 	)
+	e.GET(
+		"/productivity",
+		handler.ProductivityHandler(srv.hlogger("productivity"), srv.productivity),
+	)
 
 	return nil
 }

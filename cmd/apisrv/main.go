@@ -12,6 +12,7 @@ import (
 
 	"github.com/stevenxie/api/config"
 	"github.com/stevenxie/api/data/github"
+	"github.com/stevenxie/api/data/rescuetime"
 	"github.com/stevenxie/api/data/spotify"
 	"github.com/stevenxie/api/internal/cmdutil"
 	"github.com/stevenxie/api/internal/info"
@@ -74,11 +75,16 @@ func run(c *cli.Context) error {
 		return errors.Errorf("creating Spotify client: %w", err)
 	}
 
+	rtClient, err := rescuetime.New()
+	if err != nil {
+		return errors.Errorf("creating RescueTime client: %w", err)
+	}
+
 	// Create server.
 	logger.Info().Msg("Initializing server...")
 	var (
 		port = c.Int("port")
-		srv  = server.New(infoStore, spotifyClient, logger)
+		srv  = server.New(infoStore, rtClient, spotifyClient, logger)
 	)
 	// TODO: Shut down server gracefully.
 	if err = srv.ListenAndServe(fmt.Sprintf(":%d", port)); err != nil {

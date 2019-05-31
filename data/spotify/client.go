@@ -7,7 +7,7 @@ import (
 	"golang.org/x/oauth2"
 	errors "golang.org/x/xerrors"
 
-	abstract "github.com/stevenxie/api/pkg/spotify"
+	"github.com/stevenxie/api/pkg/music"
 	"github.com/zmb3/spotify"
 )
 
@@ -17,7 +17,7 @@ const Namespace = "spotify"
 // A Client can access the Spotify API.
 type Client struct{ sc spotify.Client }
 
-var _ abstract.CurrentlyPlayingService = (*Client)(nil)
+var _ music.CurrentlyPlayingService = (*Client)(nil)
 
 // New creates a new Spotify client.
 //
@@ -36,6 +36,6 @@ func New() (*Client, error) {
 	return &Client{sc: client}, nil
 }
 
-// ErrBadEnvToken means that no 'GITHUB_TOKEN' environment variable was found.
-var ErrBadEnvToken = errors.New("spotify: no such environment variable " +
-	"'SPOTIFY_TOKEN'")
+// ErrBadEnvToken means that no 'SPOTIFY_TOKEN' environment variable was found.
+var ErrBadEnvToken = errors.Errorf("spotify: no such environment variable "+
+	"'%s_TOKEN'", strings.ToUpper(Namespace))

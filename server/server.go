@@ -4,13 +4,13 @@ import (
 	"context"
 	"io/ioutil"
 
-	"github.com/stevenxie/api/pkg/spotify"
-
 	errors "golang.org/x/xerrors"
 
 	echo "github.com/labstack/echo/v4"
 	"github.com/rs/zerolog"
 	"github.com/stevenxie/api/pkg/about"
+	"github.com/stevenxie/api/pkg/metrics"
+	"github.com/stevenxie/api/pkg/music"
 )
 
 // Server serves the accounts REST API.
@@ -19,13 +19,15 @@ type Server struct {
 	logger zerolog.Logger
 
 	info             about.InfoStore
-	currentlyPlaying spotify.CurrentlyPlayingService
+	productivity     metrics.ProductivityService
+	currentlyPlaying music.CurrentlyPlayingService
 }
 
 // New creates a new Server.
 func New(
 	info about.InfoStore,
-	currentlyPlaying spotify.CurrentlyPlayingService,
+	productivity metrics.ProductivityService,
+	currentlyPlaying music.CurrentlyPlayingService,
 	l zerolog.Logger,
 ) *Server {
 	echo := echo.New()
@@ -35,6 +37,7 @@ func New(
 		echo:             echo,
 		logger:           l,
 		info:             info,
+		productivity:     productivity,
 		currentlyPlaying: currentlyPlaying,
 	}
 }

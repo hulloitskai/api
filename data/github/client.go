@@ -39,5 +39,5 @@ func New() (*Client, error) {
 }
 
 // ErrBadEnvToken means that no 'GITHUB_TOKEN' environment variable was found.
-var ErrBadEnvToken = errors.New("github: no such environment variable " +
-	"'GITHUB_TOKEN'")
+var ErrBadEnvToken = errors.Errorf("github: no such environment variable "+
+	"'%s_TOKEN'", strings.ToUpper(Namespace))

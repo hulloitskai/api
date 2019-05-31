@@ -1,4 +1,4 @@
-package spotify
+package music
 
 import (
 	"time"
@@ -6,13 +6,13 @@ import (
 	"github.com/zmb3/spotify"
 )
 
-// An Artist represents an artist on Spotify.
+// An Artist represents an artist that plays music.
 type Artist struct {
 	Name string `json:"name"`
 	URL  string `json:"url"`
 }
 
-// An Album represents an album on Spotify.
+// An Album represents an album of tracks.
 type Album struct {
 	Name   string          `json:"name"`
 	URL    string          `json:"url"`
@@ -32,5 +32,5 @@ type CurrentlyPlaying struct {
 
 // CurrentlyPlayingService can get the currently playing track.
 type CurrentlyPlayingService interface {
-	GetCurrentlyPlaying() (*CurrentlyPlaying, error)
+	CurrentlyPlaying() (*CurrentlyPlaying, error)
 }
