@@ -1,20 +1,27 @@
 package server
 
 import (
-	"github.com/stevenxie/api/server/handle"
+	"github.com/rs/zerolog"
+	"github.com/stevenxie/api/server/handler"
 )
 
-// registerRoutes registers the routes for srv.router.
-func (srv *Server) registerRoutes() {
-	r := srv.router
+func (srv *Server) registerRoutes() error {
+	e := srv.echo
 
-	// Register info handler.
-	info := handle.NewInfoHandler(srv.logger.Named("info"))
-	r.HEAD("/", info.GetInfo)
-	r.GET("/", info.GetInfo)
+	// Register error handler.
+	e.HTTPErrorHandler = handler.ErrorHandler(srv.hlogger("error"))
 
-	// Register mood handler.
-	moods := handle.NewMoodsHandler(srv.provider, srv.logger.Named("moods"))
-	r.GET("/moods", moods.ListMoods)
-	r.GET("/moods/:id", moods.GetMood)
+	// Register routes.
+	e.GET("/", handler.InfoHandler())
+	e.GET("/about", handler.AboutHandler(srv.hlogger("about"), srv.info))
+	e.GET(
+		"/nowplaying",
+		handler.NowPlayingHandler(srv.hlogger("nowplaying"), srv.currentlyPlaying),
+	)
+
+	return nil
+}
+
+func (srv *Server) hlogger(name string) zerolog.Logger {
+	return srv.logger.With().Str("handler", name).Logger()
 }

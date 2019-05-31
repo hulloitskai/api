@@ -1,35 +1,33 @@
-## ----- VARIABLES -----
-## Program version.
+# ----- VARIABLES -----
+# Program version.
 __TAG = $(shell git describe --tags 2> /dev/null)
 ifneq ($(__TAG),)
 	VERSION ?= $(shell echo "$(__TAG)" | cut -c 2-)
 else
-	VERSION ?= latest
+	VERSION ?= undefined
 endif
 
-## Go module name.
+# Go module name.
 GOMODULE = $(shell basename "$$(pwd)")
 ifeq ($(shell ls -1 go.mod 2> /dev/null),go.mod)
 	GOMODULE = $(shell cat go.mod | head -1 | awk '{print $$2}')
 endif
 
-## Custom Go linker flag.
+# Custom Go linker flag.
 LDFLAGS = -X $(GOMODULE)/internal/info.Version=$(VERSION)
 
-## Project variables:
+# Project variables:
 GOENV        ?= development
-GODEFAULTCMD =  server
-DKDIR        =  ./build
+GODEFAULTCMD =  apisrv
 
 
-## ----- TARGETS ------
-## Generic:
-.PHONY: default version setup install build clean run lint test review release \
-        help
+# ----- TARGETS ------
+# Generic:
+.PHONY: default version setup install build clean run lint test review help
 __ARGS = $(filter-out $@,$(MAKECMDGOALS))
 
 default: run
-version: ## Show project version (derived from 'git describe').
+version: # Show project version (derived from 'git describe').
 	@echo $(VERSION)
 
 setup: go-setup ## Set this project up on a new environment.
@@ -38,70 +36,41 @@ setup: go-setup ## Set this project up on a new environment.
 	 echo done
 install: go-install ## Install project dependencies.
 
-run: ## Run project (development).
+run: # Run project (development).
 	$(eval __ARGS := $(if $(__ARGS),$(__ARGS),$(GODEFAULTCMD)))
 	@GOENV="$(GOENV)" $(MAKE) go-run -- $(__ARGS)
-build: ## Build project.
+build: # Build project.
 	$(eval __ARGS := $(if $(__ARGS),$(__ARGS),$(GODEFAULTCMD)))
 	@$(MAKE) go-build -- $(__ARGS)
-clean: ## Clean build artifacts.
+clean: # Clean build artifacts.
 	@$(MAKE) go-clean -- $(__ARGS)
 
 lint: go-lint ## Lint and check code.
-test: ## Run tests.
+test: # Run tests.
 	@$(MAKE) go-test -- $(__ARGS)
-review: ## Lint code and run tests.
+review: # Lint code and run tests.
 	@$(MAKE) go-review -- $(__ARGS)
-release: ## Release / deploy this project.
-	@echo "No release procedure defined."
 
-## Show usage for the targets in this Makefile.
+# Show usage for the targets in this Makefile.
 help:
-	@grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | \
-	 awk 'BEGIN {FS = ":.*?## "}; {printf "\033[36m%-15s\033[0m %s\n", $$1, $$2}'
+	@grep -E '^[a-zA-Z_-]+:.*?# .*$$' $(MAKEFILE_LIST) | \
+	 awk 'BEGIN {FS = ":.*?# "}; {printf "\033[36m%-15s\033[0m %s\n", $$1, $$2}'
 
 
-## CI:
-.PHONY: ci-install ci-test ci-build ci-deploy
-
-BRANCH        ?= $(shell git rev-parse --abbrev-ref HEAD)
-RELEASEBRANCH ?= master
-
-ci-install:
-	@$(MAKE) DKFILE=build dk-pull && \
-	 $(MAKE) DKFILE=test  dk-pull
-ci-test:
-	@$(MAKE) dk-test -- $(__ARGS)
-ci-build:
-	@$(MAKE) DKFILE=build dk-build
-ci-deploy: SHELL := bash
-ci-deploy:
-	@if [ "$(BRANCH)" == "$(RELEASEBRANCH)" ]; then \
-	   VERSIONS="$(VERSION) latest"; \
-	 else \
-	   VERSIONS="$(BRANCH)-$$(git describe --always)"; \
-	 fi && \
-	 for VERSION in $$VERSIONS; do \
-	   $(MAKE) DKFILE=build dk-tag $$VERSION && \
-	   $(MAKE) DKFILE=build VERSION="$$VERSION" dk-push; \
-	 done && \
-	 $(MAKE) DKFILE=test dk-push
-
-
-## git-secret:
+# git-secret:
 .PHONY: secrets-hide secrets-reveal
-secrets-hide: ## Hides modified secret files using git-secret.
+secrets-hide: # Hides modified secret files using git-secret.
 	@echo "Hiding modified secret files..." && git secret hide -m $(__ARGS)
-secrets-reveal: ## Reveals secret files that were hidden using git-secret.
+secrets-reveal: # Reveals secret files that were hidden using git-secret.
 	@echo "Revealing hidden secret files..." && git secret reveal $(__ARGS)
 
 
-## Go:
+# Go:
 .PHONY: go-setup go-install go-deps go-build go-clean go-run go-lint go-test \
         go-bench go-review
 
 go-setup: go-install go-deps
-go-deps: ## Verify and tidy project dependencies.
+go-deps: # Verify and tidy project dependencies.
 	@echo "Verifying module dependencies..." && \
 	 go mod verify && \
 	 echo "Tidying module dependencies..." && \
@@ -144,11 +113,14 @@ go-lint:
 	 else \
 	   echo "'goimports' not installed, skipping format step."; \
 	 fi && \
-	 if command -v golint > /dev/null; then \
+	 if command -v revive > /dev/null; then \
+	   echo "Linting code with 'revive'..." && \
+	   revive -config .revive.toml ./...; EXIT="$$((EXIT | $$?))"; \
+	 elif command -v golint > /dev/null; then \
 	   echo "Linting code with 'golint'..." && \
 	   golint -set_exit_status ./...; EXIT="$$((EXIT | $$?))"; \
 	 else \
-	   echo "'golint' not installed, skipping linting step."; \
+	   echo "Neither 'revive' nor 'golint' is installed, skipping linting step."; \
 	 fi && \
 	 echo "Checking code with 'go vet'..." && go vet ./... && \
 	 echo done && exit $$EXIT
@@ -165,84 +137,14 @@ __GOTEST = \
 	  $(GOBUILDFLAGS) $(GOTESTFLAGS)
 go-test:
 	@echo "Running tests with 'go test':" && $(__GOTEST) ./... $(__ARGS)
-go-bench: ## Run benchmarks.
+go-bench: # Run benchmarks.
 	@echo "Running benchmarks with 'go test -bench=.'..." && \
 	 $(__GOTEST) -run=^$$ -bench=. -benchmem ./... $(__ARGS)
 
 
-## Docker:
-.PHONY: dk-pull dk-push dk-build dk-build-push dk-clean dk-tag dk-up \
-        dk-build-up dk-down dk-logs dk-test
-
-DKDIR ?= .
-
-__DKFILE = $(DKDIR)/docker-compose.yml
-ifneq ($(DKFILE),)
-	__DKFILE = $(DKDIR)/docker-compose.$(DKFILE).yml
-endif
-
-__DK        = docker
-__DKCMP     = docker-compose -f "$(__DKFILE)"
-__DKCMP_VER = VERSION="$(VERSION)" $(__DKCMP)
-__DKCMP_LST = VERSION=latest $(__DKCMP)
-
-dk-pull: ## Pull latest Docker images from registry.
-	@echo "Pulling latest images from registry..." && \
-	 $(__DKCMP_LST) pull $(__ARGS)
-dk-push: ## Push new Docker images to registry.
-	@echo "Pushing images to registry (:$(VERSION))..." && \
-	 $(__DKCMP_VER) push $(__ARGS) && \
-	 echo done
-
-dk-build: ## Build and tag Docker images.
-	@echo "Building images..." && \
-	 $(__DKCMP_VER) build --parallel --compress $(__ARGS) && \
-	 echo done
-dk-clean: ## Clean up unused Docker data.
-	@echo "Cleaning unused data..." && $(__DK) system prune $(__ARGS)
-dk-tag: ## Re-tag Docker images with other names.
-	@TAG=latest && if [ -n "$(__ARGS)" ]; then TAG="$(__ARGS)"; fi && \
-	 echo "Tagging versioned images with ':$$TAG'..." && \
-	 IMAGES="$$($(__DKCMP_VER) config | grep image | awk '{print $$2}')" && \
-	 for IMG in $$IMAGES; do \
-	   if [ -z "$$($(__DK) images -q "$$IMG" 2> /dev/null)" ]; then \
-	     continue; \
-	   fi && \
-	   echo "$$IMG" | sed -e "s/:.*$$/:$$TAG/" | xargs $(__DK) tag "$$IMG"; \
-	 done && \
-	 echo done
-dk-build-push: dk-build dk-push ## Build and push new Docker images.
-
-__DK_UP = $(__DKCMP_VER) up
-dk-up: ## Start up containerized services.
-	@echo "Bringing up services..." && $(__DK_UP) $(__ARGS) && echo done
-dk-down: ## Shut down containerized services.
-	@echo "Bringing down services..." && \
-	 $(__DKCMP_VER) down $(__ARGS) && \
-	 echo done
-dk-build-up: ## Build new images, then start them.
-	@echo "Building and bringing up services..." && \
-	 $(__DK_UP) --build $(__ARGS) && \
-	 echo done
-
-dk-logs: ## Show logs for containerized services.
-	@$(__DKCMP_VER) logs -f $(__ARGS)
-dk-test: ## Test using 'docker-compose.test.yml'.
-	$(eval __DKFILE = $(DKDIR)/docker-compose.test.yml)
-	@if [ -s "$(__DKFILE)" ]; then \
-	   echo "Running containerized service tests..." && \
-	   for svc in $$($(__DKCMP_LST) config --services); do \
-	     if ! $(__DK_UP) --abort-on-container-exit $(__ARGS) "$$svc"; \
-	       then exit -1; \
-	     fi \
-	   done; \
-	 fi && \
-	 echo done
-
-
-## HACKS:
-## These targets are hacks that allow for Make targets to receive
-## pseudo-arguments.
+# HACKS:
+# These targets are hacks that allow for Make targets to receive
+# pseudo-arguments.
 .PHONY: __FORCE
 __FORCE:
 %: __FORCE

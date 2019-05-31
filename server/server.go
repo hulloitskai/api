@@ -2,77 +2,61 @@ package server
 
 import (
 	"context"
-	"net/http"
-	"time"
+	"io/ioutil"
 
-	"go.uber.org/zap"
+	"github.com/stevenxie/api/pkg/spotify"
 
-	"github.com/julienschmidt/httprouter"
-	"github.com/stevenxie/api"
-	"github.com/stevenxie/api/internal/util"
+	errors "golang.org/x/xerrors"
+
+	echo "github.com/labstack/echo/v4"
+	"github.com/rs/zerolog"
+	"github.com/stevenxie/api/pkg/about"
 )
 
-// Server serves a REST API for the services defined in package api.
+// Server serves the accounts REST API.
 type Server struct {
-	provider Provider
-	httpsrv  *http.Server
-	router   *httprouter.Router
-	logger   *zap.SugaredLogger
+	echo   *echo.Echo
+	logger zerolog.Logger
 
-	shutdownTimeout time.Duration
-}
-
-// Provider provides the underlying services required by a Router.
-type Provider interface {
-	api.MoodService
+	info             about.InfoStore
+	currentlyPlaying spotify.CurrentlyPlayingService
 }
 
 // New creates a new Server.
-func New(p Provider) *Server {
-	router := httprouter.New()
-	router.RedirectTrailingSlash = false
+func New(
+	info about.InfoStore,
+	currentlyPlaying spotify.CurrentlyPlayingService,
+	l zerolog.Logger,
+) *Server {
+	echo := echo.New()
+	echo.Logger.SetOutput(ioutil.Discard) // disable logger
 
-	srv := &Server{
-		provider: p,
-		router:   router,
-		httpsrv:  new(http.Server),
-		logger:   util.NoopLogger,
+	return &Server{
+		echo:             echo,
+		logger:           l,
+		info:             info,
+		currentlyPlaying: currentlyPlaying,
 	}
-	srv.registerRoutes()
-	return srv
 }
 
-// SetShutdownTimeout sets the shutdown timeout for srv.
-func (srv *Server) SetShutdownTimeout(timeout time.Duration) {
-	srv.shutdownTimeout = timeout
-}
-
-// SetLogger sets a zap.SugaredLogger for srv.
-func (srv *Server) SetLogger(logger *zap.SugaredLogger) {
-	if logger == nil {
-		logger = util.NoopLogger
-	}
-	srv.logger = logger
-}
-
-// ListenAndServe starts the server, and listens for connections on addr.
+// ListenAndServe listens and serves on the specified address.
 func (srv *Server) ListenAndServe(addr string) error {
-	srv.httpsrv.Handler = srv.buildHandler()
-	srv.httpsrv.Addr = addr
-	srv.l().Infof("Listening on address '%s'...", addr)
-	return srv.httpsrv.ListenAndServe()
+	if addr == "" {
+		return errors.New("server: addr must be non-empty")
+	}
+
+	// Register routes.
+	if err := srv.registerRoutes(); err != nil {
+		return errors.Errorf("server: registering routes: %w", err)
+	}
+
+	// Listen for connections.
+	srv.logger.Info().Str("addr", addr).Msg("Listening for connections...")
+	return srv.echo.Start(addr)
 }
 
-// Shutdown gracefully shuts down the server.
-func (srv *Server) Shutdown() error {
-	ctx, cancel := srv.shutdownContext()
-	defer cancel()
-	return srv.httpsrv.Shutdown(ctx)
+// Shutdown shuts down the server gracefully without interupting any active
+// connections.
+func (srv *Server) Shutdown(ctx context.Context) error {
+	return srv.echo.Shutdown(ctx)
 }
-
-// shutdownContext creates a context.Context used for shutting down a server.
-func (srv *Server) shutdownContext() (context.Context, context.CancelFunc) {
-	return util.ContextWithTimeout(srv.shutdownTimeout)
-}
-
-func (srv *Server) l() *zap.SugaredLogger { return srv.logger }

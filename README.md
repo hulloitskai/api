@@ -2,8 +2,7 @@
 
 _A personal API._
 
-[![Github: Tag][tag-img]][tag]
-[![Travis: Build][travis-img]][travis]
+[![GitHub Tag][tag-img]][tag]
 [![Go Report Card][grp-img]][grp]
 [![Microbadger][microbadger-img]][microbadger]
 

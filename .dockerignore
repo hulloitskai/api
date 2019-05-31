@@ -1,48 +1,54 @@
-## [Repository]
-## API:
-/*api*
-!/*api*.*
-/*api*.exe
-
-## Secrets:
+##
+## REPOSITORY
+##
 .env
 .env.local
 
 
-## [Go]
+##
+## GO
+##
 /dist/
 coverage.out
 
 
-## [Git]
+##
+## GIT
+##
 .githooks/
 .gitignore
 
-## git-secret:
+# git-secret:
 .gitsecret/
 *.secret
 
 
-## [Docker]
+##
+## DOCKER
+##
 .dockerignore
 
 
-## [Miscellaneous]
+##
+## MISC
+##
 .editorconfig
 README.md
 
 
-## [System Files]
-## macOS:
+##
+## SYS
+##
+# macOS:
 .DS_Store
 .DS_Store?
 *.swp
 
-## Windows:
+# Windows:
 Thumbs.db
 
-## VSCode
+# VSCode:
 .vscode/*
 
-## IntelliJ
+# IntelliJ:
 .idea/
