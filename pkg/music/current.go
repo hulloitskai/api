@@ -23,6 +23,7 @@ type Album struct {
 type CurrentlyPlaying struct {
 	Name      string    `json:"name"`
 	Timestamp time.Time `json:"timestamp"`
+	Playing   bool      `json:"playing"`
 	Progress  int       `json:"progress"`
 	Duration  int       `json:"duration"`
 	URL       string    `json:"url"`

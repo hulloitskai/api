@@ -45,6 +45,7 @@ func (c *Client) CurrentlyPlaying() (*music.CurrentlyPlaying, error) {
 			cp.Timestamp/1000,
 			(cp.Timestamp%1000)*int64((time.Millisecond/time.Nanosecond)),
 		),
+		Playing:  cp.Playing,
 		Progress: cp.Progress,
 		Duration: cp.Item.Duration,
 		URL:      extSpotifyURL(cp.Item.ExternalURLs),
