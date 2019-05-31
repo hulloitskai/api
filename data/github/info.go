@@ -16,10 +16,10 @@ type InfoStore struct {
 
 // A GistRepo can retrieve gist data.
 type GistRepo interface {
-	GetGistFile(id, file string) ([]byte, error)
+	GistFile(id, file string) ([]byte, error)
 }
 
-var _ about.InfoStore = (*InfoStore)(nil)
+var _ about.InfoService = (*InfoStore)(nil)
 
 // NewInfoStore creates a new InfoStore that reads Info from a GitHub gist.
 func NewInfoStore(gr GistRepo, gistID, file string) *InfoStore {
@@ -30,9 +30,9 @@ func NewInfoStore(gr GistRepo, gistID, file string) *InfoStore {
 	}
 }
 
-// LoadInfo gets an Info from the store.
-func (is *InfoStore) LoadInfo() (*about.Info, error) {
-	raw, err := is.repo.GetGistFile(is.gistID, is.file)
+// Info retrieves Info from a GitHub gist.
+func (is *InfoStore) Info() (*about.Info, error) {
+	raw, err := is.repo.GistFile(is.gistID, is.file)
 	if err != nil {
 		return nil, errors.Errorf("github: getting gist: %w", err)
 	}

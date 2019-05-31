@@ -1,6 +1,7 @@
 package handler
 
 import (
+	"context"
 	"fmt"
 	"io"
 	"net/http"
@@ -69,4 +70,15 @@ func ErrorHandler(l zerolog.Logger) echo.HTTPErrorHandler {
 			l.Err(err).Msg(msg)
 		}
 	}
+}
+
+// setRequestStatusCode inserts the status code 'code' into the request context,
+// tor use with ErrorHandler.
+func setRequestStatusCode(c echo.Context, code int) {
+	var (
+		req  = c.Request()
+		ctx  = context.WithValue(req.Context(), StatusCodeContextKey, code)
+		nreq = req.WithContext(ctx)
+	)
+	c.SetRequest(nreq)
 }

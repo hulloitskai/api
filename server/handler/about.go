@@ -9,9 +9,9 @@ import (
 )
 
 // AboutHandler responds with personal data.
-func AboutHandler(l zerolog.Logger, store about.InfoStore) echo.HandlerFunc {
+func AboutHandler(l zerolog.Logger, svc about.InfoService) echo.HandlerFunc {
 	return func(c echo.Context) error {
-		info, err := store.LoadInfo()
+		info, err := svc.Info()
 		if err != nil {
 			l.Err(err).Msg("Failed to load info from store.")
 			return errors.Errorf("loading info from store: %w", err)

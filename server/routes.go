@@ -22,6 +22,10 @@ func (srv *Server) registerRoutes() error {
 		"/productivity",
 		handler.ProductivityHandler(srv.hlogger("productivity"), srv.productivity),
 	)
+	e.GET("/commits", handler.RecentCommitsHandler(
+		srv.hlogger("recent_commits"),
+		srv.recentCommits,
+	))
 
 	return nil
 }

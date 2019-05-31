@@ -6,8 +6,12 @@ import (
 	"os"
 	"strings"
 
+	"github.com/stevenxie/api/pkg/git"
+
 	"golang.org/x/oauth2"
 	errors "golang.org/x/xerrors"
+
+	"github.com/google/go-github/v25/github"
 )
 
 // Namespace is the package namespace, used for things like envvars.
@@ -15,10 +19,14 @@ const Namespace = "github"
 
 // A Client can access the GitHub API.
 type Client struct {
+	ghc   *github.Client
 	httpc *http.Client
 }
 
-var _ GistRepo = (*Client)(nil)
+var (
+	_ GistRepo                 = (*Client)(nil)
+	_ git.RecentCommitsService = (*Client)(nil)
+)
 
 // New creates a new GitHub client.
 //
@@ -35,7 +43,10 @@ func New() (*Client, error) {
 		source = oauth2.StaticTokenSource(&oauth2.Token{AccessToken: token})
 		client = oauth2.NewClient(context.Background(), source)
 	)
-	return &Client{httpc: client}, nil
+	return &Client{
+		ghc:   github.NewClient(client),
+		httpc: client,
+	}, nil
 }
 
 // ErrBadEnvToken means that no 'GITHUB_TOKEN' environment variable was found.

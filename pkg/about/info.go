@@ -16,9 +16,9 @@ type Info struct {
 	Whereabouts string
 }
 
-// An InfoStore holds Info.
-type InfoStore interface {
-	LoadInfo() (*Info, error)
+// An InfoService can get Info.
+type InfoService interface {
+	Info() (*Info, error)
 }
 
 //revive:disable

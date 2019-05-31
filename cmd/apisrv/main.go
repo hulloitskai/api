@@ -64,11 +64,12 @@ func run(c *cli.Context) error {
 
 	// Construct services.
 	logger.Info().Msg("Constructing services...")
-	github, err := github.New()
+	githubClient, err := github.New()
 	if err != nil {
 		return errors.Errorf("creating GitHub client: %w", err)
 	}
-	infoStore := cfg.BuildInfoStore(github)
+
+	infoStore := cfg.BuildInfoStore(githubClient)
 
 	spotifyClient, err := spotify.New()
 	if err != nil {
@@ -84,7 +85,7 @@ func run(c *cli.Context) error {
 	logger.Info().Msg("Initializing server...")
 	var (
 		port = c.Int("port")
-		srv  = server.New(infoStore, rtClient, spotifyClient, logger)
+		srv  = server.New(infoStore, rtClient, githubClient, spotifyClient, logger)
 	)
 	// TODO: Shut down server gracefully.
 	if err = srv.ListenAndServe(fmt.Sprintf(":%d", port)); err != nil {

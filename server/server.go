@@ -8,7 +8,9 @@ import (
 
 	echo "github.com/labstack/echo/v4"
 	"github.com/rs/zerolog"
+
 	"github.com/stevenxie/api/pkg/about"
+	"github.com/stevenxie/api/pkg/git"
 	"github.com/stevenxie/api/pkg/metrics"
 	"github.com/stevenxie/api/pkg/music"
 )
@@ -18,15 +20,17 @@ type Server struct {
 	echo   *echo.Echo
 	logger zerolog.Logger
 
-	info             about.InfoStore
+	info             about.InfoService
 	productivity     metrics.ProductivityService
+	recentCommits    git.RecentCommitsService
 	currentlyPlaying music.CurrentlyPlayingService
 }
 
 // New creates a new Server.
 func New(
-	info about.InfoStore,
+	info about.InfoService,
 	productivity metrics.ProductivityService,
+	recentCommits git.RecentCommitsService,
 	currentlyPlaying music.CurrentlyPlayingService,
 	l zerolog.Logger,
 ) *Server {
@@ -38,6 +42,7 @@ func New(
 		logger:           l,
 		info:             info,
 		productivity:     productivity,
+		recentCommits:    recentCommits,
 		currentlyPlaying: currentlyPlaying,
 	}
 }
