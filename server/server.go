@@ -9,10 +9,7 @@ import (
 	echo "github.com/labstack/echo/v4"
 	"github.com/rs/zerolog"
 
-	"github.com/stevenxie/api/pkg/about"
-	"github.com/stevenxie/api/pkg/git"
-	"github.com/stevenxie/api/pkg/metrics"
-	"github.com/stevenxie/api/pkg/music"
+	"github.com/stevenxie/api/pkg/api"
 )
 
 // Server serves the accounts REST API.
@@ -20,30 +17,30 @@ type Server struct {
 	echo   *echo.Echo
 	logger zerolog.Logger
 
-	info             about.InfoService
-	productivity     metrics.ProductivityService
-	recentCommits    git.RecentCommitsService
-	currentlyPlaying music.CurrentlyPlayingService
+	about        api.AboutService
+	productivity api.ProductivityService
+	gitCommits   api.GitCommitsService
+	nowPlaying   api.NowPlayingService
 }
 
 // New creates a new Server.
 func New(
-	info about.InfoService,
-	productivity metrics.ProductivityService,
-	recentCommits git.RecentCommitsService,
-	currentlyPlaying music.CurrentlyPlayingService,
+	about api.AboutService,
+	productivity api.ProductivityService,
+	gitCommits api.GitCommitsService,
+	nowPlaying api.NowPlayingService,
 	l zerolog.Logger,
 ) *Server {
 	echo := echo.New()
 	echo.Logger.SetOutput(ioutil.Discard) // disable logger
 
 	return &Server{
-		echo:             echo,
-		logger:           l,
-		info:             info,
-		productivity:     productivity,
-		recentCommits:    recentCommits,
-		currentlyPlaying: currentlyPlaying,
+		echo:         echo,
+		logger:       l,
+		about:        about,
+		productivity: productivity,
+		gitCommits:   gitCommits,
+		nowPlaying:   nowPlaying,
 	}
 }
 

@@ -7,7 +7,7 @@ import (
 	"golang.org/x/oauth2"
 	errors "golang.org/x/xerrors"
 
-	"github.com/stevenxie/api/pkg/music"
+	"github.com/stevenxie/api/pkg/api"
 	"github.com/zmb3/spotify"
 )
 
@@ -17,7 +17,7 @@ const Namespace = "spotify"
 // A Client can access the Spotify API.
 type Client struct{ sc spotify.Client }
 
-var _ music.CurrentlyPlayingService = (*Client)(nil)
+var _ api.NowPlayingService = (*Client)(nil)
 
 // New creates a new Spotify client.
 //

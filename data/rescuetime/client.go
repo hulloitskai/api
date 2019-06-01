@@ -5,7 +5,7 @@ import (
 	"os"
 	"strings"
 
-	"github.com/stevenxie/api/pkg/metrics"
+	"github.com/stevenxie/api/pkg/api"
 	errors "golang.org/x/xerrors"
 )
 
@@ -18,7 +18,7 @@ type Client struct {
 	key   string
 }
 
-var _ metrics.ProductivityService = (*Client)(nil)
+var _ api.ProductivityService = (*Client)(nil)
 
 // New creates a new Client.
 //

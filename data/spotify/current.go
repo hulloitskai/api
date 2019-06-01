@@ -4,14 +4,14 @@ import (
 	"io"
 	"time"
 
-	"github.com/stevenxie/api/pkg/music"
+	"github.com/stevenxie/api/pkg/api"
 	errors "golang.org/x/xerrors"
 )
 
 const extURLKeySpotify = "spotify"
 
-// CurrentlyPlaying returns the currently playing track.
-func (c *Client) CurrentlyPlaying() (*music.CurrentlyPlaying, error) {
+// NowPlaying returns the currently playing track.
+func (c *Client) NowPlaying() (*api.NowPlaying, error) {
 	cp, err := c.sc.PlayerCurrentlyPlaying()
 	if err != nil {
 		if errors.Is(err, io.EOF) { // if EOF, return nill (no current playing song)
@@ -23,7 +23,7 @@ func (c *Client) CurrentlyPlaying() (*music.CurrentlyPlaying, error) {
 	// Derive track album.
 	var (
 		sa    = &cp.Item.Album
-		album = &music.Album{
+		album = &api.MusicAlbum{
 			Name:   sa.Name,
 			URL:    extSpotifyURL(sa.ExternalURLs),
 			Images: sa.Images,
@@ -31,16 +31,15 @@ func (c *Client) CurrentlyPlaying() (*music.CurrentlyPlaying, error) {
 	)
 
 	// Derive track artists.
-	artists := make([]*music.Artist, len(cp.Item.Artists))
+	artists := make([]*api.MusicArtist, len(cp.Item.Artists))
 	for i, a := range cp.Item.Artists {
-		artists[i] = &music.Artist{
+		artists[i] = &api.MusicArtist{
 			Name: a.Name,
 			URL:  extSpotifyURL(a.ExternalURLs),
 		}
 	}
 
-	return &music.CurrentlyPlaying{
-		Name: cp.Item.Name,
+	return &api.NowPlaying{
 		Timestamp: time.Unix(
 			cp.Timestamp/1000,
 			(cp.Timestamp%1000)*int64((time.Millisecond/time.Nanosecond)),
@@ -48,9 +47,12 @@ func (c *Client) CurrentlyPlaying() (*music.CurrentlyPlaying, error) {
 		Playing:  cp.Playing,
 		Progress: cp.Progress,
 		Duration: cp.Item.Duration,
-		URL:      extSpotifyURL(cp.Item.ExternalURLs),
-		Artists:  artists,
-		Album:    album,
+		Track: &api.MusicTrack{
+			Name:    cp.Item.Name,
+			URL:     extSpotifyURL(cp.Item.ExternalURLs),
+			Artists: artists,
+			Album:   album,
+		},
 	}, nil
 }
 

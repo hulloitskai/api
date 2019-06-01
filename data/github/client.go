@@ -6,12 +6,11 @@ import (
 	"os"
 	"strings"
 
-	"github.com/stevenxie/api/pkg/git"
-
 	"golang.org/x/oauth2"
 	errors "golang.org/x/xerrors"
 
 	"github.com/google/go-github/v25/github"
+	"github.com/stevenxie/api/pkg/api"
 )
 
 // Namespace is the package namespace, used for things like envvars.
@@ -24,8 +23,8 @@ type Client struct {
 }
 
 var (
-	_ GistRepo                 = (*Client)(nil)
-	_ git.RecentCommitsService = (*Client)(nil)
+	_ GistRepo              = (*Client)(nil)
+	_ api.GitCommitsService = (*Client)(nil)
 )
 
 // New creates a new GitHub client.

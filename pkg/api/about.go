@@ -1,4 +1,4 @@
-package about
+package api
 
 import (
 	"encoding/json"
@@ -6,8 +6,8 @@ import (
 	"time"
 )
 
-// Info provides information about me.
-type Info struct {
+// About provides information about me.
+type About struct {
 	Name        string
 	Type        string
 	Age         time.Duration
@@ -16,13 +16,11 @@ type Info struct {
 	Whereabouts string
 }
 
-// An InfoService can get Info.
-type InfoService interface {
-	Info() (*Info, error)
-}
+// An AboutService can get About info.
+type AboutService interface{ About() (*About, error) }
 
 //revive:disable
-func (i *Info) MarshalJSON() ([]byte, error) {
+func (a *About) MarshalJSON() ([]byte, error) {
 	return json.Marshal(&struct {
 		Name        string   `json:"name"`
 		Type        string   `json:"type"`
@@ -31,10 +29,10 @@ func (i *Info) MarshalJSON() ([]byte, error) {
 		Skills      []string `json:"skills"`
 		Whereabouts string   `json:"whereabouts"`
 	}{
-		Name:        i.Name,
-		Type:        i.Type,
-		Age:         fmt.Sprintf("about %d years", int(i.Age.Hours())/(365*24)),
-		Skills:      i.Skills,
-		Whereabouts: i.Whereabouts,
+		Name:        a.Name,
+		Type:        a.Type,
+		Age:         fmt.Sprintf("about %d years", int(a.Age.Hours())/(365*24)),
+		Skills:      a.Skills,
+		Whereabouts: a.Whereabouts,
 	})
 }

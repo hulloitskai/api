@@ -40,6 +40,7 @@ func main() {
 		if err != nil {
 			http.Error(w, fmt.Sprintf("failed to extract token: %v", err),
 				http.StatusBadRequest)
+			return // break early
 		}
 		io.WriteString(w, token.RefreshToken)
 	})

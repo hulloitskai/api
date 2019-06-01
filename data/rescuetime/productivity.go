@@ -5,15 +5,15 @@ import (
 	"net/url"
 	"time"
 
-	"github.com/stevenxie/api/pkg/metrics"
+	"github.com/stevenxie/api/pkg/api"
 	errors "golang.org/x/xerrors"
 )
 
 const baseURL = "https://www.rescuetime.com/anapi/data"
 
-// CurrentProductivity gets the current metrics.Productivity values from
+// CurrentProductivity gets the current api.Productivity values from
 // RescueTime.
-func (c *Client) CurrentProductivity() (*metrics.Productivity, error) {
+func (c *Client) CurrentProductivity() (*api.Productivity, error) {
 	nowstr := time.Now().Format("2006-01-02")
 
 	// Build query params.
@@ -44,7 +44,7 @@ func (c *Client) CurrentProductivity() (*metrics.Productivity, error) {
 	}
 
 	// Parse productivity data.
-	prod := new(metrics.Productivity)
+	prod := new(api.Productivity)
 	for _, row := range data.Rows {
 		val := row[1]
 		switch row[3] {

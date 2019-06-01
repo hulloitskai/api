@@ -3,12 +3,12 @@ package handler
 import (
 	echo "github.com/labstack/echo/v4"
 	"github.com/rs/zerolog"
-	"github.com/stevenxie/api/pkg/metrics"
+	"github.com/stevenxie/api/pkg/api"
 )
 
 // ProductivityHandler handles requests for productivity metrics.
 func ProductivityHandler(
-	svc metrics.ProductivityService,
+	svc api.ProductivityService,
 	l zerolog.Logger,
 ) echo.HandlerFunc {
 	return func(c echo.Context) error {

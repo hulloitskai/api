@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/stevenxie/api/pkg/git"
+	"github.com/stevenxie/api/pkg/gitutil"
 
 	errors "golang.org/x/xerrors"
 
@@ -68,19 +68,18 @@ func run(c *cli.Context) error {
 	// Construct services:
 	logger.Info().Msg("Constructing services...")
 
-	// Create recent commits cache and info store.
+	// Create commits loader and about service.
 	githubClient, err := github.New()
 	if err != nil {
 		return errors.Errorf("creating GitHub client: %w", err)
 	}
-	// TODO: Construct cache with a context that corresponds to the server
-	// lifetime.
-	recentCommitsWithCache := git.WithUpdatingCache(
+	// TODO: Use a context that corresponds to the server lifetime.
+	commitLoader := cfg.BuildCommitLoader(
 		context.Background(),
 		githubClient,
-		logger.With().Str("service", "recent_commits").Logger(),
+		gitutil.WithLogger(logger.With().Str("service", "commit_loader").Logger()),
 	)
-	infoStore := cfg.BuildInfoStore(githubClient)
+	aboutService := cfg.BuildAboutService(githubClient)
 
 	// Create Spotify client.
 	spotifyClient, err := spotify.New()
@@ -99,9 +98,9 @@ func run(c *cli.Context) error {
 	var (
 		port = c.Int("port")
 		srv  = server.New(
-			infoStore,
+			aboutService,
 			rtClient,
-			recentCommitsWithCache,
+			commitLoader,
 			spotifyClient,
 			logger,
 		)

@@ -13,17 +13,17 @@ func (srv *Server) registerRoutes() error {
 
 	// Register routes.
 	e.GET("/", handler.InfoHandler())
-	e.GET("/about", handler.AboutHandler(srv.info, srv.hlogger("about")))
+	e.GET("/about", handler.AboutHandler(srv.about, srv.hlogger("about")))
 	e.GET(
 		"/nowplaying",
-		handler.NowPlayingHandler(srv.currentlyPlaying, srv.hlogger("nowplaying")),
+		handler.NowPlayingHandler(srv.nowPlaying, srv.hlogger("nowplaying")),
 	)
 	e.GET(
 		"/productivity",
 		handler.ProductivityHandler(srv.productivity, srv.hlogger("productivity")),
 	)
 	e.GET("/commits", handler.RecentCommitsHandler(
-		srv.recentCommits,
+		srv.gitCommits,
 		srv.hlogger("recent_commits"),
 	))
 

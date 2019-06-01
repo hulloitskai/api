@@ -6,7 +6,7 @@ import (
 	errors "golang.org/x/xerrors"
 
 	"github.com/google/go-github/v25/github"
-	"github.com/stevenxie/api/pkg/git"
+	"github.com/stevenxie/api/pkg/api"
 )
 
 const (
@@ -14,22 +14,22 @@ const (
 	maxEventsPage = 10
 )
 
-// RecentCommits retrieves the latest `limit` Git commits across unique
+// RecentGitCommits retrieves the latest `limit` Git commits across unique
 // repositories.
-func (c *Client) RecentCommits(limit int) ([]*git.Commit, error) {
+func (c *Client) RecentGitCommits(limit int) ([]*api.GitCommit, error) {
 	return c.recentCommits(
 		limit,
 		0,
-		make([]*git.Commit, 0, limit),
+		make([]*api.GitCommit, 0, limit),
 		make(map[string]struct{}),
 	)
 }
 
 func (c *Client) recentCommits(
 	limit, page int,
-	commits []*git.Commit,
+	commits []*api.GitCommit,
 	seenRepos map[string]struct{},
-) ([]*git.Commit, error) {
+) ([]*api.GitCommit, error) {
 	// Get current user.
 	login, err := c.CurrentUserLogin()
 	if err != nil {
@@ -69,13 +69,13 @@ func (c *Client) recentCommits(
 		commit := pushPayload.Commits[0]
 		var (
 			repo = e.GetRepo()
-			cm   = &git.Commit{
+			cm   = &api.GitCommit{
 				SHA:       commit.GetSHA(),
 				Author:    commit.GetAuthor(),
 				Committer: commit.GetCommitter(),
 				Message:   commit.GetMessage(),
 				URL:       commit.GetURL(),
-				Repo: &git.Repo{
+				Repo: &api.GitRepo{
 					Name: repo.GetName(),
 					URL:  repo.GetURL(),
 				},

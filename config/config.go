@@ -1,6 +1,8 @@
 package config
 
 import (
+	"time"
+
 	validator "gopkg.in/go-validator/validator.v2"
 )
 
@@ -13,6 +15,11 @@ type Config struct {
 			File string `yaml:"file" valid:"nonzero"`
 		} `yaml:"gist"`
 	} `yaml:"about"`
+
+	Commits struct {
+		Limit    *int           `yaml:"limit"`
+		Interval *time.Duration `yaml:"interval"`
+	} `yaml:"commits"`
 }
 
 func defaultConfig() *Config {

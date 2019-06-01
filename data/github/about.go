@@ -4,12 +4,12 @@ import (
 	"encoding/json"
 	"time"
 
-	"github.com/stevenxie/api/pkg/about"
+	"github.com/stevenxie/api/pkg/api"
 	errors "golang.org/x/xerrors"
 )
 
-// InfoStore reads an about.Info from a file stored in Github Gists.
-type InfoStore struct {
+// AboutService reads an about.Info from a file stored in Github Gists.
+type AboutService struct {
 	repo         GistRepo
 	gistID, file string
 }
@@ -19,27 +19,28 @@ type GistRepo interface {
 	GistFile(id, file string) ([]byte, error)
 }
 
-var _ about.InfoService = (*InfoStore)(nil)
+var _ api.AboutService = (*AboutService)(nil)
 
-// NewInfoStore creates a new InfoStore that reads Info from a GitHub gist.
-func NewInfoStore(gr GistRepo, gistID, file string) *InfoStore {
-	return &InfoStore{
+// NewAboutService creates a new AboutService that reads Info from a GitHub
+// gist.
+func NewAboutService(gr GistRepo, gistID, file string) *AboutService {
+	return &AboutService{
 		repo:   gr,
 		gistID: gistID,
 		file:   file,
 	}
 }
 
-// Info retrieves Info from a GitHub gist.
-func (is *InfoStore) Info() (*about.Info, error) {
-	raw, err := is.repo.GistFile(is.gistID, is.file)
+// About retrieves About info from a GitHub gist.
+func (as *AboutService) About() (*api.About, error) {
+	raw, err := as.repo.GistFile(as.gistID, as.file)
 	if err != nil {
 		return nil, errors.Errorf("github: getting gist: %w", err)
 	}
 
 	// Decode gist contents.
 	var data struct {
-		*about.Info
+		*api.About
 		Birthday string `json:"birthday"`
 	}
 	if err = json.Unmarshal(raw, &data); err != nil {
@@ -53,12 +54,12 @@ func (is *InfoStore) Info() (*about.Info, error) {
 		return nil, errors.Errorf("github: failed to parse birthday '%s': %w",
 			data.Birthday, err)
 	}
-	data.Info.Age = time.Since(bday).Truncate(365 * 24 * time.Hour)
+	data.About.Age = time.Since(bday).Truncate(365 * 24 * time.Hour)
 
 	// Fill missing values.
-	if data.Info.Whereabouts == "" {
-		data.Info.Whereabouts = "Unknown (unimplemented)"
+	if data.About.Whereabouts == "" {
+		data.About.Whereabouts = "Unknown (unimplemented)"
 	}
 
-	return data.Info, nil
+	return data.About, nil
 }

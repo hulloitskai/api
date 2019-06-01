@@ -8,12 +8,12 @@ import (
 
 	echo "github.com/labstack/echo/v4"
 	"github.com/rs/zerolog"
-	"github.com/stevenxie/api/pkg/git"
+	"github.com/stevenxie/api/pkg/api"
 )
 
 // RecentCommitsHandler handles requests for recent commits that I've made.
 func RecentCommitsHandler(
-	svc git.RecentCommitsService,
+	svc api.GitCommitsService,
 	l zerolog.Logger,
 ) echo.HandlerFunc {
 	return func(c echo.Context) error {
@@ -27,7 +27,7 @@ func RecentCommitsHandler(
 		}
 
 		// Get recent commits.
-		commits, err := svc.RecentCommits(limit)
+		commits, err := svc.RecentGitCommits(limit)
 		if err != nil {
 			l.Err(err).Msg("Failed to get recent commits.")
 			return errors.Errorf("getting recent commits: %w", err)
