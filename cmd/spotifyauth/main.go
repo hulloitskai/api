@@ -10,9 +10,10 @@ import (
 	"strconv"
 	"time"
 
-	"github.com/stevenxie/api/internal/cmdutil"
 	ess "github.com/unixpickle/essentials"
 	"github.com/zmb3/spotify"
+
+	"github.com/stevenxie/api/internal/cmdutil"
 )
 
 const (

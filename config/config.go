@@ -20,6 +20,12 @@ type Config struct {
 		Limit    *int           `yaml:"limit"`
 		Interval *time.Duration `yaml:"interval"`
 	} `yaml:"commits"`
+
+	Availability struct {
+		GCal struct {
+			CalendarIDs []string `yaml:"calendarIDs"`
+		} `yaml:"gcal"`
+	} `yaml:"availability"`
 }
 
 func defaultConfig() *Config {

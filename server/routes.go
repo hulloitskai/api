@@ -26,6 +26,10 @@ func (srv *Server) registerRoutes() error {
 		srv.gitCommits,
 		srv.hlogger("recent_commits"),
 	))
+	e.GET("/availability", handler.AvailabilityHandler(
+		srv.availability,
+		srv.hlogger("availability"),
+	))
 
 	return nil
 }

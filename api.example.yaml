@@ -2,3 +2,12 @@ about:
   gist:
     id: String
     file: String
+
+commits:
+  limit: Int
+  interval: Duration
+
+availability:
+  gcal:
+    calendarIDs:
+      - String # Calendar ID

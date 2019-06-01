@@ -12,13 +12,14 @@ _A personal API._
 
 ## Usage
 
-| Path                                                     | Description                           |
-| -------------------------------------------------------- | ------------------------------------- |
-| [`/`](https://api.stevenxie.me)                          | API server metadata.                  |
-| [`/about`](https://api.stevenxie.me/about)               | General personal information.         |
-| [`/commits`](https://api.stevenxie.me/commits)           | Recent commits from GitHub.           |
-| [`/nowplaying`](https://api.stevenxie.me/nowplaying)     | Currently playing track from Spotify. |
-| [`/productivity`](https://api.stevenxie.me/productivity) | Productivity metrics from RescueTime. |
+| Path                                                     | Description                                  |
+| -------------------------------------------------------- | -------------------------------------------- |
+| [`/`](https://api.stevenxie.me)                          | API server metadata.                         |
+| [`/about`](https://api.stevenxie.me/about)               | General personal information.                |
+| [`/commits`](https://api.stevenxie.me/commits)           | Recent commits from GitHub.                  |
+| [`/nowplaying`](https://api.stevenxie.me/nowplaying)     | Currently playing track from Spotify.        |
+| [`/productivity`](https://api.stevenxie.me/productivity) | Productivity metrics from RescueTime.        |
+| [`/availability`](https://api.stevenxie.me/availability) | Personal availability information from GCal. |
 
 [tag]: https://github.com/stevenxie/api/releases
 [tag-img]: https://img.shields.io/github/tag/stevenxie/api.svg

@@ -3,6 +3,7 @@ package config
 import (
 	"context"
 
+	"github.com/stevenxie/api/data/gcal"
 	"github.com/stevenxie/api/data/github"
 	"github.com/stevenxie/api/pkg/api"
 	"github.com/stevenxie/api/pkg/gitutil"
@@ -33,4 +34,9 @@ func (cfg *Config) BuildCommitLoader(
 
 	// Build commit loader.
 	return gitutil.NewCommitLoader(ctx, svc, append(cfgopts, opts...)...)
+}
+
+// BuildGCalClient builds a new GCal client, with preconfigured calendar IDs.
+func (cfg *Config) BuildGCalClient() (*gcal.Client, error) {
+	return gcal.New(cfg.Availability.GCal.CalendarIDs)
 }

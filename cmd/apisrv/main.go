@@ -5,8 +5,6 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/stevenxie/api/pkg/gitutil"
-
 	errors "golang.org/x/xerrors"
 
 	"github.com/rs/zerolog"
@@ -19,6 +17,7 @@ import (
 	"github.com/stevenxie/api/data/spotify"
 	"github.com/stevenxie/api/internal/cmdutil"
 	"github.com/stevenxie/api/internal/info"
+	"github.com/stevenxie/api/pkg/gitutil"
 	"github.com/stevenxie/api/server"
 )
 
@@ -93,6 +92,12 @@ func run(c *cli.Context) error {
 		return errors.Errorf("creating RescueTime client: %w", err)
 	}
 
+	// Create GCal client.
+	gcalClient, err := cfg.BuildGCalClient()
+	if err != nil {
+		return errors.Errorf("creating GCal client: %w", err)
+	}
+
 	// Create server.
 	logger.Info().Msg("Initializing server...")
 	var (
@@ -100,6 +105,7 @@ func run(c *cli.Context) error {
 		srv  = server.New(
 			aboutService,
 			rtClient,
+			gcalClient,
 			commitLoader,
 			spotifyClient,
 			logger,

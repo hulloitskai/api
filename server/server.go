@@ -8,7 +8,6 @@ import (
 
 	echo "github.com/labstack/echo/v4"
 	"github.com/rs/zerolog"
-
 	"github.com/stevenxie/api/pkg/api"
 )
 
@@ -19,6 +18,7 @@ type Server struct {
 
 	about        api.AboutService
 	productivity api.ProductivityService
+	availability api.AvailabilityService
 	gitCommits   api.GitCommitsService
 	nowPlaying   api.NowPlayingService
 }
@@ -27,6 +27,7 @@ type Server struct {
 func New(
 	about api.AboutService,
 	productivity api.ProductivityService,
+	availability api.AvailabilityService,
 	gitCommits api.GitCommitsService,
 	nowPlaying api.NowPlayingService,
 	l zerolog.Logger,
@@ -39,6 +40,7 @@ func New(
 		logger:       l,
 		about:        about,
 		productivity: productivity,
+		availability: availability,
 		gitCommits:   gitCommits,
 		nowPlaying:   nowPlaying,
 	}
