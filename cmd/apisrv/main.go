@@ -114,6 +114,13 @@ func run(c *cli.Context) error {
 
 // buildLogger builds an application-level zerolog.Logger.
 func buildLogger() zerolog.Logger {
-	return zerolog.New(zerolog.NewConsoleWriter()).
-		With().Timestamp().Logger()
+	logger := zerolog.New(zerolog.NewConsoleWriter()).
+		With().Timestamp().
+		Logger()
+
+	// Set logger level.
+	if os.Getenv("GOENV") != "development" {
+		logger = logger.Level(zerolog.InfoLevel)
+	}
+	return logger
 }
