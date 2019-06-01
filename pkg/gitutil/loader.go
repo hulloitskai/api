@@ -97,7 +97,7 @@ func (cl *CommitLoader) RecentGitCommits(limit int) ([]*api.GitCommit, error) {
 
 func (cl *CommitLoader) run() {
 	cl.l().Info().
-		Dur("interval", cl.interval).
+		Str("interval", cl.interval.String()).
 		Msg("Starting commit load loop...")
 	trace := time.Now()
 
@@ -106,7 +106,7 @@ func (cl *CommitLoader) run() {
 	cl.firstload <- struct{}{} // notify on first load
 
 	cl.l().Info().
-		Dur("duration", time.Since(trace)).
+		Str("duration", time.Since(trace).String()).
 		Msg("Finished loading first set of commits.")
 
 loop:
