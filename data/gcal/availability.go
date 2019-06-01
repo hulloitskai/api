@@ -44,7 +44,7 @@ func (c *Client) BusyPeriods(date time.Time) ([]*api.TimePeriod, error) {
 	}
 
 	// Parse availabilities.
-	var busy []*api.TimePeriod
+	busy := make([]*api.TimePeriod, 0)
 	for _, cal := range res.Calendars {
 		if len(cal.Errors) > 0 {
 			return nil, errors.Errorf("gcal: error in calendars response: %w",

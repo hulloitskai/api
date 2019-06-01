@@ -58,7 +58,7 @@ func (as *AboutService) About() (*api.About, error) {
 
 	// Fill missing values.
 	if data.About.Whereabouts == "" {
-		data.About.Whereabouts = "Unknown (unimplemented)"
+		data.About.Whereabouts = "NOT IMPLEMENTED"
 	}
 
 	return data.About, nil
