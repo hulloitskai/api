@@ -34,9 +34,9 @@ const envPrefix = "google"
 // error will be returned.
 func New(calendarIDs []string) (*Client, error) {
 	var data struct {
-		Token  string `valid:"nonzero"`
-		ID     string `valid:"nonzero"`
-		Secret string `valid:"nonzero"`
+		Token  string `validate:"nonzero"`
+		ID     string `validate:"nonzero"`
+		Secret string `validate:"nonzero"`
 	}
 	if err := envconfig.Process(envPrefix, &data); err != nil {
 		return nil, errors.Errorf("gcal: reading envvars: %w", err)
