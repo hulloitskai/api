@@ -46,12 +46,12 @@ func (c *Client) NowPlaying() (*api.NowPlaying, error) {
 		),
 		Playing:  cp.Playing,
 		Progress: cp.Progress,
-		Duration: cp.Item.Duration,
 		Track: &api.MusicTrack{
-			Name:    cp.Item.Name,
-			URL:     extSpotifyURL(cp.Item.ExternalURLs),
-			Artists: artists,
-			Album:   album,
+			Name:     cp.Item.Name,
+			URL:      extSpotifyURL(cp.Item.ExternalURLs),
+			Artists:  artists,
+			Album:    album,
+			Duration: cp.Item.Duration,
 		},
 	}, nil
 }
