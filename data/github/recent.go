@@ -2,6 +2,7 @@ package github
 
 import (
 	"context"
+	"fmt"
 
 	errors "golang.org/x/xerrors"
 
@@ -10,6 +11,7 @@ import (
 )
 
 const (
+	baseURL       = "https://github.com"
 	eventTypePush = "PushEvent"
 	maxEventsPage = 10
 )
@@ -74,10 +76,11 @@ func (c *Client) recentCommits(
 				Author:    commit.GetAuthor(),
 				Committer: commit.GetCommitter(),
 				Message:   commit.GetMessage(),
-				URL:       commit.GetURL(),
+				URL: fmt.Sprintf("%s/%s/commit/%s", baseURL, repo.GetName(),
+					commit.GetSHA()),
 				Repo: &api.GitRepo{
 					Name: repo.GetName(),
-					URL:  repo.GetURL(),
+					URL:  fmt.Sprintf("%s/%s", baseURL, repo.GetName()),
 				},
 				Timestamp: e.GetCreatedAt(),
 			}
