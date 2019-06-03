@@ -3,6 +3,7 @@ package rescuetime
 import (
 	"encoding/json"
 	"net/url"
+	"sort"
 	"time"
 
 	"github.com/stevenxie/api/pkg/api"
@@ -13,7 +14,7 @@ const baseURL = "https://www.rescuetime.com/anapi/data"
 
 // CurrentProductivity gets the current api.Productivity values from
 // RescueTime.
-func (c *Client) CurrentProductivity() (*api.Productivity, error) {
+func (c *Client) CurrentProductivity() ([]*api.ProductivitySegment, error) {
 	nowstr := time.Now().Format("2006-01-02")
 
 	// Build query params.
@@ -44,26 +45,35 @@ func (c *Client) CurrentProductivity() (*api.Productivity, error) {
 	}
 
 	// Parse productivity data.
-	prod := new(api.Productivity)
-	for _, row := range data.Rows {
-		val := row[1]
+	segs := make([]*api.ProductivitySegment, len(data.Rows))
+	for i, row := range data.Rows {
+		var name string
 		switch row[3] {
 		case 2:
-			prod.VeryProductive = val
+			name = "Very Productive"
 		case 1:
-			prod.Productive = val
+			name = "Productive"
 		case 0:
-			prod.Neutral = val
+			name = "Neutral"
 		case -1:
-			prod.Distracting = val
+			name = "Distracting"
 		case -2:
-			prod.VeryDistracting = val
+			name = "Very Distracting"
 		default:
 			return nil, errors.Errorf("rescuetime: unknown productivity ID '%d'",
 				row[3])
 		}
+
+		segs[i] = &api.ProductivitySegment{
+			Name:     name,
+			ID:       row[3],
+			Duration: row[1],
+		}
 	}
-	return prod, nil
+
+	// Sort segments by ID.
+	sort.Sort(sortableSegments(segs))
+	return segs, nil
 }
 
 // queryParams returns a set of default query params to send with requests
@@ -73,4 +83,18 @@ func (c *Client) queryParams() url.Values {
 	qp.Set("key", c.key)
 	qp.Set("version", "0")
 	return qp
+}
+
+// sortableSegments implements sort.Interface for a slice of
+// api.ProductivitySegments.
+type sortableSegments []*api.ProductivitySegment
+
+var _ sort.Interface = (*sortableSegments)(nil)
+
+func (segs sortableSegments) Len() int { return len(segs) }
+func (segs sortableSegments) Less(i, j int) bool {
+	return segs[i].ID < segs[j].ID
+}
+func (segs sortableSegments) Swap(i, j int) {
+	segs[i], segs[j] = segs[j], segs[i]
 }

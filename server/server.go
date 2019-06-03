@@ -3,10 +3,12 @@ package server
 import (
 	"context"
 	"io/ioutil"
+	"os"
 
 	errors "golang.org/x/xerrors"
 
 	echo "github.com/labstack/echo/v4"
+	"github.com/labstack/echo/v4/middleware"
 	"github.com/rs/zerolog"
 	"github.com/stevenxie/api/pkg/api"
 )
@@ -32,8 +34,14 @@ func New(
 	nowPlaying api.NowPlayingService,
 	l zerolog.Logger,
 ) *Server {
+	// Configure echo.
 	echo := echo.New()
 	echo.Logger.SetOutput(ioutil.Discard) // disable logger
+
+	// Enable Access-Control-Allow-Origin: * during development.
+	if os.Getenv("GOENV") == "development" {
+		echo.Use(middleware.CORS())
+	}
 
 	return &Server{
 		echo:         echo,
