@@ -20,6 +20,8 @@ const Namespace = "github"
 type Client struct {
 	ghc   *github.Client
 	httpc *http.Client
+
+	currentUserLogin string
 }
 
 var (

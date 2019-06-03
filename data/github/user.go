@@ -8,18 +8,20 @@ import (
 
 // CurrentUserLogin gets the login of the authenticated user.
 func (c *Client) CurrentUserLogin() (string, error) {
-	res, err := c.httpc.Get(c.ghc.BaseURL.String() + "user")
-	if err != nil {
-		return "", err
-	}
-	defer res.Body.Close()
+	if c.currentUserLogin == "" {
+		res, err := c.httpc.Get(c.ghc.BaseURL.String() + "user")
+		if err != nil {
+			return "", err
+		}
+		defer res.Body.Close()
 
-	var data struct {
-		Login string `json:"login"`
+		var data struct {
+			Login string `json:"login"`
+		}
+		if err = json.NewDecoder(res.Body).Decode(&data); err != nil {
+			return "", errors.Errorf("github: decoding response as JSON: %w", err)
+		}
+		c.currentUserLogin = data.Login
 	}
-	if err = json.NewDecoder(res.Body).Decode(&data); err != nil {
-		return "", errors.Errorf("github: decoding response as JSON: %w", err)
-	}
-
-	return data.Login, nil
+	return c.currentUserLogin, nil
 }
