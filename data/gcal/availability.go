@@ -60,7 +60,7 @@ func (c *Client) BusyPeriods(date time.Time) ([]*api.TimePeriod, error) {
 				return nil, errors.Errorf("gcal: parsing end time: %w", err)
 			}
 
-			const timeformat = "3:04 PM"
+			const timeformat = "15:04"
 			busy = append(busy, &api.TimePeriod{
 				Start: start.Format(timeformat),
 				End:   end.Format(timeformat),
