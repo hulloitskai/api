@@ -1,10 +1,11 @@
 package handler
 
 import (
-	"context"
 	"fmt"
 	"io"
 	"net/http"
+
+	"github.com/stevenxie/api/internal/httputil"
 
 	"golang.org/x/xerrors"
 
@@ -12,12 +13,6 @@ import (
 	"github.com/sirupsen/logrus"
 	"github.com/stevenxie/api/pkg/errors"
 )
-
-type contextKey string
-
-// StatusCodeContextKey is the context key that ErrorHandler will check to
-// override the default error status code (http.StatusInternalServerError).
-const StatusCodeContextKey contextKey = "StatusCode"
 
 // ErrorHandler handles errors by writing them to c.Response() as JSON.
 //
@@ -41,14 +36,7 @@ func ErrorHandler(log *logrus.Logger) echo.HTTPErrorHandler {
 		}
 
 		// Retrieve status code from request context.
-		if val := c.Request().Context().Value(StatusCodeContextKey); val != nil {
-			code, ok := val.(int)
-			if !ok {
-				log.
-					WithField("contextVal", val).
-					Error("Unrecognized status code context value.")
-				return // break early
-			}
+		if code, ok := httputil.GetEchoStatusCode(c); ok {
 			statusCode = code
 		}
 
@@ -71,15 +59,4 @@ func ErrorHandler(log *logrus.Logger) echo.HTTPErrorHandler {
 			log.WithError(err).Error(msg)
 		}
 	}
-}
-
-// setRequestStatusCode inserts the status code 'code' into the request context,
-// tor use with ErrorHandler.
-func setRequestStatusCode(c echo.Context, code int) {
-	var (
-		req  = c.Request()
-		ctx  = context.WithValue(req.Context(), StatusCodeContextKey, code)
-		nreq = req.WithContext(ctx)
-	)
-	c.SetRequest(nreq)
 }

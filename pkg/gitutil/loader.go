@@ -43,7 +43,7 @@ func NewCommitLoader(
 		ctx: ctx,
 		log: zero.Logger(),
 
-		interval:  1 * time.Minute,
+		interval:  time.Minute,
 		limit:     10,
 		firstload: make(chan struct{}, 1),
 	}

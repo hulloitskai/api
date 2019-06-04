@@ -8,6 +8,7 @@ import (
 
 	echo "github.com/labstack/echo/v4"
 	"github.com/sirupsen/logrus"
+	"github.com/stevenxie/api/internal/httputil"
 	"github.com/stevenxie/api/pkg/api"
 )
 
@@ -28,7 +29,7 @@ func AvailabilityHandler(
 		if datep := c.QueryParam("date"); datep != "" {
 			date, err = time.ParseInLocation("2006-01-02", datep, loc)
 			if err != nil {
-				setRequestStatusCode(c, http.StatusBadRequest)
+				httputil.SetEchoStatusCode(c, http.StatusBadRequest)
 				return errors.Errorf("bad parameter 'date': %w", err)
 			}
 		}

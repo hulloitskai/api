@@ -4,6 +4,8 @@ import (
 	"net/http"
 	"strconv"
 
+	"github.com/stevenxie/api/internal/httputil"
+
 	errors "golang.org/x/xerrors"
 
 	echo "github.com/labstack/echo/v4"
@@ -21,7 +23,7 @@ func RecentCommitsHandler(
 		if qlim := c.QueryParam("limit"); qlim != "" {
 			var err error
 			if limit, err = strconv.Atoi(qlim); err != nil {
-				setRequestStatusCode(c, http.StatusBadRequest)
+				httputil.SetEchoStatusCode(c, http.StatusBadRequest)
 				return errors.Errorf("parsing 'limit' parameter", err)
 			}
 		}
