@@ -131,9 +131,9 @@ func (cl *CommitLoader) loadCommits() {
 		Debug("Loading latest commits...")
 
 	commits, err := cl.svc.RecentGitCommits(cl.limit)
+	cl.err = err
 	if err != nil {
 		cl.log.WithError(err).Error("Failed to load latest commits.")
-		cl.err = err
 		return // break early
 	}
 
