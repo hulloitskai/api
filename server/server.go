@@ -7,16 +7,19 @@ import (
 
 	errors "golang.org/x/xerrors"
 
+	"github.com/getsentry/raven-go"
 	echo "github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"
-	"github.com/rs/zerolog"
+	"github.com/sirupsen/logrus"
+
+	"github.com/stevenxie/api/internal/zero"
 	"github.com/stevenxie/api/pkg/api"
 )
 
 // Server serves the accounts REST API.
 type Server struct {
-	echo   *echo.Echo
-	logger zerolog.Logger
+	echo *echo.Echo
+	log  *logrus.Logger
 
 	about        api.AboutService
 	productivity api.ProductivityService
@@ -32,7 +35,6 @@ func New(
 	availability api.AvailabilityService,
 	gitCommits api.GitCommitsService,
 	nowPlaying api.NowPlayingService,
-	l zerolog.Logger,
 ) *Server {
 	// Configure echo.
 	echo := echo.New()
@@ -45,13 +47,22 @@ func New(
 
 	return &Server{
 		echo:         echo,
-		logger:       l,
+		log:          zero.Logger(),
 		about:        about,
 		productivity: productivity,
 		availability: availability,
 		gitCommits:   gitCommits,
 		nowPlaying:   nowPlaying,
 	}
+}
+
+// SetLogger sets the Server's Logger.
+func (srv *Server) SetLogger(log *logrus.Logger) { srv.log = log }
+
+// UseRaven configures the Server to capture panic events with the provided
+// Raven client.
+func (srv *Server) UseRaven(rc *raven.Client) {
+	srv.echo.Use(SentryRecoverMiddleware(rc))
 }
 
 // ListenAndServe listens and serves on the specified address.
@@ -66,7 +77,7 @@ func (srv *Server) ListenAndServe(addr string) error {
 	}
 
 	// Listen for connections.
-	srv.logger.Info().Str("addr", addr).Msg("Listening for connections...")
+	srv.log.WithField("addr", addr).Info("Listening for connections...")
 	return srv.echo.Start(addr)
 }
 

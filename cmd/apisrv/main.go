@@ -7,7 +7,10 @@ import (
 
 	errors "golang.org/x/xerrors"
 
-	"github.com/rs/zerolog"
+	sentry "github.com/evalphobia/logrus_sentry"
+	"github.com/sirupsen/logrus"
+
+	"github.com/getsentry/raven-go"
 	ess "github.com/unixpickle/essentials"
 	"github.com/urfave/cli"
 
@@ -57,15 +60,16 @@ func main() {
 func run(c *cli.Context) error {
 	// Init logger, load config.
 	var (
-		logger   = buildLogger()
-		cfg, err = config.Load()
+		ravenClient = buildRaven()
+		log         = buildLogger(ravenClient)
+		cfg, err    = config.Load()
 	)
 	if err != nil {
 		return errors.Errorf("loading config: %w", err)
 	}
 
 	// Construct services:
-	logger.Info().Msg("Constructing services...")
+	log.Info("Constructing services...")
 
 	// Create commits loader and about service.
 	githubClient, err := github.New()
@@ -76,7 +80,7 @@ func run(c *cli.Context) error {
 	commitLoader := cfg.BuildCommitLoader(
 		context.Background(),
 		githubClient,
-		gitutil.WithLogger(logger.With().Str("service", "commit_loader").Logger()),
+		gitutil.WithLogger(log.WithField("service", "commit_loader").Logger),
 	)
 	aboutService := cfg.BuildAboutService(githubClient)
 
@@ -98,35 +102,58 @@ func run(c *cli.Context) error {
 		return errors.Errorf("creating GCal client: %w", err)
 	}
 
-	// Create server.
-	logger.Info().Msg("Initializing server...")
-	var (
-		port = c.Int("port")
-		srv  = server.New(
-			aboutService,
-			rtClient,
-			gcalClient,
-			commitLoader,
-			spotifyClient,
-			logger,
-		)
+	// Create and configure server.
+	log.Info("Initializing server...")
+	srv := server.New(
+		aboutService,
+		rtClient,
+		gcalClient,
+		commitLoader,
+		spotifyClient,
 	)
+	srv.SetLogger(log)
+	srv.UseRaven(ravenClient)
+
 	// TODO: Shut down server gracefully.
-	if err = srv.ListenAndServe(fmt.Sprintf(":%d", port)); err != nil {
+	if err = srv.ListenAndServe(fmt.Sprintf(":%d", c.Int("port"))); err != nil {
 		return errors.Errorf("starting server: %w", err)
 	}
 	return nil
 }
 
-// buildLogger builds an application-level zerolog.Logger.
-func buildLogger() zerolog.Logger {
-	logger := zerolog.New(zerolog.NewConsoleWriter()).
-		With().Timestamp().
-		Logger()
+func buildRaven() *raven.Client {
+	rc, err := raven.New(os.Getenv("SENTRY_DSN"))
+	if err != nil {
+		ess.Die("Failed to build Raven client:", err)
+	}
+
+	// Configure client.
+	if env := os.Getenv("GOENV"); env != "" {
+		rc.SetEnvironment(env)
+	}
+	rc.SetRelease(info.Version)
+
+	return rc
+}
+
+// buildLogger builds an application-level zerolog.Logger, which also captures
+// ErrorLevel (and higher) events using Raven.
+func buildLogger(rc *raven.Client) *logrus.Logger {
+	log := logrus.New()
+	log.SetOutput(os.Stdout)
 
 	// Set logger level.
-	if os.Getenv("GOENV") != "development" {
-		logger = logger.Level(zerolog.InfoLevel)
+	if os.Getenv("GOENV") == "development" {
+		log.SetLevel(logrus.DebugLevel)
 	}
-	return logger
+
+	// Add Sentry hook.
+	hook, err := sentry.NewAsyncWithClientSentryHook(rc,
+		[]logrus.Level{logrus.ErrorLevel, logrus.PanicLevel, logrus.FatalLevel})
+	if err != nil {
+		ess.Die("Failed to build Sentry Logrus hook:", err)
+	}
+	log.AddHook(hook)
+
+	return log
 }

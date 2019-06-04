@@ -9,7 +9,7 @@ import (
 	"golang.org/x/xerrors"
 
 	echo "github.com/labstack/echo/v4"
-	"github.com/rs/zerolog"
+	"github.com/sirupsen/logrus"
 	"github.com/stevenxie/api/pkg/errors"
 )
 
@@ -22,7 +22,7 @@ const StatusCodeContextKey contextKey = "StatusCode"
 // ErrorHandler handles errors by writing them to c.Response() as JSON.
 //
 // It will attempt to extract the status code c.
-func ErrorHandler(l zerolog.Logger) echo.HTTPErrorHandler {
+func ErrorHandler(log *logrus.Logger) echo.HTTPErrorHandler {
 	return func(err error, c echo.Context) {
 		var (
 			data struct {
@@ -44,8 +44,9 @@ func ErrorHandler(l zerolog.Logger) echo.HTTPErrorHandler {
 		if val := c.Request().Context().Value(StatusCodeContextKey); val != nil {
 			code, ok := val.(int)
 			if !ok {
-				l.Error().Interface("contextVal", val).
-					Msg("Unrecognized status code context value.")
+				log.
+					WithField("contextVal", val).
+					Error("Unrecognized status code context value.")
 				return // break early
 			}
 			statusCode = code
@@ -67,7 +68,7 @@ func ErrorHandler(l zerolog.Logger) echo.HTTPErrorHandler {
 			const msg = "Failed to write JSON error."
 			c.Response().WriteHeader(http.StatusInternalServerError)
 			io.WriteString(c.Response(), msg)
-			l.Err(err).Msg(msg)
+			log.WithError(err).Error(msg)
 		}
 	}
 }

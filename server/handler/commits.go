@@ -7,14 +7,14 @@ import (
 	errors "golang.org/x/xerrors"
 
 	echo "github.com/labstack/echo/v4"
-	"github.com/rs/zerolog"
+	"github.com/sirupsen/logrus"
 	"github.com/stevenxie/api/pkg/api"
 )
 
 // RecentCommitsHandler handles requests for recent commits that I've made.
 func RecentCommitsHandler(
 	svc api.GitCommitsService,
-	l zerolog.Logger,
+	log *logrus.Logger,
 ) echo.HandlerFunc {
 	return func(c echo.Context) error {
 		limit := 5
@@ -29,7 +29,7 @@ func RecentCommitsHandler(
 		// Get recent commits.
 		commits, err := svc.RecentGitCommits(limit)
 		if err != nil {
-			l.Err(err).Msg("Failed to get recent commits.")
+			log.WithError(err).Error("Failed to get recent commits.")
 			return errors.Errorf("getting recent commits: %w", err)
 		}
 

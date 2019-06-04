@@ -4,7 +4,7 @@ import (
 	errors "golang.org/x/xerrors"
 
 	echo "github.com/labstack/echo/v4"
-	"github.com/rs/zerolog"
+	"github.com/sirupsen/logrus"
 	"github.com/stevenxie/api/pkg/api"
 )
 
@@ -12,12 +12,12 @@ import (
 // Spotify account.
 func NowPlayingHandler(
 	svc api.NowPlayingService,
-	l zerolog.Logger,
+	log *logrus.Logger,
 ) echo.HandlerFunc {
 	return func(c echo.Context) error {
 		cplaying, err := svc.NowPlaying()
 		if err != nil {
-			l.Err(err).Msg("Failed to get currently playing track.")
+			log.WithError(err).Error("Failed to get currently playing track.")
 			return errors.Errorf("getting currently playing track: %w", err)
 		}
 

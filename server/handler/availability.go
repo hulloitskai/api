@@ -7,19 +7,19 @@ import (
 	errors "golang.org/x/xerrors"
 
 	echo "github.com/labstack/echo/v4"
-	"github.com/rs/zerolog"
+	"github.com/sirupsen/logrus"
 	"github.com/stevenxie/api/pkg/api"
 )
 
 // AvailabilityHandler handles requests for availability information.
 func AvailabilityHandler(
 	svc api.AvailabilityService,
-	l zerolog.Logger,
+	log *logrus.Logger,
 ) echo.HandlerFunc {
 	return func(c echo.Context) error {
 		loc, err := svc.Timezone()
 		if err != nil {
-			l.Err(err).Msg("Failed to determine timezone.")
+			log.WithError(err).Error("Failed to determine timezone.")
 			return errors.Errorf("failed to determine timezone: %w", err)
 		}
 
@@ -36,7 +36,7 @@ func AvailabilityHandler(
 		// Check busy periods.
 		busyPeriods, err := svc.BusyPeriods(date)
 		if err != nil {
-			l.Err(err).Msg("Failed to load availability.")
+			log.WithError(err).Error("Failed to load availability.")
 			return err
 		}
 

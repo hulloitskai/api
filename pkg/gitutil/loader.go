@@ -4,16 +4,18 @@ import (
 	"context"
 	"time"
 
-	"github.com/rs/zerolog"
+	"github.com/stevenxie/api/internal/zero"
+
+	"github.com/sirupsen/logrus"
 	"github.com/stevenxie/api/pkg/api"
 )
 
 // A CommitLoader loads recent Git commits in advance.
 type CommitLoader struct {
 	// Internal components.
-	svc    api.GitCommitsService
-	ctx    context.Context
-	logger zerolog.Logger
+	svc api.GitCommitsService
+	ctx context.Context
+	log *logrus.Logger
 
 	// Configurable options.
 	interval time.Duration
@@ -37,9 +39,10 @@ func NewCommitLoader(
 	opts ...CLOption,
 ) *CommitLoader {
 	cl := &CommitLoader{
-		svc:       svc,
-		ctx:       ctx,
-		logger:    zerolog.Nop(),
+		svc: svc,
+		ctx: ctx,
+		log: zero.Logger(),
+
 		interval:  1 * time.Minute,
 		limit:     10,
 		firstload: make(chan struct{}, 1),
@@ -65,25 +68,25 @@ func WithLimit(limit int) CLOption {
 }
 
 // WithLogger configures the logger that the CommitLoader will write to.
-func WithLogger(l zerolog.Logger) CLOption {
-	return func(cl *CommitLoader) { cl.logger = l }
+func WithLogger(log *logrus.Logger) CLOption {
+	return func(cl *CommitLoader) { cl.log = log }
 }
 
 // RecentGitCommits returns the most recently preloaded commits.
 func (cl *CommitLoader) RecentGitCommits(limit int) ([]*api.GitCommit, error) {
 	// Check limit argument.
 	if cl.limit < limit {
-		cl.l().Warn().
-			Int("limit", cl.limit).
-			Int("requested", limit).
-			Msg("Recent commits were requested with a limit greater than the " +
-				"internal limit.")
+		cl.log.WithFields(logrus.Fields{
+			"limit":     cl.limit,
+			"requested": limit,
+		}).Warn("Recent commits were requested with a limit greater than the " +
+			"internal limit.")
 		limit = cl.limit
 	}
 
 	// Guard against requests before first load finishes.
 	if cl.commits == nil {
-		cl.l().Info().Msg("Commits were requested before first load.")
+		cl.log.Info("Commits were requested before first load.")
 		<-cl.firstload // block until first load completes
 	}
 
@@ -96,18 +99,18 @@ func (cl *CommitLoader) RecentGitCommits(limit int) ([]*api.GitCommit, error) {
 }
 
 func (cl *CommitLoader) run() {
-	cl.l().Info().
-		Str("interval", cl.interval.String()).
-		Msg("Starting commit load loop...")
+	cl.log.
+		WithField("interval", cl.interval.String()).
+		Info("Starting commit load loop...")
 	trace := time.Now()
 
 	ticker := time.NewTicker(cl.interval)
 	cl.loadCommits()
 	cl.firstload <- struct{}{} // notify on first load
 
-	cl.l().Info().
-		Str("duration", time.Since(trace).String()).
-		Msg("Finished loading first set of commits.")
+	cl.log.
+		WithField("duration", time.Since(trace).String()).
+		Info("Finished loading first set of commits.")
 
 loop:
 	for {
@@ -123,18 +126,16 @@ loop:
 }
 
 func (cl *CommitLoader) loadCommits() {
-	cl.l().Debug().
-		Int("limit", cl.limit).
-		Msg("Loading latest commits...")
+	cl.log.
+		WithField("limit", cl.limit).
+		Debug("Loading latest commits...")
 
 	commits, err := cl.svc.RecentGitCommits(cl.limit)
 	if err != nil {
-		cl.l().Err(err).Msg("Failed to load latest commits.")
+		cl.log.WithError(err).Error("Failed to load latest commits.")
 		cl.err = err
 		return // break early
 	}
 
 	cl.commits = commits // save results
 }
-
-func (cl *CommitLoader) l() *zerolog.Logger { return &cl.logger }
