@@ -1,6 +1,7 @@
 package gcal
 
 import (
+	"sort"
 	"time"
 
 	errors "golang.org/x/xerrors"
@@ -59,14 +60,14 @@ func (c *Client) BusyPeriods(date time.Time) ([]*api.TimePeriod, error) {
 			if err != nil {
 				return nil, errors.Errorf("gcal: parsing end time: %w", err)
 			}
-
-			const timeformat = "15:04"
 			busy = append(busy, &api.TimePeriod{
-				Start: start.Format(timeformat),
-				End:   end.Format(timeformat),
+				Start: start,
+				End:   end,
 			})
 		}
 	}
+
+	sort.Sort(sortablePeriods(busy))
 	return busy, nil
 }
 
@@ -86,4 +87,22 @@ func (c *Client) Timezone() (*time.Location, error) {
 	}
 
 	return c.timezone, nil
+}
+
+// sortablePeriods implements sort.Interface for a slice of
+// api.TimePeriods.
+type sortablePeriods []*api.TimePeriod
+
+var _ sort.Interface = (*sortablePeriods)(nil)
+
+func (sp sortablePeriods) Len() int      { return len(sp) }
+func (sp sortablePeriods) Swap(i, j int) { sp[i], sp[j] = sp[j], sp[i] }
+func (sp sortablePeriods) Less(i, j int) bool {
+	if sp[i].Start.Before(sp[j].Start) {
+		return true
+	}
+	if sp[i].Start.Equal(sp[j].Start) {
+		return sp[i].End.Before(sp[j].End)
+	}
+	return false
 }

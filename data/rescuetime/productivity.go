@@ -43,6 +43,9 @@ func (c *Client) CurrentProductivity() ([]*api.ProductivitySegment, error) {
 	if err = json.NewDecoder(res.Body).Decode(&data); err != nil {
 		return nil, errors.Errorf("rescuetime: decoding response as JSON: %w", err)
 	}
+	if err = res.Body.Close(); err != nil {
+		return nil, errors.Errorf("rescuetime: closing response body: %w", err)
+	}
 
 	// Parse productivity data.
 	segs := make([]*api.ProductivitySegment, len(data.Rows))
@@ -72,7 +75,7 @@ func (c *Client) CurrentProductivity() ([]*api.ProductivitySegment, error) {
 	}
 
 	// Sort segments by ID.
-	sort.Sort(sortableSegments(segs))
+	sort.Sort(sortableSegs(segs))
 	return segs, nil
 }
 
@@ -85,16 +88,14 @@ func (c *Client) queryParams() url.Values {
 	return qp
 }
 
-// sortableSegments implements sort.Interface for a slice of
+// sortableSegs implements sort.Interface for a slice of
 // api.ProductivitySegments.
-type sortableSegments []*api.ProductivitySegment
+type sortableSegs []*api.ProductivitySegment
 
-var _ sort.Interface = (*sortableSegments)(nil)
+var _ sort.Interface = (*sortableSegs)(nil)
 
-func (segs sortableSegments) Len() int { return len(segs) }
-func (segs sortableSegments) Less(i, j int) bool {
-	return segs[i].ID < segs[j].ID
-}
-func (segs sortableSegments) Swap(i, j int) {
+func (segs sortableSegs) Len() int           { return len(segs) }
+func (segs sortableSegs) Less(i, j int) bool { return segs[i].ID < segs[j].ID }
+func (segs sortableSegs) Swap(i, j int) {
 	segs[i], segs[j] = segs[j], segs[i]
 }
