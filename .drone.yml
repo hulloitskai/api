@@ -33,6 +33,9 @@ steps:
       - |
         CGO_ENABLED=0 \
         go build -ldflags "$LDFLAGS" -o ./dist/apisrv ./cmd/apisrv
+    environment:
+      GO111MODULE: 'on'
+      GOPROXY: https://goproxy.io
     volumes:
       - name: info
         path: /info
@@ -51,7 +54,8 @@ steps:
           $([ $(cat /i/branch) == master ] && \
              [ $DRONE_BUILD_EVENT == push ] && \
              cat /i/version || true)
-      username: stevenxie
+      username:
+        from_secret: docker_user
       password:
         from_secret: docker_pass
     volumes:

@@ -2,7 +2,7 @@
 
 _A personal API._
 
-[![GitHub Tag][tag-img]][tag]
+[![Git Tag][tag-img]][tag]
 [![Drone][drone-img]][drone]
 [![Go Report Card][grp-img]][grp]
 [![GoDoc][godoc-img]][godoc]
@@ -12,14 +12,14 @@ _A personal API._
 
 ## Usage
 
-| Path                                                     | Description                                  |
-| -------------------------------------------------------- | -------------------------------------------- |
-| [`/`](https://api.stevenxie.me)                          | API server metadata.                         |
-| [`/about`](https://api.stevenxie.me/about)               | General personal information.                |
-| [`/commits`](https://api.stevenxie.me/commits)           | Recent commits from GitHub.                  |
-| [`/nowplaying`](https://api.stevenxie.me/nowplaying)     | Currently playing track from Spotify.        |
-| [`/productivity`](https://api.stevenxie.me/productivity) | Productivity metrics from RescueTime.        |
-| [`/availability`](https://api.stevenxie.me/availability) | Personal availability information from GCal. |
+| Path                                                           | Description                                  |
+| -------------------------------------------------------------- | -------------------------------------------- |
+| [`/v1/`](https://api.stevenxie.me/v1/)                         | API server metadata.                         |
+| [`/v1/about`](https://api.stevenxie.me/v1/about)               | General personal information.                |
+| [`/v1/commits`](https://api.stevenxie.me/v1/commits)           | Recent commits from GitHub.                  |
+| [`/v1/nowplaying`](https://api.stevenxie.me/v1/nowplaying)     | Currently playing track from Spotify.        |
+| [`/v1/productivity`](https://api.stevenxie.me/v1/productivity) | Productivity metrics from RescueTime.        |
+| [`/v1/availability`](https://api.stevenxie.me/v1/availability) | Personal availability information from GCal. |
 
 [tag]: https://github.com/stevenxie/api/releases
 [tag-img]: https://img.shields.io/github/tag/stevenxie/api.svg
