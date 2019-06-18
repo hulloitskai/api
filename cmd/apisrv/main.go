@@ -90,17 +90,22 @@ func run(c *cli.Context) error {
 		return errors.Errorf("creating Spotify client: %w", err)
 	}
 
-	// Create RescueTime client.
-	rtClient, err := rescuetime.New()
-	if err != nil {
-		return errors.Errorf("creating RescueTime client: %w", err)
-	}
-
 	// Create GCal client.
 	gcalClient, err := cfg.BuildGCalClient()
 	if err != nil {
 		return errors.Errorf("creating GCal client: %w", err)
 	}
+
+	// Create and configure RescueTime client.
+	rtClient, err := rescuetime.New()
+	if err != nil {
+		return errors.Errorf("creating RescueTime client: %w", err)
+	}
+	timezone, err := gcalClient.Timezone()
+	if err != nil {
+		return errors.Errorf("failed to load current timezone from GCal: %w", err)
+	}
+	rtClient.SetTimezone(timezone)
 
 	// Create and configure server.
 	log.Info("Initializing server...")

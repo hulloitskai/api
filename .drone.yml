@@ -54,8 +54,7 @@ steps:
           $([ $(cat /i/branch) == master ] && \
              [ $DRONE_BUILD_EVENT == push ] && \
              cat /i/version || true)
-      username:
-        from_secret: docker_user
+      username: stevenxie
       password:
         from_secret: docker_pass
     volumes:

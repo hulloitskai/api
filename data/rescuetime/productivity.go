@@ -10,12 +10,15 @@ import (
 	errors "golang.org/x/xerrors"
 )
 
-const baseURL = "https://www.rescuetime.com/anapi/data"
+const (
+	baseURL = "https://www.rescuetime.com/anapi/data"
+	iso8601 = "2006-01-02"
+)
 
 // CurrentProductivity gets the current api.Productivity values from
 // RescueTime.
 func (c *Client) CurrentProductivity() ([]*api.ProductivitySegment, error) {
-	nowstr := time.Now().Format("2006-01-02")
+	nowstr := c.currentDate()
 
 	// Build query params.
 	qp := c.queryParams()
@@ -77,6 +80,14 @@ func (c *Client) CurrentProductivity() ([]*api.ProductivitySegment, error) {
 	// Sort segments by ID.
 	sort.Sort(sortableSegs(segs))
 	return segs, nil
+}
+
+func (c *Client) currentDate() string {
+	now := time.Now()
+	if c.timezone != nil {
+		now = now.In(c.timezone)
+	}
+	return now.Format(iso8601)
 }
 
 // queryParams returns a set of default query params to send with requests
