@@ -17,8 +17,8 @@ type Config struct {
 	} `yaml:"about"`
 
 	Commits struct {
-		Limit    *int           `yaml:"limit"`
-		Interval *time.Duration `yaml:"interval"`
+		Limit        *int           `yaml:"limit"`
+		PollInterval *time.Duration `yaml:"pollInterval"`
 	} `yaml:"commits"`
 
 	Availability struct {
@@ -26,6 +26,10 @@ type Config struct {
 			CalendarIDs []string `yaml:"calendarIDs"`
 		} `yaml:"gcal"`
 	} `yaml:"availability"`
+
+	NowPlaying struct {
+		PollInterval *time.Duration `yaml:"pollInterval"`
+	} `yaml:"nowPlaying"`
 }
 
 func defaultConfig() *Config {

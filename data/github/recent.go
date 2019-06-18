@@ -8,6 +8,7 @@ import (
 
 	"github.com/google/go-github/v25/github"
 	"github.com/stevenxie/api/pkg/api"
+	"github.com/stevenxie/api/pkg/zero"
 )
 
 const (
@@ -23,14 +24,14 @@ func (c *Client) RecentGitCommits(limit int) ([]*api.GitCommit, error) {
 		limit,
 		0,
 		make([]*api.GitCommit, 0, limit),
-		make(map[string]struct{}),
+		make(map[string]zero.Struct),
 	)
 }
 
 func (c *Client) recentCommits(
 	limit, page int,
 	commits []*api.GitCommit,
-	seenRepos map[string]struct{},
+	seenRepos map[string]zero.Struct,
 ) ([]*api.GitCommit, error) {
 	// Get current user.
 	login, err := c.CurrentUserLogin()
@@ -93,7 +94,7 @@ func (c *Client) recentCommits(
 		}
 
 		// Add repo to seen cache.
-		seenRepos[repo.GetName()] = struct{}{}
+		seenRepos[repo.GetName()] = zero.Struct{}
 	}
 
 	if (len(commits) < limit) && (page < maxEventsPage) {

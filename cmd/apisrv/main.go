@@ -5,12 +5,13 @@ import (
 	"fmt"
 	"os"
 
+	"github.com/stevenxie/api/data/gcal"
+
 	errors "golang.org/x/xerrors"
 
 	sentry "github.com/evalphobia/logrus_sentry"
-	"github.com/sirupsen/logrus"
-
 	"github.com/getsentry/raven-go"
+	"github.com/sirupsen/logrus"
 	ess "github.com/unixpickle/essentials"
 	"github.com/urfave/cli"
 
@@ -71,18 +72,25 @@ func run(c *cli.Context) error {
 	// Construct services:
 	log.Info("Constructing services...")
 
-	// Create commits loader and about service.
 	githubClient, err := github.New()
 	if err != nil {
 		return errors.Errorf("creating GitHub client: %w", err)
 	}
+
+	// Create commits loader.
 	// TODO: Use a context that corresponds to the server lifetime.
-	commitLoader := cfg.BuildCommitLoader(
+	commitLoader := gitutil.NewCommitLoader(
 		context.Background(),
 		githubClient,
-		gitutil.WithLogger(log.WithField("service", "commit_loader").Logger),
+		append(
+			cfg.CommitLoaderOpts(),
+			gitutil.WithLogger(log.WithField("service", "commit_loader").Logger),
+		)...,
 	)
-	aboutService := cfg.BuildAboutService(githubClient)
+
+	// Build about service.
+	gistID, gistFile := cfg.AboutGistInfo()
+	aboutService := github.NewAboutService(githubClient, gistID, gistFile)
 
 	// Create Spotify client.
 	spotifyClient, err := spotify.New()
@@ -91,7 +99,7 @@ func run(c *cli.Context) error {
 	}
 
 	// Create GCal client.
-	gcalClient, err := cfg.BuildGCalClient()
+	gcalClient, err := gcal.New(cfg.GCalCalendarIDs())
 	if err != nil {
 		return errors.Errorf("creating GCal client: %w", err)
 	}
@@ -115,6 +123,7 @@ func run(c *cli.Context) error {
 		gcalClient,
 		commitLoader,
 		spotifyClient,
+		cfg.ServerOpts()...,
 	)
 	srv.SetLogger(log)
 	srv.UseRaven(ravenClient)

@@ -5,9 +5,12 @@ about:
 
 commits:
   limit: Int
-  interval: Duration
+  pollInterval: Duration
 
 availability:
   gcal:
     calendarIDs:
       - String # Calendar ID
+
+nowPlaying:
+  pollInterval: Duration
