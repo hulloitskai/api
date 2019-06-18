@@ -1,42 +1,48 @@
 package config
 
 import (
-	"context"
-
-	"github.com/stevenxie/api/data/gcal"
-	"github.com/stevenxie/api/data/github"
-	"github.com/stevenxie/api/pkg/api"
 	"github.com/stevenxie/api/pkg/gitutil"
+	"github.com/stevenxie/api/server"
 )
 
-// BuildAboutService builds a preconfigured api.AboutService.
-func (cfg *Config) BuildAboutService(gr github.GistRepo) *github.AboutService {
+// AboutGistInfo returns info required for creating a new github.AboutService.
+func (cfg *Config) AboutGistInfo() (id, file string) {
 	gist := &cfg.About.Gist
-	return github.NewAboutService(gr, gist.ID, gist.File)
+	return gist.ID, gist.File
 }
 
-// BuildCommitLoader builds a preconfigured gitutil.CommitLoader.
-func (cfg *Config) BuildCommitLoader(
-	ctx context.Context,
-	svc api.GitCommitsService,
-	opts ...gitutil.CLOption,
-) *gitutil.CommitLoader {
+// CommitLoaderOpts returns options used to configure a gitutil.CommitLoader.
+func (cfg *Config) CommitLoaderOpts() []gitutil.CLOption {
 	var (
+		opts    []gitutil.CLOption
 		commits = &cfg.Commits
-		cfgopts []gitutil.CLOption
 	)
 	if commits.Limit != nil {
-		cfgopts = append(cfgopts, gitutil.WithLimit(*commits.Limit))
+		opts = append(opts, gitutil.WithLimit(*commits.Limit))
 	}
-	if commits.Interval != nil {
-		cfgopts = append(cfgopts, gitutil.WithInterval(*commits.Interval))
+	if commits.PollInterval != nil {
+		opts = append(opts, gitutil.WithInterval(*commits.PollInterval))
 	}
-
-	// Build commit loader.
-	return gitutil.NewCommitLoader(ctx, svc, append(cfgopts, opts...)...)
+	return opts
 }
 
-// BuildGCalClient builds a new GCal client, with preconfigured calendar IDs.
-func (cfg *Config) BuildGCalClient() (*gcal.Client, error) {
-	return gcal.New(cfg.Availability.GCal.CalendarIDs)
+// GCalCalendarIDs returns the calendar IDs required for creating a new
+// gcal.Client.
+func (cfg *Config) GCalCalendarIDs() []string {
+	return cfg.Availability.GCal.CalendarIDs
+}
+
+// ServerOpts returns options used to configure a server.Server.
+func (cfg *Config) ServerOpts() []server.Option {
+	var (
+		opts       []server.Option
+		nowPlaying = &cfg.NowPlaying
+	)
+	if nowPlaying.PollInterval != nil {
+		opts = append(
+			opts,
+			server.WithNowPlayingPollInterval(*nowPlaying.PollInterval),
+		)
+	}
+	return opts
 }

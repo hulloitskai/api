@@ -6,6 +6,16 @@ import (
 	"github.com/zmb3/spotify"
 )
 
+// NowPlayingService can get the currently playing track.
+type NowPlayingService interface {
+	NowPlaying() (*NowPlaying, error)
+}
+
+// NowPlayingStreamingService can stream the currently playing track.
+type NowPlayingStreamingService interface {
+	NowPlayingStream() <-chan MaybeNowPlaying
+}
+
 // NowPlaying represents music that is currently playing.
 type NowPlaying struct {
 	Timestamp time.Time   `json:"timestamp"`
@@ -13,9 +23,6 @@ type NowPlaying struct {
 	Progress  int         `json:"progress"`
 	Track     *MusicTrack `json:"track"`
 }
-
-// NowPlayingService can get the currently playing track.
-type NowPlayingService interface{ NowPlaying() (*NowPlaying, error) }
 
 // A MusicTrack is a unit of music.
 type MusicTrack struct {
@@ -38,3 +45,13 @@ type MusicAlbum struct {
 	URL    string          `json:"url"`
 	Images []spotify.Image `json:"images"`
 }
+
+// MaybeNowPlaying is a value-error pair that might be a NowPlaying object, or
+// it might be an error.
+type MaybeNowPlaying struct {
+	NowPlaying *NowPlaying
+	Err        error
+}
+
+// IsError returns true if the MaybeNowPlaying is in the error state.
+func (maybe *MaybeNowPlaying) IsError() bool { return maybe.Err != nil }

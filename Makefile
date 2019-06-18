@@ -1,4 +1,6 @@
-# ----- VARIABLES -----
+##
+## VARIABLES
+##
 # Program version.
 __TAG = $(shell git describe --tags 2> /dev/null)
 ifneq ($(__TAG),)
@@ -21,7 +23,9 @@ GOENV        ?= development
 GODEFAULTCMD =  apisrv
 
 
-# ----- TARGETS ------
+##
+## TARGETS
+##
 # Generic:
 .PHONY: default version setup install build clean run lint test review help
 __ARGS = $(filter-out $@,$(MAKECMDGOALS))

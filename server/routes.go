@@ -2,6 +2,7 @@ package server
 
 import (
 	"github.com/sirupsen/logrus"
+	"github.com/stevenxie/api/pkg/stream"
 	"github.com/stevenxie/api/server/handler"
 )
 
@@ -15,10 +16,6 @@ func (srv *Server) registerRoutes() error {
 	e.GET("/", handler.InfoHandler())
 	e.GET("/about", handler.AboutHandler(srv.about, srv.hlog("about")))
 	e.GET(
-		"/nowplaying",
-		handler.NowPlayingHandler(srv.nowPlaying, srv.hlog("nowplaying")),
-	)
-	e.GET(
 		"/productivity",
 		handler.ProductivityHandler(srv.productivity, srv.hlog("productivity")),
 	)
@@ -30,6 +27,26 @@ func (srv *Server) registerRoutes() error {
 		srv.availability,
 		srv.hlog("availability"),
 	))
+
+	// Handle music routes.
+	var (
+		nps = stream.NewNowPlayingStreamer(
+			srv.nowPlaying,
+			srv.nowPlayingPollInterval,
+			stream.WithNPSLogger(
+				srv.log.WithField("service", "nowplaying_streamer").Logger,
+			),
+		)
+		npp = handler.NewNowPlayingProvider(nps, nps)
+	)
+	e.GET(
+		"/nowplaying",
+		npp.RESTHandler(srv.hlog("nowplaying_rest")),
+	)
+	e.GET(
+		"/nowplaying/ws",
+		npp.StreamingHandler(srv.hlog("nowplaying_streaming")),
+	)
 
 	return nil
 }

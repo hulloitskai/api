@@ -4,7 +4,7 @@ import (
 	"context"
 	"time"
 
-	"github.com/stevenxie/api/internal/zero"
+	"github.com/stevenxie/api/pkg/zero"
 
 	"github.com/sirupsen/logrus"
 	"github.com/stevenxie/api/pkg/api"

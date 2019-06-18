@@ -10,7 +10,7 @@ _A personal API._
 
 > **Why?** Well, why... not?
 
-## Usage
+## REST Endpoints
 
 | Path                                                           | Description                                  |
 | -------------------------------------------------------------- | -------------------------------------------- |
@@ -20,6 +20,27 @@ _A personal API._
 | [`/v1/nowplaying`](https://api.stevenxie.me/v1/nowplaying)     | Currently playing track from Spotify.        |
 | [`/v1/productivity`](https://api.stevenxie.me/v1/productivity) | Productivity metrics from RescueTime.        |
 | [`/v1/availability`](https://api.stevenxie.me/v1/availability) | Personal availability information from GCal. |
+
+## Websocket Endpoints
+
+### Now Playing
+
+**Endpoint:** `/v1/nowplaying/ws`
+
+All messages from this endpoint are in the format:
+
+```js
+{
+  "event": String,
+  "payload": (String | Object | Number)
+}
+```
+
+| Event        | Payload Type | Payload Description                                                           |
+| ------------ | ------------ | ----------------------------------------------------------------------------- |
+| `error`      | `String`     | A description of an error from the server.                                    |
+| `nowplaying` | `Object`     | A full `NowPlaying` object, which describes a track that's currently playing. |
+| `progress`   | `Number`     | The progress of the currently playing track, in milliseconds.                 |
 
 [tag]: https://github.com/stevenxie/api/releases
 [tag-img]: https://img.shields.io/github/tag/stevenxie/api.svg

@@ -4,6 +4,7 @@ import (
 	"context"
 	"io/ioutil"
 	"os"
+	"time"
 
 	errors "golang.org/x/xerrors"
 
@@ -12,8 +13,8 @@ import (
 	"github.com/labstack/echo/v4/middleware"
 	"github.com/sirupsen/logrus"
 
-	"github.com/stevenxie/api/internal/zero"
 	"github.com/stevenxie/api/pkg/api"
+	"github.com/stevenxie/api/pkg/zero"
 )
 
 // Server serves the accounts REST API.
@@ -26,6 +27,18 @@ type Server struct {
 	availability api.AvailabilityService
 	gitCommits   api.GitCommitsService
 	nowPlaying   api.NowPlayingService
+
+	// Configurable options.
+	nowPlayingPollInterval time.Duration
+}
+
+// An Option configures a Server.
+type Option func(*Server)
+
+// WithNowPlayingPollInterval sets interval at which the server polls the
+// NowPlayingService for updates.
+func WithNowPlayingPollInterval(interval time.Duration) Option {
+	return func(srv *Server) { srv.nowPlayingPollInterval = interval }
 }
 
 // New creates a new Server.
@@ -35,25 +48,35 @@ func New(
 	availability api.AvailabilityService,
 	gitCommits api.GitCommitsService,
 	nowPlaying api.NowPlayingService,
+	opts ...Option,
 ) *Server {
 	// Configure echo.
 	echo := echo.New()
 	echo.Logger.SetOutput(ioutil.Discard) // disable logger
+	echo.Use(middleware.Recover())
 
 	// Enable Access-Control-Allow-Origin: * during development.
 	if os.Getenv("GOENV") == "development" {
 		echo.Use(middleware.CORS())
 	}
 
-	return &Server{
-		echo:         echo,
-		log:          zero.Logger(),
+	// Create and configure server.
+	srv := &Server{
+		echo: echo,
+		log:  zero.Logger(),
+
 		about:        about,
 		productivity: productivity,
 		availability: availability,
 		gitCommits:   gitCommits,
 		nowPlaying:   nowPlaying,
+
+		nowPlayingPollInterval: 5 * time.Second,
 	}
+	for _, opt := range opts {
+		opt(srv)
+	}
+	return srv
 }
 
 // SetLogger sets the Server's Logger.
