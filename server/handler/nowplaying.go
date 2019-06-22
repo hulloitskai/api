@@ -95,8 +95,12 @@ func (p *NowPlayingProvider) StreamingHandler(
 		}
 	}(p.streamer.NowPlayingStream())
 
+	handlelog := log.WithField("stage", "handle").Logger
 	return func(c echo.Context) error {
-		return mel.HandleRequest(c.Response().Writer, c.Request())
+		if err := mel.HandleRequest(c.Response().Writer, c.Request()); err != nil {
+			handlelog.WithError(err).Error("Melody failed to handle request.")
+		}
+		return nil
 	}
 }
 
