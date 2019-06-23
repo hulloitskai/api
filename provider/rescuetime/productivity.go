@@ -33,6 +33,7 @@ func (c *Client) CurrentProductivity() ([]*api.ProductivitySegment, error) {
 		panic(err)
 	}
 	u.RawQuery = qp.Encode()
+
 	res, err := c.httpc.Get(u.String())
 	if err != nil {
 		return nil, err

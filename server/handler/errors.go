@@ -5,12 +5,11 @@ import (
 	"io"
 	"net/http"
 
-	"github.com/stevenxie/api/internal/httputil"
-
 	"golang.org/x/xerrors"
 
 	echo "github.com/labstack/echo/v4"
 	"github.com/sirupsen/logrus"
+	"github.com/stevenxie/api/internal/httputil"
 	"github.com/stevenxie/api/pkg/errors"
 )
 

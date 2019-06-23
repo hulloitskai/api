@@ -42,6 +42,10 @@ All messages from this endpoint are in the format:
 | `nowplaying` | `Object`     | A full `NowPlaying` object, which describes a track that's currently playing. |
 | `progress`   | `Number`     | The progress of the currently playing track, in milliseconds.                 |
 
+Upon socket connection, a `nowplaying` event will be sent; afterwards,
+`progress` events will be broadcasted until either the playback stops, or the
+track changes, in which case a new `nowplaying` event will be sent.
+
 [tag]: https://github.com/stevenxie/api/releases
 [tag-img]: https://img.shields.io/github/tag/stevenxie/api.svg
 [drone]: https://ci.stevenxie.me/stevenxie/api

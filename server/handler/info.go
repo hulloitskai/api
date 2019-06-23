@@ -4,7 +4,6 @@ import (
 	"os"
 
 	echo "github.com/labstack/echo/v4"
-
 	"github.com/stevenxie/api/internal/info"
 	srvinfo "github.com/stevenxie/api/server/internal/info"
 )

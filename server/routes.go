@@ -2,8 +2,8 @@ package server
 
 import (
 	"github.com/sirupsen/logrus"
-	"github.com/stevenxie/api/pkg/stream"
 	"github.com/stevenxie/api/server/handler"
+	"github.com/stevenxie/api/stream"
 )
 
 func (srv *Server) registerRoutes() error {

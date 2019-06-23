@@ -4,17 +4,15 @@ go 1.12
 
 require (
 	cloud.google.com/go v0.39.0 // indirect
-	github.com/certifi/gocertifi v0.0.0-20190506164543-d2eda7129713 // indirect
-	github.com/evalphobia/logrus_sentry v0.8.2
+	github.com/dmksnnk/sentryhook v0.0.0-20190616213648-f8cfe1c9b1a6
 	github.com/getsentry/raven-go v0.2.0
 	github.com/google/go-github/v25 v25.1.1
-	github.com/gorilla/websocket v1.4.0
+	github.com/gorilla/websocket v1.4.0 // indirect
 	github.com/joho/godotenv v1.3.0
 	github.com/kelseyhightower/envconfig v1.4.0
 	github.com/konsorten/go-windows-terminal-sequences v1.0.2 // indirect
 	github.com/kr/pretty v0.1.0 // indirect
 	github.com/labstack/echo/v4 v4.1.5
-	github.com/pkg/errors v0.8.1 // indirect
 	github.com/sirupsen/logrus v1.4.2
 	github.com/unixpickle/essentials v0.0.0-20180916162721-ae02bc395f1d
 	github.com/urfave/cli v1.20.0

@@ -5,23 +5,22 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/stevenxie/api/data/gcal"
-
 	errors "golang.org/x/xerrors"
 
-	sentry "github.com/evalphobia/logrus_sentry"
+	"github.com/dmksnnk/sentryhook"
 	"github.com/getsentry/raven-go"
 	"github.com/sirupsen/logrus"
 	ess "github.com/unixpickle/essentials"
 	"github.com/urfave/cli"
 
 	"github.com/stevenxie/api/config"
-	"github.com/stevenxie/api/data/github"
-	"github.com/stevenxie/api/data/rescuetime"
-	"github.com/stevenxie/api/data/spotify"
 	"github.com/stevenxie/api/internal/cmdutil"
 	"github.com/stevenxie/api/internal/info"
 	"github.com/stevenxie/api/pkg/gitutil"
+	"github.com/stevenxie/api/provider/gcal"
+	"github.com/stevenxie/api/provider/github"
+	"github.com/stevenxie/api/provider/rescuetime"
+	"github.com/stevenxie/api/provider/spotify"
 	"github.com/stevenxie/api/server"
 )
 
@@ -161,12 +160,10 @@ func buildLogger(rc *raven.Client) *logrus.Logger {
 		log.SetLevel(logrus.DebugLevel)
 	}
 
-	// Add Sentry hook.
-	hook, err := sentry.NewAsyncWithClientSentryHook(rc,
-		[]logrus.Level{logrus.ErrorLevel, logrus.PanicLevel, logrus.FatalLevel})
-	if err != nil {
-		ess.Die("Failed to build Sentry Logrus hook:", err)
-	}
+	// Integrate error reporting with Sentry.
+	hook := sentryhook.New(rc)
+	hook.SetAsync(logrus.ErrorLevel)
+	hook.SetSync(logrus.PanicLevel, logrus.FatalLevel)
 	log.AddHook(hook)
 
 	return log

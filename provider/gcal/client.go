@@ -7,13 +7,12 @@ import (
 	"golang.org/x/oauth2"
 	"golang.org/x/oauth2/google"
 	errors "golang.org/x/xerrors"
-
 	calendar "google.golang.org/api/calendar/v3"
 	"google.golang.org/api/option"
+	"gopkg.in/go-validator/validator.v2"
 
 	"github.com/kelseyhightower/envconfig"
 	"github.com/stevenxie/api/pkg/api"
-	"gopkg.in/go-validator/validator.v2"
 )
 
 // A Client can interact with the Google Calendar API.
