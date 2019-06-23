@@ -1,7 +1,6 @@
 package main
 
 import (
-	"context"
 	"fmt"
 	"os"
 
@@ -16,7 +15,6 @@ import (
 	"github.com/stevenxie/api/config"
 	"github.com/stevenxie/api/internal/cmdutil"
 	"github.com/stevenxie/api/internal/info"
-	"github.com/stevenxie/api/pkg/gitutil"
 	"github.com/stevenxie/api/provider/gcal"
 	"github.com/stevenxie/api/provider/github"
 	"github.com/stevenxie/api/provider/rescuetime"
@@ -76,17 +74,6 @@ func run(c *cli.Context) error {
 		return errors.Errorf("creating GitHub client: %w", err)
 	}
 
-	// Create commits loader.
-	// TODO: Use a context that corresponds to the server lifetime.
-	commitLoader := gitutil.NewCommitLoader(
-		context.Background(),
-		githubClient,
-		append(
-			cfg.CommitLoaderOpts(),
-			gitutil.WithLogger(log.WithField("service", "commit_loader").Logger),
-		)...,
-	)
-
 	// Build about service.
 	gistID, gistFile := cfg.AboutGistInfo()
 	aboutService := github.NewAboutService(githubClient, gistID, gistFile)
@@ -120,7 +107,7 @@ func run(c *cli.Context) error {
 		aboutService,
 		rtClient,
 		gcalClient,
-		commitLoader,
+		githubClient,
 		spotifyClient,
 		cfg.ServerOpts()...,
 	)

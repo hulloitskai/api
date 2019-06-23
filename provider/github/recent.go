@@ -94,7 +94,7 @@ func (c *Client) recentCommits(
 		}
 
 		// Add repo to seen cache.
-		seenRepos[repo.GetName()] = zero.Struct{}
+		seenRepos[repo.GetName()] = zero.Empty
 	}
 
 	if (len(commits) < limit) && (page < maxEventsPage) {

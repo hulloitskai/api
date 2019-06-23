@@ -1,7 +1,6 @@
 package config
 
 import (
-	"github.com/stevenxie/api/pkg/gitutil"
 	"github.com/stevenxie/api/server"
 )
 
@@ -9,21 +8,6 @@ import (
 func (cfg *Config) AboutGistInfo() (id, file string) {
 	gist := &cfg.About.Gist
 	return gist.ID, gist.File
-}
-
-// CommitLoaderOpts returns options used to configure a gitutil.CommitLoader.
-func (cfg *Config) CommitLoaderOpts() []gitutil.CLOption {
-	var (
-		opts    []gitutil.CLOption
-		commits = &cfg.Commits
-	)
-	if commits.Limit != nil {
-		opts = append(opts, gitutil.WithLimit(*commits.Limit))
-	}
-	if commits.PollInterval != nil {
-		opts = append(opts, gitutil.WithInterval(*commits.PollInterval))
-	}
-	return opts
 }
 
 // GCalCalendarIDs returns the calendar IDs required for creating a new
@@ -36,12 +20,25 @@ func (cfg *Config) GCalCalendarIDs() []string {
 func (cfg *Config) ServerOpts() []server.Option {
 	var (
 		opts       []server.Option
+		commits    = &cfg.Commits
 		nowPlaying = &cfg.NowPlaying
 	)
 	if nowPlaying.PollInterval != nil {
 		opts = append(
 			opts,
 			server.WithNowPlayingPollInterval(*nowPlaying.PollInterval),
+		)
+	}
+	if commits.PollInterval != nil {
+		opts = append(
+			opts,
+			server.WithGitCommitsPollInterval(*commits.PollInterval),
+		)
+	}
+	if commits.Limit != nil {
+		opts = append(
+			opts,
+			server.WithGitCommitsLimit(*commits.Limit),
 		)
 	}
 	return opts

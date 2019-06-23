@@ -38,7 +38,16 @@ func NewPollStreamer(action PollFunc, interval time.Duration) *PollStreamer {
 }
 
 func (ps *PollStreamer) startPolling() {
+	// Start ticker.
 	ticker := time.NewTicker(ps.interval)
+
+	// Perform initial action run.
+	res, err := ps.poll()
+	if err != nil {
+		ps.stream <- err
+	} else {
+		ps.stream <- res
+	}
 
 	for {
 		select {
@@ -58,7 +67,7 @@ func (ps *PollStreamer) startPolling() {
 	}
 }
 
-// Stop stops a PollStreamer.
+// Stop stops the PollStreamer.
 //
 // It can be called multiple times with no side effects.
 func (ps *PollStreamer) Stop() {

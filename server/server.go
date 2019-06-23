@@ -25,11 +25,13 @@ type Server struct {
 	about        api.AboutService
 	productivity api.ProductivityService
 	availability api.AvailabilityService
-	gitCommits   api.GitCommitsService
+	commits      api.GitCommitsService
 	nowPlaying   api.NowPlayingService
 
 	// Configurable options.
 	nowPlayingPollInterval time.Duration
+	commitsPollInterval    time.Duration
+	commitsLimit           *int
 }
 
 // An Option configures a Server.
@@ -41,12 +43,23 @@ func WithNowPlayingPollInterval(interval time.Duration) Option {
 	return func(srv *Server) { srv.nowPlayingPollInterval = interval }
 }
 
+// WithGitCommitsPollInterval sets the interval at which the server polls the
+// GitCommitsService for updates.
+func WithGitCommitsPollInterval(interval time.Duration) Option {
+	return func(srv *Server) { srv.commitsPollInterval = interval }
+}
+
+// WithGitCommitsLimit sets the maximum number of Git commits to preload.
+func WithGitCommitsLimit(limit int) Option {
+	return func(srv *Server) { srv.commitsLimit = &limit }
+}
+
 // New creates a new Server.
 func New(
 	about api.AboutService,
 	productivity api.ProductivityService,
 	availability api.AvailabilityService,
-	gitCommits api.GitCommitsService,
+	commits api.GitCommitsService,
 	nowPlaying api.NowPlayingService,
 	opts ...Option,
 ) *Server {
@@ -68,10 +81,11 @@ func New(
 		about:        about,
 		productivity: productivity,
 		availability: availability,
-		gitCommits:   gitCommits,
+		commits:      commits,
 		nowPlaying:   nowPlaying,
 
 		nowPlayingPollInterval: 5 * time.Second,
+		commitsPollInterval:    time.Minute,
 	}
 	for _, opt := range opts {
 		opt(srv)

@@ -19,13 +19,28 @@ func (srv *Server) registerRoutes() error {
 		"/productivity",
 		handler.ProductivityHandler(srv.productivity, srv.hlog("productivity")),
 	)
-	e.GET("/commits", handler.RecentCommitsHandler(
-		srv.gitCommits,
-		srv.hlog("recent_commits"),
-	))
 	e.GET("/availability", handler.AvailabilityHandler(
 		srv.availability,
 		srv.hlog("availability"),
+	))
+
+	// Handle Git commits (using a streaming preloader).
+	cpopts := []stream.CPOption{
+		stream.WithCPLogger(
+			srv.log.WithField("service", "commits_preloader").Logger,
+		),
+	}
+	if srv.commitsLimit != nil {
+		cpopts = append(cpopts, stream.WithCPLimit(*srv.commitsLimit))
+	}
+	commits := stream.NewCommitsPreloader(
+		srv.commits,
+		srv.commitsPollInterval,
+		cpopts...,
+	)
+	e.GET("/commits", handler.RecentCommitsHandler(
+		commits,
+		srv.hlog("recent_commits"),
 	))
 
 	// Handle music routes.
