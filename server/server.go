@@ -6,6 +6,8 @@ import (
 	"os"
 	"time"
 
+	"github.com/stevenxie/api/stream"
+
 	errors "golang.org/x/xerrors"
 
 	"github.com/getsentry/raven-go"
@@ -25,8 +27,9 @@ type Server struct {
 	about        api.AboutService
 	productivity api.ProductivityService
 	availability api.AvailabilityService
-	commits      api.GitCommitsService
-	nowPlaying   api.NowPlayingService
+
+	commits    *stream.CommitsPreloader
+	nowPlaying *stream.NowPlayingStreamer
 
 	// Configurable options.
 	nowPlayingPollInterval time.Duration
@@ -81,8 +84,6 @@ func New(
 		about:        about,
 		productivity: productivity,
 		availability: availability,
-		commits:      commits,
-		nowPlaying:   nowPlaying,
 
 		nowPlayingPollInterval: 5 * time.Second,
 		commitsPollInterval:    time.Minute,
@@ -90,6 +91,31 @@ func New(
 	for _, opt := range opts {
 		opt(srv)
 	}
+
+	// Build Git commits preloader.
+	cpopts := []stream.CPOption{
+		stream.WithCPLogger(
+			srv.log.WithField("service", "commits_preloader").Logger,
+		),
+	}
+	if srv.commitsLimit != nil {
+		cpopts = append(cpopts, stream.WithCPLimit(*srv.commitsLimit))
+	}
+	srv.commits = stream.NewCommitsPreloader(
+		commits,
+		srv.commitsPollInterval,
+		cpopts...,
+	)
+
+	// Build now playing streamer.
+	srv.nowPlaying = stream.NewNowPlayingStreamer(
+		nowPlaying,
+		srv.nowPlayingPollInterval,
+		stream.WithNPSLogger(
+			srv.log.WithField("service", "nowplaying_streamer").Logger,
+		),
+	)
+
 	return srv
 }
 
@@ -121,5 +147,13 @@ func (srv *Server) ListenAndServe(addr string) error {
 // Shutdown shuts down the server gracefully without interupting any active
 // connections.
 func (srv *Server) Shutdown(ctx context.Context) error {
-	return srv.echo.Shutdown(ctx)
+	// Stop streaming services.
+	srv.nowPlaying.Stop()
+	srv.commits.Stop()
+
+	// Shut down Echo.
+	if err := srv.echo.Shutdown(ctx); err != nil {
+		return errors.Errorf("server: shutting down Echo: %w", err)
+	}
+	return nil
 }

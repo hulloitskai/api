@@ -49,6 +49,7 @@ func (ps *PollStreamer) startPolling() {
 		ps.stream <- res
 	}
 
+	// Poll every tick, break upon stop signal.
 	for {
 		select {
 		case <-ps.done:

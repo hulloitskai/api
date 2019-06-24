@@ -30,6 +30,9 @@ type Config struct {
 	NowPlaying struct {
 		PollInterval *time.Duration `yaml:"pollInterval"`
 	} `yaml:"nowPlaying"`
+
+	// Miscellaneous:
+	ShutdownTimeout *time.Duration `yaml:"shutdownTimeout"`
 }
 
 func defaultConfig() *Config {

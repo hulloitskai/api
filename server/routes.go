@@ -3,7 +3,6 @@ package server
 import (
 	"github.com/sirupsen/logrus"
 	"github.com/stevenxie/api/server/handler"
-	"github.com/stevenxie/api/stream"
 )
 
 func (srv *Server) registerRoutes() error {
@@ -23,37 +22,13 @@ func (srv *Server) registerRoutes() error {
 		srv.availability,
 		srv.hlog("availability"),
 	))
-
-	// Handle Git commits (using a streaming preloader).
-	cpopts := []stream.CPOption{
-		stream.WithCPLogger(
-			srv.log.WithField("service", "commits_preloader").Logger,
-		),
-	}
-	if srv.commitsLimit != nil {
-		cpopts = append(cpopts, stream.WithCPLimit(*srv.commitsLimit))
-	}
-	commits := stream.NewCommitsPreloader(
-		srv.commits,
-		srv.commitsPollInterval,
-		cpopts...,
-	)
 	e.GET("/commits", handler.RecentCommitsHandler(
-		commits,
+		srv.commits,
 		srv.hlog("recent_commits"),
 	))
 
 	// Handle music routes.
-	var (
-		nps = stream.NewNowPlayingStreamer(
-			srv.nowPlaying,
-			srv.nowPlayingPollInterval,
-			stream.WithNPSLogger(
-				srv.log.WithField("service", "nowplaying_streamer").Logger,
-			),
-		)
-		npp = handler.NewNowPlayingProvider(nps, nps)
-	)
+	npp := handler.NewNowPlayingProvider(srv.nowPlaying, srv.nowPlaying)
 	e.GET(
 		"/nowplaying",
 		npp.RESTHandler(srv.hlog("nowplaying_rest")),

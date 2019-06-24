@@ -1,13 +1,15 @@
 package main
 
 import (
+	"context"
 	"fmt"
+	"net/http"
 	"os"
+	"os/signal"
+	"time"
 
 	errors "golang.org/x/xerrors"
 
-	"github.com/dmksnnk/sentryhook"
-	"github.com/getsentry/raven-go"
 	"github.com/sirupsen/logrus"
 	ess "github.com/unixpickle/essentials"
 	"github.com/urfave/cli"
@@ -114,44 +116,45 @@ func run(c *cli.Context) error {
 	srv.SetLogger(log)
 	srv.UseRaven(ravenClient)
 
+	// Shut down server gracefully upon interrupt.
+	go shutdownUponInterrupt(srv, log, cfg.ShutdownTimeout)
+
 	// TODO: Shut down server gracefully.
-	if err = srv.ListenAndServe(fmt.Sprintf(":%d", c.Int("port"))); err != nil {
+	err = srv.ListenAndServe(fmt.Sprintf(":%d", c.Int("port")))
+	if (err != nil) && (err != http.ErrServerClosed) {
 		return errors.Errorf("starting server: %w", err)
 	}
+
 	return nil
 }
 
-func buildRaven() *raven.Client {
-	rc, err := raven.New(os.Getenv("SENTRY_DSN"))
-	if err != nil {
-		ess.Die("Failed to build Raven client:", err)
+func shutdownUponInterrupt(
+	srv *server.Server,
+	log *logrus.Logger,
+	timeout *time.Duration,
+) {
+	sig := make(chan os.Signal, 1)
+	signal.Notify(sig, os.Interrupt)
+
+	// Wait for interrupt signal.
+	<-sig
+
+	const msg = "Received interrupt signal; shutting down."
+	if timeout != nil {
+		log.WithField("timeout", timeout.String()).Info(msg)
+	} else {
+		log.Info(msg)
 	}
 
-	// Configure client.
-	if env := os.Getenv("GOENV"); env != "" {
-		rc.SetEnvironment(env)
-	}
-	rc.SetRelease(info.Version)
-
-	return rc
-}
-
-// buildLogger builds an application-level zerolog.Logger, which also captures
-// ErrorLevel (and higher) events using Raven.
-func buildLogger(rc *raven.Client) *logrus.Logger {
-	log := logrus.New()
-	log.SetOutput(os.Stdout)
-
-	// Set logger level.
-	if os.Getenv("GOENV") == "development" {
-		log.SetLevel(logrus.DebugLevel)
+	// Prepare shutdown context.
+	ctx := context.Background()
+	if timeout != nil {
+		var cancel context.CancelFunc
+		ctx, cancel = context.WithTimeout(context.Background(), *timeout)
+		defer cancel()
 	}
 
-	// Integrate error reporting with Sentry.
-	hook := sentryhook.New(rc)
-	hook.SetAsync(logrus.ErrorLevel)
-	hook.SetSync(logrus.PanicLevel, logrus.FatalLevel)
-	log.AddHook(hook)
-
-	return log
+	if err := srv.Shutdown(ctx); err != nil {
+		log.WithError(err).Error("Server didn't shut down correctly.")
+	}
 }
