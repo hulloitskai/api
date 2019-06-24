@@ -72,7 +72,7 @@ func (ps *PollStreamer) startPolling() {
 //
 // It can be called multiple times with no side effects.
 func (ps *PollStreamer) Stop() {
-	ps.done <- zero.Empty // no need to close
+	ps.done <- zero.Empty() // no need to close
 }
 
 // Stream exposes PollStreamer's poll result stream.
