@@ -10,7 +10,6 @@ import (
 
 	errors "golang.org/x/xerrors"
 
-	"github.com/getsentry/raven-go"
 	echo "github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"
 	"github.com/sirupsen/logrus"
@@ -19,43 +18,28 @@ import (
 	"github.com/stevenxie/api/pkg/zero"
 )
 
-// Server serves the accounts REST API.
-type Server struct {
-	echo *echo.Echo
-	log  *logrus.Logger
+type (
+	// Server serves the accounts REST API.
+	Server struct {
+		echo *echo.Echo
+		log  *logrus.Logger
 
-	about        api.AboutService
-	productivity api.ProductivityService
-	availability api.AvailabilityService
+		about        api.AboutService
+		productivity api.ProductivityService
+		availability api.AvailabilityService
 
-	commits    *stream.CommitsPreloader
-	nowPlaying *stream.NowPlayingStreamer
+		commits    *stream.CommitsPreloader
+		nowPlaying *stream.NowPlayingStreamer
 
-	// Configurable options.
-	nowPlayingPollInterval time.Duration
-	commitsPollInterval    time.Duration
-	commitsLimit           *int
-}
+		// Configurable options.
+		nowPlayingPollInterval time.Duration
+		commitsPollInterval    time.Duration
+		commitsLimit           *int
+	}
 
-// An Option configures a Server.
-type Option func(*Server)
-
-// WithNowPlayingPollInterval sets interval at which the server polls the
-// NowPlayingService for updates.
-func WithNowPlayingPollInterval(interval time.Duration) Option {
-	return func(srv *Server) { srv.nowPlayingPollInterval = interval }
-}
-
-// WithGitCommitsPollInterval sets the interval at which the server polls the
-// GitCommitsService for updates.
-func WithGitCommitsPollInterval(interval time.Duration) Option {
-	return func(srv *Server) { srv.commitsPollInterval = interval }
-}
-
-// WithGitCommitsLimit sets the maximum number of Git commits to preload.
-func WithGitCommitsLimit(limit int) Option {
-	return func(srv *Server) { srv.commitsLimit = &limit }
-}
+	// An Option configures a Server.
+	Option func(*Server)
+)
 
 // New creates a new Server.
 func New(
@@ -117,15 +101,6 @@ func New(
 	)
 
 	return srv
-}
-
-// SetLogger sets the Server's Logger.
-func (srv *Server) SetLogger(log *logrus.Logger) { srv.log = log }
-
-// UseRaven configures the Server to capture panic events with the provided
-// Raven client.
-func (srv *Server) UseRaven(rc *raven.Client) {
-	srv.echo.Use(SentryRecoverMiddleware(rc))
 }
 
 // ListenAndServe listens and serves on the specified address.

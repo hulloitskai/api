@@ -2,7 +2,6 @@ package gcal
 
 import (
 	"context"
-	"time"
 
 	"golang.org/x/oauth2"
 	"golang.org/x/oauth2/google"
@@ -12,26 +11,18 @@ import (
 	"gopkg.in/go-validator/validator.v2"
 
 	"github.com/kelseyhightower/envconfig"
-	"github.com/stevenxie/api/pkg/api"
 )
-
-// A Client can interact with the Google Calendar API.
-type Client struct {
-	cs       *calendar.Service
-	timezone *time.Location
-
-	calendarIDs []string
-}
-
-var _ api.AvailabilityService = (*Client)(nil)
 
 const envPrefix = "google"
 
-// New creates a new Client.
+// A Client can interact with the Google Calendar API.
+type Client struct{ calendar.Service }
+
+// NewClient creates a new Client.
 //
 // It reads GOOGLE_TOKEN from the environment; if no such variable is found, an
 // error will be returned.
-func New(calendarIDs []string) (*Client, error) {
+func NewClient() (*Client, error) {
 	var data struct {
 		Token  string `validate:"nonzero"`
 		ID     string `validate:"nonzero"`
@@ -63,8 +54,5 @@ func New(calendarIDs []string) (*Client, error) {
 	if err != nil {
 		return nil, err
 	}
-	return &Client{
-		cs:          calsvc,
-		calendarIDs: calendarIDs,
-	}, nil
+	return &Client{*calsvc}, nil
 }

@@ -68,8 +68,8 @@ func run(c *cli.Context) error {
 		return errors.Errorf("loading config: %w", err)
 	}
 
-	// Construct services:
-	log.Info("Constructing services...")
+	// Initialize services:
+	log.Info("Initializing services...")
 
 	githubClient, err := github.New()
 	if err != nil {
@@ -87,34 +87,39 @@ func run(c *cli.Context) error {
 	}
 
 	// Create GCal client.
-	gcalClient, err := gcal.New(cfg.GCalCalendarIDs())
+	gcalClient, err := gcal.NewClient()
 	if err != nil {
 		return errors.Errorf("creating GCal client: %w", err)
 	}
+	availabilityService := gcal.NewAvailabilityService(
+		gcalClient,
+		cfg.GCalCalendarIDs(),
+	)
 
 	// Create and configure RescueTime client.
-	rtClient, err := rescuetime.New()
-	if err != nil {
-		return errors.Errorf("creating RescueTime client: %w", err)
-	}
-	timezone, err := gcalClient.Timezone()
+	timezone, err := availabilityService.Timezone()
 	if err != nil {
 		return errors.Errorf("failed to load current timezone from GCal: %w", err)
 	}
-	rtClient.SetTimezone(timezone)
+	rtClient, err := rescuetime.New(rescuetime.WithTimezone(timezone))
+	if err != nil {
+		return errors.Errorf("creating RescueTime client: %w", err)
+	}
 
 	// Create and configure server.
 	log.Info("Initializing server...")
 	srv := server.New(
 		aboutService,
 		rtClient,
-		gcalClient,
+		availabilityService,
 		githubClient,
 		spotifyClient,
-		cfg.ServerOpts()...,
+		append(
+			cfg.ServerOpts(),
+			server.WithLogger(log),
+			server.WithRaven(ravenClient),
+		)...,
 	)
-	srv.SetLogger(log)
-	srv.UseRaven(ravenClient)
 
 	// Shut down server gracefully upon interrupt.
 	go shutdownUponInterrupt(srv, log, cfg.ShutdownTimeout)

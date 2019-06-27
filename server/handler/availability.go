@@ -18,16 +18,27 @@ func AvailabilityHandler(
 	log *logrus.Logger,
 ) echo.HandlerFunc {
 	return func(c echo.Context) error {
-		loc, err := svc.Timezone()
-		if err != nil {
-			log.WithError(err).Error("Failed to determine timezone.")
-			return errors.Errorf("failed to determine timezone: %w", err)
+		// Derive timezone.
+		var (
+			timezone *time.Location
+			err      error
+		)
+		if timezonep := c.QueryParam("timezone"); timezonep != "" {
+			if timezone, err = time.LoadLocation(timezonep); err != nil {
+				httputil.SetEchoStatusCode(c, http.StatusBadRequest)
+				return errors.Errorf("bad paremter 'timezone': %w", err)
+			}
+		} else {
+			if timezone, err = svc.Timezone(); err != nil {
+				log.WithError(err).Error("Failed to load default timezone.")
+				return errors.Errorf("failed to load default timezone: %w", err)
+			}
 		}
 
 		// Derive date.
-		date := time.Now().In(loc)
+		date := time.Now().In(timezone)
 		if datep := c.QueryParam("date"); datep != "" {
-			date, err = time.ParseInLocation("2006-01-02", datep, loc)
+			date, err = time.ParseInLocation("2006-01-02", datep, timezone)
 			if err != nil {
 				httputil.SetEchoStatusCode(c, http.StatusBadRequest)
 				return errors.Errorf("bad parameter 'date': %w", err)
@@ -46,7 +57,7 @@ func AvailabilityHandler(
 			Timezone string            `json:"timezone"`
 		}{
 			Busy:     busyPeriods,
-			Timezone: loc.String(),
+			Timezone: timezone.String(),
 		})
 	}
 }

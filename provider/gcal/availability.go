@@ -10,22 +10,40 @@ import (
 	"github.com/stevenxie/api/pkg/api"
 )
 
-// BusyPeriods determines periods of availability for a given date.
-func (c *Client) BusyPeriods(date time.Time) ([]*api.TimePeriod, error) {
-	timezone, err := c.Timezone()
-	if err != nil {
-		return nil, err
-	}
+// An AvailabilityService implements an api.AvailabilityService for a Client.
+type AvailabilityService struct {
+	client      *Client
+	calendarIDs []string
 
+	timezone *time.Location
+}
+
+var _ api.AvailabilityService = (*AvailabilityService)(nil)
+
+// NewAvailabilityService creates a new AvailabilityService.
+func NewAvailabilityService(
+	c *Client,
+	calendarIDs []string,
+) *AvailabilityService {
+	return &AvailabilityService{
+		client:      c,
+		calendarIDs: calendarIDs,
+	}
+}
+
+// BusyPeriods determines periods of availability for a given date.
+func (svc *AvailabilityService) BusyPeriods(date time.Time) ([]*api.TimePeriod,
+	error) {
 	// Determine calendars to query.
-	items := make([]*calendar.FreeBusyRequestItem, len(c.calendarIDs))
-	for i, id := range c.calendarIDs {
+	items := make([]*calendar.FreeBusyRequestItem, len(svc.calendarIDs))
+	for i, id := range svc.calendarIDs {
 		items[i] = &calendar.FreeBusyRequestItem{Id: id}
 	}
 
 	// Build FreeBusy request.
 	var (
-		min = time.Date(
+		timezone = date.Location()
+		min      = time.Date(
 			date.Year(), date.Month(), date.Day(),
 			0, 0, 0, 0,
 			date.Location(),
@@ -39,7 +57,7 @@ func (c *Client) BusyPeriods(date time.Time) ([]*api.TimePeriod, error) {
 	)
 
 	// Perform request.
-	res, err := c.cs.Freebusy.Query(&req).Do()
+	res, err := svc.client.Freebusy.Query(&req).Do()
 	if err != nil {
 		return nil, err
 	}
@@ -72,9 +90,9 @@ func (c *Client) BusyPeriods(date time.Time) ([]*api.TimePeriod, error) {
 }
 
 // Timezone returns the authenticated user's timezone.
-func (c *Client) Timezone() (*time.Location, error) {
-	if c.timezone == nil {
-		setting, err := c.cs.Settings.Get("timezone").Do()
+func (svc *AvailabilityService) Timezone() (*time.Location, error) {
+	if svc.timezone == nil {
+		setting, err := svc.client.Settings.Get("timezone").Do()
 		if err != nil {
 			return nil, err
 		}
@@ -83,10 +101,10 @@ func (c *Client) Timezone() (*time.Location, error) {
 		if err != nil {
 			return nil, errors.Errorf("gcal: failed to parse timezone: %w", err)
 		}
-		c.timezone = loc
+		svc.timezone = loc
 	}
 
-	return c.timezone, nil
+	return svc.timezone, nil
 }
 
 // sortablePeriods implements sort.Interface for a slice of
