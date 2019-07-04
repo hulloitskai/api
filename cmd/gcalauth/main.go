@@ -14,7 +14,7 @@ import (
 	"golang.org/x/oauth2/google"
 	calendar "google.golang.org/api/calendar/v3"
 
-	"github.com/stevenxie/api/internal/cmdutil"
+	"github.com/stevenxie/api/pkg/cmdutil"
 	ess "github.com/unixpickle/essentials"
 )
 

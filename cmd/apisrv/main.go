@@ -15,8 +15,8 @@ import (
 	"github.com/urfave/cli"
 
 	"github.com/stevenxie/api/config"
-	"github.com/stevenxie/api/internal/cmdutil"
 	"github.com/stevenxie/api/internal/info"
+	"github.com/stevenxie/api/pkg/cmdutil"
 	"github.com/stevenxie/api/provider/gcal"
 	"github.com/stevenxie/api/provider/github"
 	"github.com/stevenxie/api/provider/rescuetime"

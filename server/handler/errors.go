@@ -9,8 +9,8 @@ import (
 
 	echo "github.com/labstack/echo/v4"
 	"github.com/sirupsen/logrus"
-	"github.com/stevenxie/api/internal/httputil"
 	"github.com/stevenxie/api/pkg/errors"
+	"github.com/stevenxie/api/pkg/httputil"
 )
 
 // ErrorHandler handles errors by writing them to c.Response() as JSON.

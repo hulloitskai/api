@@ -8,8 +8,8 @@ import (
 
 	echo "github.com/labstack/echo/v4"
 	"github.com/sirupsen/logrus"
-	"github.com/stevenxie/api/internal/httputil"
 	"github.com/stevenxie/api/pkg/api"
+	"github.com/stevenxie/api/pkg/httputil"
 )
 
 // RecentCommitsHandler handles requests for recent commits that I've made.

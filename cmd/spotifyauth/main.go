@@ -13,7 +13,7 @@ import (
 	ess "github.com/unixpickle/essentials"
 	"github.com/zmb3/spotify"
 
-	"github.com/stevenxie/api/internal/cmdutil"
+	"github.com/stevenxie/api/pkg/cmdutil"
 )
 
 const (
