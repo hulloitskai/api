@@ -4,9 +4,6 @@ import (
 	"context"
 	"io/ioutil"
 	"os"
-	"time"
-
-	"github.com/stevenxie/api/stream"
 
 	errors "golang.org/x/xerrors"
 
@@ -27,14 +24,8 @@ type (
 		about        api.AboutService
 		productivity api.ProductivityService
 		availability api.AvailabilityService
-
-		commits    *stream.CommitsPreloader
-		nowPlaying *stream.NowPlayingStreamer
-
-		// Configurable options.
-		nowPlayingPollInterval time.Duration
-		commitsPollInterval    time.Duration
-		commitsLimit           *int
+		commits      api.GitCommitsService
+		nowPlaying   api.NowPlayingStreamingService
 	}
 
 	// An Option configures a Server.
@@ -46,8 +37,8 @@ func New(
 	about api.AboutService,
 	productivity api.ProductivityService,
 	availability api.AvailabilityService,
+	nowPlaying api.NowPlayingStreamingService,
 	commits api.GitCommitsService,
-	nowPlaying api.NowPlayingService,
 	opts ...Option,
 ) *Server {
 	// Configure echo.
@@ -68,38 +59,12 @@ func New(
 		about:        about,
 		productivity: productivity,
 		availability: availability,
-
-		nowPlayingPollInterval: 5 * time.Second,
-		commitsPollInterval:    time.Minute,
+		nowPlaying:   nowPlaying,
+		commits:      commits,
 	}
 	for _, opt := range opts {
 		opt(srv)
 	}
-
-	// Build Git commits preloader.
-	cpopts := []stream.CPOption{
-		stream.WithCPLogger(
-			srv.log.WithField("service", "commits_preloader").Logger,
-		),
-	}
-	if srv.commitsLimit != nil {
-		cpopts = append(cpopts, stream.WithCPLimit(*srv.commitsLimit))
-	}
-	srv.commits = stream.NewCommitsPreloader(
-		commits,
-		srv.commitsPollInterval,
-		cpopts...,
-	)
-
-	// Build now playing streamer.
-	srv.nowPlaying = stream.NewNowPlayingStreamer(
-		nowPlaying,
-		srv.nowPlayingPollInterval,
-		stream.WithNPSLogger(
-			srv.log.WithField("service", "nowplaying_streamer").Logger,
-		),
-	)
-
 	return srv
 }
 
@@ -122,11 +87,6 @@ func (srv *Server) ListenAndServe(addr string) error {
 // Shutdown shuts down the server gracefully without interupting any active
 // connections.
 func (srv *Server) Shutdown(ctx context.Context) error {
-	// Stop streaming services.
-	srv.nowPlaying.Stop()
-	srv.commits.Stop()
-
-	// Shut down Echo.
 	if err := srv.echo.Shutdown(ctx); err != nil {
 		return errors.Errorf("server: shutting down Echo: %w", err)
 	}

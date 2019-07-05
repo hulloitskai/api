@@ -12,6 +12,8 @@ import (
 type AboutService struct {
 	repo         GistRepo
 	gistID, file string
+
+	location api.LocationService
 }
 
 // A GistRepo can retrieve gist data.
@@ -23,17 +25,20 @@ var _ api.AboutService = (*AboutService)(nil)
 
 // NewAboutService creates a new AboutService that reads Info from a GitHub
 // gist.
-func NewAboutService(gr GistRepo, gistID, file string) *AboutService {
+func NewAboutService(
+	gr GistRepo, gistID, file string,
+	location api.LocationService,
+) *AboutService {
 	return &AboutService{
 		repo:   gr,
-		gistID: gistID,
-		file:   file,
+		gistID: gistID, file: file,
+		location: location,
 	}
 }
 
 // About retrieves About info from a GitHub gist.
-func (as *AboutService) About() (*api.About, error) {
-	raw, err := as.repo.GistFile(as.gistID, as.file)
+func (svc *AboutService) About() (*api.About, error) {
+	raw, err := svc.repo.GistFile(svc.gistID, svc.file)
 	if err != nil {
 		return nil, errors.Errorf("github: getting gist: %w", err)
 	}
@@ -56,9 +61,9 @@ func (as *AboutService) About() (*api.About, error) {
 	}
 	data.About.Age = time.Since(bday).Truncate(365 * 24 * time.Hour)
 
-	// Fill missing values.
-	if data.About.Whereabouts == "" {
-		data.About.Whereabouts = "NOT IMPLEMENTED"
+	// Fill in whereabouts using location service.
+	if data.About.Whereabouts, err = svc.location.CurrentCity(); err != nil {
+		return nil, errors.Errorf("github: getting current location: %w", err)
 	}
 
 	return data.About, nil

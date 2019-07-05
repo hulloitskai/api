@@ -4,11 +4,14 @@ go 1.12
 
 require (
 	cloud.google.com/go v0.39.0 // indirect
+	github.com/alecthomas/repr v0.0.0-20181024024818-d37bc2a10ba1
 	github.com/dmksnnk/sentryhook v0.0.0-20190616213648-f8cfe1c9b1a6
 	github.com/getsentry/raven-go v0.2.0
 	github.com/google/go-github/v25 v25.1.1
 	github.com/gorilla/websocket v1.4.0 // indirect
 	github.com/joho/godotenv v1.3.0
+	github.com/k0kubun/colorstring v0.0.0-20150214042306-9440f1994b88 // indirect
+	github.com/k0kubun/pp v3.0.1+incompatible
 	github.com/kelseyhightower/envconfig v1.4.0
 	github.com/konsorten/go-windows-terminal-sequences v1.0.2 // indirect
 	github.com/kr/pretty v0.1.0 // indirect

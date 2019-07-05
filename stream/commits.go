@@ -24,7 +24,7 @@ type (
 		err     error
 	}
 
-	// A CPOption configures a CommitsPreloader
+	// A CPOption configures a CommitsPreloader.
 	CPOption func(*CommitsPreloader)
 )
 

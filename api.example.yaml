@@ -15,4 +15,7 @@ availability:
 nowPlaying:
   pollInterval: Duration
 
+location:
+  pollInterval: Duration
+
 shutdownTimeout: Duration

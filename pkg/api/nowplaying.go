@@ -13,6 +13,7 @@ type NowPlayingService interface {
 
 // NowPlayingStreamingService can stream the currently playing track.
 type NowPlayingStreamingService interface {
+	NowPlayingService
 	NowPlayingStream() <-chan MaybeNowPlaying
 }
 

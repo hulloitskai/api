@@ -8,6 +8,8 @@ import (
 	"os/signal"
 	"time"
 
+	"github.com/stevenxie/api/stream"
+
 	errors "golang.org/x/xerrors"
 
 	"github.com/sirupsen/logrus"
@@ -17,8 +19,10 @@ import (
 	"github.com/stevenxie/api/config"
 	"github.com/stevenxie/api/internal/info"
 	"github.com/stevenxie/api/pkg/cmdutil"
-	"github.com/stevenxie/api/provider/gcal"
-	"github.com/stevenxie/api/provider/github"
+	gh "github.com/stevenxie/api/provider/github"
+	gcal "github.com/stevenxie/api/provider/google/calendar"
+	gmaps "github.com/stevenxie/api/provider/google/maps"
+	"github.com/stevenxie/api/provider/mapbox"
 	"github.com/stevenxie/api/provider/rescuetime"
 	"github.com/stevenxie/api/provider/spotify"
 	"github.com/stevenxie/api/server"
@@ -60,9 +64,9 @@ func main() {
 func run(c *cli.Context) error {
 	// Init logger, load config.
 	var (
-		ravenClient = buildRaven()
-		log         = buildLogger(ravenClient)
-		cfg, err    = config.Load()
+		raven    = buildRaven()
+		log      = buildLogger(raven)
+		cfg, err = config.Load()
 	)
 	if err != nil {
 		return errors.Errorf("loading config: %w", err)
@@ -71,28 +75,79 @@ func run(c *cli.Context) error {
 	// Initialize services:
 	log.Info("Initializing services...")
 
-	githubClient, err := github.New()
+	// Build location service.
+	geocoder, err := mapbox.New()
+	if err != nil {
+		return errors.Errorf("creating MapBox client: %w", err)
+	}
+	locationService, err := gmaps.NewLocationService(geocoder)
+	if err != nil {
+		return errors.Errorf("creating location service: %w", err)
+	}
+	locationPollInterval := time.Minute
+	if cfg.Location.PollInterval != nil {
+		locationPollInterval = *cfg.Location.PollInterval
+	}
+	locationPreloader := stream.NewLocationPreloader(
+		locationService, geocoder,
+		locationPollInterval,
+		stream.WithLPLogger(log.WithField("service", "location_preloader").Logger),
+	)
+
+	// Build about service.
+	github, err := gh.New()
 	if err != nil {
 		return errors.Errorf("creating GitHub client: %w", err)
 	}
-
-	// Build about service.
 	gistID, gistFile := cfg.AboutGistInfo()
-	aboutService := github.NewAboutService(githubClient, gistID, gistFile)
+	aboutService := gh.NewAboutService(
+		github, gistID, gistFile,
+		locationPreloader,
+	)
 
-	// Create Spotify client.
-	spotifyClient, err := spotify.New()
+	// Build commits service.
+	var (
+		cpOpts              []stream.CPOption
+		commitsPollInterval = time.Minute
+	)
+	if cfg.Commits.Limit != nil {
+		cpOpts = append(cpOpts, stream.WithCPLimit(*cfg.Commits.Limit))
+	}
+	if cfg.Commits.PollInterval != nil {
+		commitsPollInterval = *cfg.Commits.PollInterval
+	}
+	commitsPreloader := stream.NewCommitsPreloader(
+		github,
+		commitsPollInterval,
+		append(cpOpts, stream.WithCPLogger(
+			log.WithField("service", "commits_preloader").Logger,
+		))...,
+	)
+
+	// Create now-playing service.
+	spotify, err := spotify.New()
 	if err != nil {
 		return errors.Errorf("creating Spotify client: %w", err)
 	}
+	nowPlayingPollInterval := 5 * time.Second
+	if cfg.NowPlaying.PollInterval != nil {
+		nowPlayingPollInterval = *cfg.NowPlaying.PollInterval
+	}
+	nowPlayingStreamer := stream.NewNowPlayingStreamer(
+		spotify,
+		nowPlayingPollInterval,
+		stream.WithNPSLogger(
+			log.WithField("service", "nowplaying_streamer").Logger,
+		),
+	)
 
 	// Create GCal client.
-	gcalClient, err := gcal.NewClient()
+	gcalc, err := gcal.NewClient()
 	if err != nil {
 		return errors.Errorf("creating GCal client: %w", err)
 	}
 	availabilityService := gcal.NewAvailabilityService(
-		gcalClient,
+		gcalc,
 		cfg.GCalCalendarIDs(),
 	)
 
@@ -101,7 +156,7 @@ func run(c *cli.Context) error {
 	if err != nil {
 		return errors.Errorf("failed to load current timezone from GCal: %w", err)
 	}
-	rtClient, err := rescuetime.New(rescuetime.WithTimezone(timezone))
+	rescuetime, err := rescuetime.New(rescuetime.WithTimezone(timezone))
 	if err != nil {
 		return errors.Errorf("creating RescueTime client: %w", err)
 	}
@@ -110,25 +165,27 @@ func run(c *cli.Context) error {
 	log.Info("Initializing server...")
 	srv := server.New(
 		aboutService,
-		rtClient,
+		rescuetime,
 		availabilityService,
-		githubClient,
-		spotifyClient,
-		append(
-			cfg.ServerOpts(),
-			server.WithLogger(log),
-			server.WithRaven(ravenClient),
-		)...,
+		nowPlayingStreamer,
+		commitsPreloader,
+
+		server.WithLogger(log),
+		server.WithRaven(raven),
 	)
 
 	// Shut down server gracefully upon interrupt.
 	go shutdownUponInterrupt(srv, log, cfg.ShutdownTimeout)
 
-	// TODO: Shut down server gracefully.
 	err = srv.ListenAndServe(fmt.Sprintf(":%d", c.Int("port")))
 	if (err != nil) && (err != http.ErrServerClosed) {
 		return errors.Errorf("starting server: %w", err)
 	}
+
+	// Stop preloaders and streamers.
+	locationPreloader.Stop()
+	commitsPreloader.Stop()
+	nowPlayingStreamer.Stop()
 
 	return nil
 }

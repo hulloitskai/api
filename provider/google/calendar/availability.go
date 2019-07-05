@@ -1,4 +1,4 @@
-package gcal
+package calendar
 
 import (
 	"sort"
@@ -66,17 +66,17 @@ func (svc *AvailabilityService) BusyPeriods(date time.Time) ([]*api.TimePeriod,
 	busy := make([]*api.TimePeriod, 0)
 	for _, cal := range res.Calendars {
 		if len(cal.Errors) > 0 {
-			return nil, errors.Errorf("gcal: error in calendars response: %w",
+			return nil, errors.Errorf("calendar: error in calendars response: %w",
 				cal.Errors[0])
 		}
 		for _, period := range cal.Busy {
 			start, err := time.ParseInLocation(time.RFC3339, period.Start, timezone)
 			if err != nil {
-				return nil, errors.Errorf("gcal: parsing start time: %w", err)
+				return nil, errors.Errorf("calendar: parsing start time: %w", err)
 			}
 			end, err := time.ParseInLocation(time.RFC3339, period.End, timezone)
 			if err != nil {
-				return nil, errors.Errorf("gcal: parsing end time: %w", err)
+				return nil, errors.Errorf("calendar: parsing end time: %w", err)
 			}
 			busy = append(busy, &api.TimePeriod{
 				Start: start,
@@ -99,7 +99,7 @@ func (svc *AvailabilityService) Timezone() (*time.Location, error) {
 
 		loc, err := time.LoadLocation(setting.Value)
 		if err != nil {
-			return nil, errors.Errorf("gcal: failed to parse timezone: %w", err)
+			return nil, errors.Errorf("calendar: failed to parse timezone: %w", err)
 		}
 		svc.timezone = loc
 	}

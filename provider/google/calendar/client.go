@@ -1,4 +1,4 @@
-package gcal
+package calendar
 
 import (
 	"context"
@@ -6,14 +6,14 @@ import (
 	"golang.org/x/oauth2"
 	"golang.org/x/oauth2/google"
 	errors "golang.org/x/xerrors"
+
 	calendar "google.golang.org/api/calendar/v3"
 	"google.golang.org/api/option"
 	"gopkg.in/go-validator/validator.v2"
 
 	"github.com/kelseyhightower/envconfig"
+	googleprov "github.com/stevenxie/api/provider/google"
 )
-
-const envPrefix = "google"
 
 // A Client can interact with the Google Calendar API.
 type Client struct{ calendar.Service }
@@ -28,13 +28,13 @@ func NewClient() (*Client, error) {
 		ID     string `validate:"nonzero"`
 		Secret string `validate:"nonzero"`
 	}
-	if err := envconfig.Process(envPrefix, &data); err != nil {
-		return nil, errors.Errorf("gcal: reading envvars: %w", err)
+	if err := envconfig.Process(googleprov.Namespace, &data); err != nil {
+		return nil, errors.Errorf("calendar: reading envvars: %w", err)
 	}
 
 	// Validate data.
 	if err := validator.Validate(&data); err != nil {
-		return nil, errors.Errorf("gcal: validating envvars: %w", err)
+		return nil, errors.Errorf("calendar: validating envvars: %w", err)
 	}
 
 	// Create authenticated calendar service.

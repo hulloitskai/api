@@ -31,6 +31,10 @@ type Config struct {
 		PollInterval *time.Duration `yaml:"pollInterval"`
 	} `yaml:"nowPlaying"`
 
+	Location struct {
+		PollInterval *time.Duration `yaml:"pollInterval"`
+	} `yaml:"location"`
+
 	// Miscellaneous:
 	ShutdownTimeout *time.Duration `yaml:"shutdownTimeout"`
 }
