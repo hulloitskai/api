@@ -68,6 +68,7 @@ func (lp *LocationPreloader) populateCache() {
 		switch v := result.(type) {
 		case error:
 			err = v
+			lp.log.WithError(err).Error("Failed to load last seen position.")
 		case *geo.Coordinate:
 			lastSeen = v
 		}

@@ -76,6 +76,7 @@ func (cp *CommitsPreloader) populateCache() {
 		switch v := result.(type) {
 		case error:
 			err = v
+			cp.log.WithError(err).Error("Failed to load latest commits.")
 		case []*api.GitCommit:
 			commits = v
 		}

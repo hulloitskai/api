@@ -67,6 +67,7 @@ func (nps *NowPlayingStreamer) startStreaming() {
 		switch v := result.(type) {
 		case error:
 			maybe = api.MaybeNowPlaying{Err: v}
+			nps.log.WithError(maybe.Err).Error("Failed to load now-playing data.")
 		case *api.NowPlaying:
 			maybe = api.MaybeNowPlaying{NowPlaying: v}
 		default:
