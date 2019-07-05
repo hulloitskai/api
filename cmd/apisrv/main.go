@@ -8,8 +8,6 @@ import (
 	"os/signal"
 	"time"
 
-	"github.com/stevenxie/api/stream"
-
 	errors "golang.org/x/xerrors"
 
 	"github.com/sirupsen/logrus"
@@ -26,6 +24,7 @@ import (
 	"github.com/stevenxie/api/provider/rescuetime"
 	"github.com/stevenxie/api/provider/spotify"
 	"github.com/stevenxie/api/server"
+	"github.com/stevenxie/api/stream"
 )
 
 func main() {
@@ -84,13 +83,9 @@ func run(c *cli.Context) error {
 	if err != nil {
 		return errors.Errorf("creating location service: %w", err)
 	}
-	locationPollInterval := time.Minute
-	if cfg.Location.PollInterval != nil {
-		locationPollInterval = *cfg.Location.PollInterval
-	}
 	locationPreloader := stream.NewLocationPreloader(
 		locationService, geocoder,
-		locationPollInterval,
+		cfg.Location.PollInterval,
 		stream.WithLPLogger(log.WithField("service", "location_preloader").Logger),
 	)
 
@@ -106,22 +101,11 @@ func run(c *cli.Context) error {
 	)
 
 	// Build commits service.
-	var (
-		cpOpts              []stream.CPOption
-		commitsPollInterval = time.Minute
-	)
-	if cfg.Commits.Limit != nil {
-		cpOpts = append(cpOpts, stream.WithCPLimit(*cfg.Commits.Limit))
-	}
-	if cfg.Commits.PollInterval != nil {
-		commitsPollInterval = *cfg.Commits.PollInterval
-	}
 	commitsPreloader := stream.NewCommitsPreloader(
 		github,
-		commitsPollInterval,
-		append(cpOpts, stream.WithCPLogger(
-			log.WithField("service", "commits_preloader").Logger,
-		))...,
+		cfg.Commits.PollInterval,
+		stream.WithCPLimit(cfg.Commits.Limit),
+		stream.WithCPLogger(log.WithField("service", "commits_preloader").Logger),
 	)
 
 	// Create now-playing service.
@@ -129,13 +113,9 @@ func run(c *cli.Context) error {
 	if err != nil {
 		return errors.Errorf("creating Spotify client: %w", err)
 	}
-	nowPlayingPollInterval := 5 * time.Second
-	if cfg.NowPlaying.PollInterval != nil {
-		nowPlayingPollInterval = *cfg.NowPlaying.PollInterval
-	}
 	nowPlayingStreamer := stream.NewNowPlayingStreamer(
 		spotify,
-		nowPlayingPollInterval,
+		cfg.NowPlaying.PollInterval,
 		stream.WithNPSLogger(
 			log.WithField("service", "nowplaying_streamer").Logger,
 		),

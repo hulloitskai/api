@@ -17,8 +17,8 @@ type Config struct {
 	} `yaml:"about"`
 
 	Commits struct {
-		Limit        *int           `yaml:"limit"`
-		PollInterval *time.Duration `yaml:"pollInterval"`
+		Limit        int           `yaml:"limit"`
+		PollInterval time.Duration `yaml:"pollInterval"`
 	} `yaml:"commits"`
 
 	Availability struct {
@@ -28,11 +28,11 @@ type Config struct {
 	} `yaml:"availability"`
 
 	NowPlaying struct {
-		PollInterval *time.Duration `yaml:"pollInterval"`
+		PollInterval time.Duration `yaml:"pollInterval"`
 	} `yaml:"nowPlaying"`
 
 	Location struct {
-		PollInterval *time.Duration `yaml:"pollInterval"`
+		PollInterval time.Duration `yaml:"pollInterval"`
 	} `yaml:"location"`
 
 	// Miscellaneous:
@@ -40,7 +40,12 @@ type Config struct {
 }
 
 func defaultConfig() *Config {
-	return new(Config)
+	cfg := new(Config)
+	cfg.Commits.Limit = 5
+	cfg.Commits.PollInterval = time.Minute
+	cfg.NowPlaying.PollInterval = 5 * time.Second
+	cfg.Location.PollInterval = time.Minute
+	return cfg
 }
 
 // Validate returns an error if the Config is not valid.
