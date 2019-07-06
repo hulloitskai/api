@@ -4,6 +4,8 @@ import (
 	"io"
 	"time"
 
+	"github.com/stevenxie/api/pkg/music"
+
 	"github.com/stevenxie/api/pkg/api"
 	errors "golang.org/x/xerrors"
 )
@@ -23,7 +25,7 @@ func (c *Client) NowPlaying() (*api.NowPlaying, error) {
 	// Derive track album.
 	var (
 		sa    = &cp.Item.Album
-		album = &api.MusicAlbum{
+		album = &music.Album{
 			Name:   sa.Name,
 			URL:    extSpotifyURL(sa.ExternalURLs),
 			Images: sa.Images,
@@ -31,9 +33,9 @@ func (c *Client) NowPlaying() (*api.NowPlaying, error) {
 	)
 
 	// Derive track artists.
-	artists := make([]*api.MusicArtist, len(cp.Item.Artists))
+	artists := make([]*music.Artist, len(cp.Item.Artists))
 	for i, a := range cp.Item.Artists {
-		artists[i] = &api.MusicArtist{
+		artists[i] = &music.Artist{
 			Name: a.Name,
 			URL:  extSpotifyURL(a.ExternalURLs),
 		}
@@ -46,7 +48,7 @@ func (c *Client) NowPlaying() (*api.NowPlaying, error) {
 		),
 		Playing:  cp.Playing,
 		Progress: cp.Progress,
-		Track: &api.MusicTrack{
+		Track: &music.Track{
 			Name:     cp.Item.Name,
 			URL:      extSpotifyURL(cp.Item.ExternalURLs),
 			Artists:  artists,

@@ -1,6 +1,8 @@
 package geo
 
 import (
+	"fmt"
+
 	errors "golang.org/x/xerrors"
 )
 
@@ -8,81 +10,126 @@ type (
 	// A Geocoder can look up geographical features that correspond to a set of
 	// coordinates.
 	Geocoder interface {
-		ReverseGeocode(coord Coordinate, opts ...GeocodeOption) ([]*Feature, error)
+		ReverseGeocode(coord Coordinate, opts ...RGOption) ([]*RGResult, error)
 	}
 
-	// GeocodeOptions are a set of configurable options for a geocoding request.
-	GeocodeOptions struct {
-		Types []FeatureType
+	// A RGResult is the result of a reverse-geocoding search.
+	RGResult struct {
+		Location  `json:"location"`
+		Relevance float32 `json:"relevance"`
+		Distance  float32 `json:"distance"`
 	}
 
-	// A GeocodeOption configures a geocoding request.
-	GeocodeOption func(*GeocodeOptions)
+	// RGOptions are a set of configurable options for a reverse-geocoding
+	// request.
+	RGOptions struct {
+		Level        GeocodeLevel
+		Radius       uint
+		IncludeShape bool
+	}
+
+	// A RGOption configures a reverse-geocoding request.
+	RGOption func(*RGOptions)
 )
 
-// WithTypes configures a geocoding request to limit the types of features
-// to search for.
-func WithTypes(types ...FeatureType) GeocodeOption {
-	return func(opts *GeocodeOptions) { opts.Types = types }
+// WithRGLevel configures a reverse-geocoding request to limit the search scope
+// specified geocoding match level.
+func WithRGLevel(l GeocodeLevel) RGOption {
+	return func(opts *RGOptions) { opts.Level = l }
 }
 
-// A FeatureType represents the type of a feature.
-type FeatureType string
+// WithRGRadius configures a reverse-geocoding request to limit the search scope
+// to the specified radius.
+func WithRGRadius(radius uint) RGOption {
+	return func(opts *RGOptions) { opts.Radius = radius }
+}
 
-// A set of possible FeatureTypes.
+// WithRGShape confiures a reverse-geocoding request to include an area shape.
+func WithRGShape() RGOption {
+	return func(opts *RGOptions) { opts.IncludeShape = true }
+}
+
+// A GeocodeLevel represents the type of a feature.
+type GeocodeLevel uint8
+
+// A set of possible GeocodeLevels.
 const (
-	CountryType      FeatureType = "country"
-	RegionType       FeatureType = "region"
-	PostcodeType     FeatureType = "postcode"
-	DistrictType     FeatureType = "district"
-	PlaceType        FeatureType = "place"
-	LocalityType     FeatureType = "locality"
-	NeighborhoodType FeatureType = "neighborhood"
-	AddressType      FeatureType = "address"
-	POIType          FeatureType = "poi"
+	CountryLevel GeocodeLevel = iota + 1
+	StateLevel
+	CountyLevel
+	CityLevel
+	DistrictLevel
+	PostcodeLevel
 )
 
+var geocodeLevelNames = map[GeocodeLevel]string{
+	CountryLevel:  "country",
+	StateLevel:    "state",
+	CountyLevel:   "county",
+	CityLevel:     "city",
+	DistrictLevel: "district",
+	PostcodeLevel: "postcode",
+}
+
+func (level GeocodeLevel) String() string {
+	if name, ok := geocodeLevelNames[level]; ok {
+		return name
+	}
+	return fmt.Sprintf("GeocodeLevel(%d)", uint8(level))
+}
+
 type (
-	// A Feature is a geographical feature.
-	Feature struct {
-		ID         string            `json:"id"`
-		Type       []FeatureType     `json:"place_type"`
-		Relevance  float32           `json:"relevance"`
-		Text       string            `json:"text"`
-		Place      string            `json:"place_name"`
-		Properties FeatureProperties `json:"properties"`
-		Context    []FeatureContext  `json:"context"`
+	// A Location is a geographical location.
+	Location struct {
+		ID       string       `json:"id"`
+		Level    string       `json:"level"`
+		Type     string       `json:"type"`
+		Position Coordinate   `json:"position"`
+		Address  *Address     `json:"address"`
+		Shape    []Coordinate `json:"shape,omitempty"`
 	}
 
-	// FeatureProperties describe the properties of a Feature.
-	FeatureProperties struct {
-		Landmark  bool   `json:"landmark"`
-		Address   string `json:"address"`
-		Category  string `json:"category"`
-		Wikidata  string `json:"wikidata"`
-		ShortCode string `json:"short_code"`
-	}
-
-	// FeatureContext describes the context of a Feature in terms of other related
-	// features.
-	FeatureContext struct {
-		ID        string `json:"id"`
-		ShortCode string `json:"short_code"`
-		Wikidata  string `json:"wikidata"`
-		Text      string `json:"text"`
+	// An Address describes the position of a location.
+	Address struct {
+		Label      string `json:"label"`
+		Country    string `json:"country"`
+		State      string `json:"state"`
+		County     string `json:"county"`
+		City       string `json:"city"`
+		District   string `json:"district,omitempty"`
+		PostalCode string `json:"postalCode"`
+		Street     string `json:"street,omitempty"`
+		Number     string `json:"number,omitempty"`
 	}
 )
 
 // CityAt uses a Geocoder to determine the city located at coord.
 func CityAt(geo Geocoder, coord Coordinate) (city string, err error) {
-	features, err := geo.ReverseGeocode(coord, WithTypes(PlaceType))
+	results, err := geo.ReverseGeocode(coord, WithRGLevel(CityLevel))
 	if err != nil {
-		return "", errors.Errorf("geo: reverse-geocoding last seen position: %w",
-			err)
+		return "", errors.Errorf("geo: reverse-geocoding position: %w", err)
 	}
+	if len(results) == 0 {
+		return "", errors.New("geo: no locations found at given position")
+	}
+	addr := results[0].Address
+	return fmt.Sprintf("%s, %s, %s", addr.County, addr.State, addr.Country), nil
+}
 
-	if len(features) == 0 {
-		return "", errors.New("geo: no features found at last seen position")
+// RegionAt uses a Geocoder to look up the region that coord is situated in.
+//
+// It will also request for the shape of the region area.
+func RegionAt(geo Geocoder, coord Coordinate) (*Location, error) {
+	results, err := geo.ReverseGeocode(
+		coord,
+		WithRGLevel(CityLevel),
+		WithRGShape(),
+	)
+	if err != nil {
+		return nil, errors.Errorf("geo: reverse-geocoding position: %w", err)
 	}
-	return features[0].Place, nil
+	if len(results) == 0 {
+		return nil, errors.New("geo: no locations found at given position")
+	}
+	return &results[0].Location, nil
 }

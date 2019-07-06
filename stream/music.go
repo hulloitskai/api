@@ -12,9 +12,9 @@ import (
 )
 
 type (
-	// NowPlayingStreamer implements a streaming interface over an
-	// api.NowPlayingService.
-	NowPlayingStreamer struct {
+	// MusicStreamer implements a streaming interface over an
+	// api.MusicService.
+	MusicStreamer struct {
 		streamer *PollStreamer
 		log      *logrus.Logger
 
@@ -25,30 +25,30 @@ type (
 	}
 
 	// An NPSOption configures a NowPlayingStreamer.
-	NPSOption func(*NowPlayingStreamer)
+	NPSOption func(*MusicStreamer)
 )
 
-// Ensure that a NowPlayingStreamer implements both api.NowPlayingService and
-// api.NowPlayingStreamingService.
+// Ensure that a NowPlayingStreamer implements both api.MusicService and
+// api.MusicStreamingService.
 var (
-	_ api.NowPlayingService          = (*NowPlayingStreamer)(nil)
-	_ api.NowPlayingStreamingService = (*NowPlayingStreamer)(nil)
+	_ api.MusicService          = (*MusicStreamer)(nil)
+	_ api.MusicStreamingService = (*MusicStreamer)(nil)
 )
 
 // WithNPSLogger adds an logger to a NowPlayingStreamer.
 func WithNPSLogger(log *logrus.Logger) NPSOption {
-	return func(nps *NowPlayingStreamer) { nps.log = log }
+	return func(nps *MusicStreamer) { nps.log = log }
 }
 
 // NewNowPlayingStreamer creates a new NowPlayingStreamer.
 func NewNowPlayingStreamer(
-	svc api.NowPlayingService,
+	svc api.MusicService,
 	interval time.Duration,
 	opts ...NPSOption,
-) *NowPlayingStreamer {
+) *MusicStreamer {
 	var (
 		action   = func() (zero.Interface, error) { return svc.NowPlaying() }
-		streamer = &NowPlayingStreamer{
+		streamer = &MusicStreamer{
 			streamer: NewPollStreamer(action, interval),
 			stream:   make(chan api.MaybeNowPlaying),
 			log:      zero.Logger(),
@@ -61,7 +61,7 @@ func NewNowPlayingStreamer(
 	return streamer
 }
 
-func (nps *NowPlayingStreamer) startStreaming() {
+func (nps *MusicStreamer) startStreaming() {
 	for result := range nps.streamer.Stream() {
 		var maybe api.MaybeNowPlaying
 		switch v := result.(type) {
@@ -87,17 +87,17 @@ func (nps *NowPlayingStreamer) startStreaming() {
 	}
 }
 
+// Stop stops the NowPlayingStreamer.
+func (nps *MusicStreamer) Stop() { nps.streamer.Stop() }
+
 // NowPlayingStream exposes a stream of NowPlaying objects.
-func (nps *NowPlayingStreamer) NowPlayingStream() <-chan api.MaybeNowPlaying {
+func (nps *MusicStreamer) NowPlayingStream() <-chan api.MaybeNowPlaying {
 	return nps.stream
 }
 
 // NowPlaying returns the latest NowPlaying stream result.
-func (nps *NowPlayingStreamer) NowPlaying() (*api.NowPlaying, error) {
+func (nps *MusicStreamer) NowPlaying() (*api.NowPlaying, error) {
 	nps.mux.Lock()
 	defer nps.mux.Unlock()
 	return nps.latest.NowPlaying, nps.latest.Err
 }
-
-// Stop stops the NowPlayingStreamer.
-func (nps *NowPlayingStreamer) Stop() { nps.streamer.Stop() }

@@ -27,12 +27,15 @@ type Config struct {
 		} `yaml:"gcal"`
 	} `yaml:"availability"`
 
-	NowPlaying struct {
+	Music struct {
 		PollInterval time.Duration `yaml:"pollInterval"`
-	} `yaml:"nowPlaying"`
+	} `yaml:"music"`
 
 	Location struct {
 		PollInterval time.Duration `yaml:"pollInterval"`
+		Here         struct {
+			AppID string `yaml:"appID"`
+		} `yaml:"here"`
 	} `yaml:"location"`
 
 	// Miscellaneous:
@@ -43,7 +46,7 @@ func defaultConfig() *Config {
 	cfg := new(Config)
 	cfg.Commits.Limit = 5
 	cfg.Commits.PollInterval = time.Minute
-	cfg.NowPlaying.PollInterval = 5 * time.Second
+	cfg.Music.PollInterval = 5 * time.Second
 	cfg.Location.PollInterval = time.Minute
 	return cfg
 }

@@ -20,6 +20,7 @@ _A personal API._
 | [`/v1/nowplaying`](https://api.stevenxie.me/v1/nowplaying)     | Currently playing track from Spotify.        |
 | [`/v1/productivity`](https://api.stevenxie.me/v1/productivity) | Productivity metrics from RescueTime.        |
 | [`/v1/availability`](https://api.stevenxie.me/v1/availability) | Personal availability information from GCal. |
+| [`/v1/location`](https://api.stevenxie.me/v1/location)         | Current location data from Google Maps.      |
 
 ## Websocket Endpoints
 

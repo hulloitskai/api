@@ -1,4 +1,4 @@
-package mapbox
+package here
 
 import (
 	"fmt"
@@ -12,15 +12,13 @@ import (
 )
 
 // Namespace is the package namespace used for things like envvar prefixes.
-const Namespace = "mapbox"
-
-const baseURL = "https://api.mapbox.com"
+const Namespace = "here"
 
 type (
-	// A Client can interact with the MapBox API.
+	// A Client can make requests to the Here API.
 	Client struct {
-		httpc *http.Client
-		token string
+		httpc    *http.Client
+		id, code string
 	}
 
 	// An Option configures a Client.
@@ -29,20 +27,21 @@ type (
 
 var _ geo.Geocoder = (*Client)(nil)
 
-// New creates a new Client, with a token read from the environment (as
-// 'MAPBOX_TOKEN').
-func New(opts ...Option) (*Client, error) {
+// New creates a new Client. It reads the app code from the environment
+// variable 'HERE_APP_CODE'.
+func New(appID string, opts ...Option) (*Client, error) {
 	var (
-		envvar    = fmt.Sprintf("%s_TOKEN", strings.ToUpper(Namespace))
-		token, ok = os.LookupEnv(envvar)
+		envvar   = fmt.Sprintf("%s_APP_CODE", strings.ToUpper(Namespace))
+		code, ok = os.LookupEnv(envvar)
 	)
 	if !ok {
-		return nil, errors.Errorf("mapbox: no such envvar '%s'", envvar)
+		return nil, errors.Errorf("here: no such envvar '%s'", envvar)
 	}
 
 	c := &Client{
 		httpc: new(http.Client),
-		token: token,
+		id:    appID,
+		code:  code,
 	}
 	for _, opt := range opts {
 		opt(c)
@@ -57,6 +56,7 @@ func WithHTTPClient(httpc *http.Client) Option {
 
 func (c *Client) beginQuery(url *url.URL) url.Values {
 	params := url.Query()
-	params.Set("access_token", c.token)
+	params.Set("app_id", c.id)
+	params.Set("app_code", c.code)
 	return params
 }

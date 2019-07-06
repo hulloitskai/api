@@ -7,6 +7,7 @@ import (
 	"github.com/sirupsen/logrus"
 	"github.com/stevenxie/api/pkg/api"
 	"github.com/stevenxie/api/pkg/zero"
+	errors "golang.org/x/xerrors"
 )
 
 type (
@@ -79,6 +80,9 @@ func (cp *CommitsPreloader) populateCache() {
 			cp.log.WithError(err).Error("Failed to load latest commits.")
 		case []*api.GitCommit:
 			commits = v
+		default:
+			cp.log.WithField("value", v).Error("Unexpected value from upstream.")
+			err = errors.Errorf("stream: unexpected value '%s' from upstream")
 		}
 
 		cp.mux.Lock()
@@ -87,6 +91,9 @@ func (cp *CommitsPreloader) populateCache() {
 		cp.mux.Unlock()
 	}
 }
+
+// Stop stops the CommitsPreloader.
+func (cp *CommitsPreloader) Stop() { cp.streamer.Stop() }
 
 // RecentGitCommits returns the most recently preloaded commits.
 func (cp *CommitsPreloader) RecentGitCommits(limit int) ([]*api.GitCommit,
@@ -112,6 +119,3 @@ func (cp *CommitsPreloader) RecentGitCommits(limit int) ([]*api.GitCommit,
 	}
 	return cp.commits[:limit:limit], cp.err
 }
-
-// Stop stops the CommitsPreloader.
-func (cp *CommitsPreloader) Stop() { cp.streamer.Stop() }

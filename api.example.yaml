@@ -12,10 +12,12 @@ availability:
     calendarIDs:
       - String # Calendar ID
 
-nowPlaying:
+music:
   pollInterval: Duration
 
 location:
+  here:
+    appID: String
   pollInterval: Duration
 
 shutdownTimeout: Duration

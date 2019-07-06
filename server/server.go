@@ -24,8 +24,9 @@ type (
 		about        api.AboutService
 		productivity api.ProductivityService
 		availability api.AvailabilityService
+		location     api.LocationService
 		commits      api.GitCommitsService
-		nowPlaying   api.NowPlayingStreamingService
+		music        api.MusicStreamingService
 	}
 
 	// An Option configures a Server.
@@ -35,10 +36,11 @@ type (
 // New creates a new Server.
 func New(
 	about api.AboutService,
-	productivity api.ProductivityService,
 	availability api.AvailabilityService,
-	nowPlaying api.NowPlayingStreamingService,
 	commits api.GitCommitsService,
+	location api.LocationService,
+	music api.MusicStreamingService,
+	productivity api.ProductivityService,
 	opts ...Option,
 ) *Server {
 	// Configure echo.
@@ -57,10 +59,11 @@ func New(
 		log:  zero.Logger(),
 
 		about:        about,
-		productivity: productivity,
 		availability: availability,
-		nowPlaying:   nowPlaying,
 		commits:      commits,
+		location:     location,
+		music:        music,
+		productivity: productivity,
 	}
 	for _, opt := range opts {
 		opt(srv)

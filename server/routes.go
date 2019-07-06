@@ -14,9 +14,9 @@ func (srv *Server) registerRoutes() error {
 	// Register routes.
 	e.GET("/", handler.InfoHandler())
 	e.GET("/about", handler.AboutHandler(srv.about, srv.hlog("about")))
-	e.GET(
-		"/productivity",
-		handler.ProductivityHandler(srv.productivity, srv.hlog("productivity")),
+	e.GET("/productivity", handler.ProductivityHandler(
+		srv.productivity,
+		srv.hlog("productivity")),
 	)
 	e.GET("/availability", handler.AvailabilityHandler(
 		srv.availability,
@@ -26,12 +26,16 @@ func (srv *Server) registerRoutes() error {
 		srv.commits,
 		srv.hlog("recent_commits"),
 	))
+	e.GET("/location", handler.LocationHandler(
+		srv.location,
+		srv.hlog("location"),
+	))
 
 	// Handle music routes.
-	npp := handler.NewNowPlayingProvider(srv.nowPlaying, srv.nowPlaying)
+	npp := handler.NewNowPlayingProvider(srv.music, srv.music)
 	e.GET(
 		"/nowplaying",
-		npp.RESTHandler(srv.hlog("nowplaying_rest")),
+		npp.RESTHandler(srv.hlog("nowplaying")),
 	)
 	e.GET(
 		"/nowplaying/ws",

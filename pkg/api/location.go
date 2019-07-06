@@ -8,4 +8,5 @@ import (
 type LocationService interface {
 	LastSeen() (*geo.Coordinate, error)
 	CurrentCity() (city string, err error)
+	CurrentRegion() (*geo.Location, error)
 }

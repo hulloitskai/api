@@ -17,7 +17,7 @@ const Namespace = "spotify"
 // A Client can access the Spotify API.
 type Client struct{ sc spotify.Client }
 
-var _ api.NowPlayingService = (*Client)(nil)
+var _ api.MusicService = (*Client)(nil)
 
 // New creates a new Spotify client.
 //

@@ -20,7 +20,7 @@ import (
 	gh "github.com/stevenxie/api/provider/github"
 	gcal "github.com/stevenxie/api/provider/google/calendar"
 	gmaps "github.com/stevenxie/api/provider/google/maps"
-	"github.com/stevenxie/api/provider/mapbox"
+	"github.com/stevenxie/api/provider/here"
 	"github.com/stevenxie/api/provider/rescuetime"
 	"github.com/stevenxie/api/provider/spotify"
 	"github.com/stevenxie/api/server"
@@ -75,18 +75,18 @@ func run(c *cli.Context) error {
 	log.Info("Initializing services...")
 
 	// Build location service.
-	geocoder, err := mapbox.New()
+	geocoder, err := here.New(cfg.Location.Here.AppID)
 	if err != nil {
 		return errors.Errorf("creating MapBox client: %w", err)
 	}
-	locationService, err := gmaps.NewLocationService(geocoder)
+	historian, err := gmaps.NewHistorian()
 	if err != nil {
-		return errors.Errorf("creating location service: %w", err)
+		return errors.Errorf("creating historian: %w", err)
 	}
-	locationPreloader := stream.NewLocationPreloader(
-		locationService, geocoder,
+	location := stream.NewLocationPreloader(
+		historian, geocoder,
 		cfg.Location.PollInterval,
-		stream.WithLPLogger(log.WithField("service", "location_preloader").Logger),
+		stream.WithLSLogger(log.WithField("service", "location_preloader").Logger),
 	)
 
 	// Build about service.
@@ -95,13 +95,13 @@ func run(c *cli.Context) error {
 		return errors.Errorf("creating GitHub client: %w", err)
 	}
 	gistID, gistFile := cfg.AboutGistInfo()
-	aboutService := gh.NewAboutService(
+	about := gh.NewAboutService(
 		github, gistID, gistFile,
-		locationPreloader,
+		location,
 	)
 
 	// Build commits service.
-	commitsPreloader := stream.NewCommitsPreloader(
+	commits := stream.NewCommitsPreloader(
 		github,
 		cfg.Commits.PollInterval,
 		stream.WithCPLimit(cfg.Commits.Limit),
@@ -113,26 +113,26 @@ func run(c *cli.Context) error {
 	if err != nil {
 		return errors.Errorf("creating Spotify client: %w", err)
 	}
-	nowPlayingStreamer := stream.NewNowPlayingStreamer(
+	nowplaying := stream.NewNowPlayingStreamer(
 		spotify,
-		cfg.NowPlaying.PollInterval,
+		cfg.Music.PollInterval,
 		stream.WithNPSLogger(
 			log.WithField("service", "nowplaying_streamer").Logger,
 		),
 	)
 
-	// Create GCal client.
+	// Create gcal client.
 	gcalc, err := gcal.NewClient()
 	if err != nil {
 		return errors.Errorf("creating GCal client: %w", err)
 	}
-	availabilityService := gcal.NewAvailabilityService(
+	availability := gcal.NewAvailabilityService(
 		gcalc,
 		cfg.GCalCalendarIDs(),
 	)
 
 	// Create and configure RescueTime client.
-	timezone, err := availabilityService.Timezone()
+	timezone, err := availability.Timezone()
 	if err != nil {
 		return errors.Errorf("failed to load current timezone from GCal: %w", err)
 	}
@@ -144,11 +144,12 @@ func run(c *cli.Context) error {
 	// Create and configure server.
 	log.Info("Initializing server...")
 	srv := server.New(
-		aboutService,
+		about,
+		availability,
+		commits,
+		location,
+		nowplaying,
 		rescuetime,
-		availabilityService,
-		nowPlayingStreamer,
-		commitsPreloader,
 
 		server.WithLogger(log),
 		server.WithRaven(raven),
@@ -163,9 +164,9 @@ func run(c *cli.Context) error {
 	}
 
 	// Stop preloaders and streamers.
-	locationPreloader.Stop()
-	commitsPreloader.Stop()
-	nowPlayingStreamer.Stop()
+	location.Stop()
+	commits.Stop()
+	nowplaying.Stop()
 
 	return nil
 }

@@ -14,14 +14,14 @@ import (
 
 // NowPlayingProvider provides handlers relating to music.
 type NowPlayingProvider struct {
-	svc      api.NowPlayingService
-	streamer api.NowPlayingStreamingService
+	svc      api.MusicService
+	streamer api.MusicStreamingService
 }
 
 // NewNowPlayingProvider creates a new NowPlayingProvider.
 func NewNowPlayingProvider(
-	svc api.NowPlayingService,
-	streamer api.NowPlayingStreamingService,
+	svc api.MusicService,
+	streamer api.MusicStreamingService,
 ) *NowPlayingProvider {
 	return &NowPlayingProvider{svc: svc, streamer: streamer}
 }
