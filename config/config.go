@@ -36,6 +36,11 @@ type Config struct {
 		Here         struct {
 			AppID string `yaml:"appID"`
 		} `yaml:"here"`
+		Airtable struct {
+			BaseID string `yaml:"baseID"`
+			Table  string `yaml:"table"`
+			View   string `yaml:"view"`
+		} `yaml:"airtable"`
 	} `yaml:"location"`
 
 	// Miscellaneous:

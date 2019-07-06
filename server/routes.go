@@ -14,32 +14,42 @@ func (srv *Server) registerRoutes() error {
 	// Register routes.
 	e.GET("/", handler.InfoHandler())
 	e.GET("/about", handler.AboutHandler(srv.about, srv.hlog("about")))
-	e.GET("/productivity", handler.ProductivityHandler(
-		srv.productivity,
-		srv.hlog("productivity")),
+	e.GET(
+		"/productivity",
+		handler.ProductivityHandler(srv.productivity, srv.hlog("productivity")),
 	)
-	e.GET("/availability", handler.AvailabilityHandler(
-		srv.availability,
-		srv.hlog("availability"),
-	))
-	e.GET("/commits", handler.RecentCommitsHandler(
-		srv.commits,
-		srv.hlog("recent_commits"),
-	))
-	e.GET("/location", handler.LocationHandler(
-		srv.location,
-		srv.hlog("location"),
-	))
+	e.GET(
+		"/availability",
+		handler.AvailabilityHandler(srv.availability, srv.hlog("availability")),
+	)
+	e.GET(
+		"/commits",
+		handler.RecentCommitsHandler(srv.commits, srv.hlog("recent_commits")),
+	)
+
+	// Register location routes.
+	location := handler.NewLocationProvider(srv.location)
+	e.GET(
+		"/location",
+		location.RegionHandler(srv.hlog("location")),
+	)
+	e.GET(
+		"/location/history",
+		location.RecentHistoryHandler(
+			srv.locationAccess,
+			srv.hlog("recent_history"),
+		),
+	)
 
 	// Handle music routes.
-	npp := handler.NewNowPlayingProvider(srv.music, srv.music)
+	nowplaying := handler.NewNowPlayingProvider(srv.music, srv.music)
 	e.GET(
 		"/nowplaying",
-		npp.RESTHandler(srv.hlog("nowplaying")),
+		nowplaying.RESTHandler(srv.hlog("nowplaying")),
 	)
 	e.GET(
 		"/nowplaying/ws",
-		npp.StreamingHandler(srv.hlog("nowplaying_streaming")),
+		nowplaying.StreamingHandler(srv.hlog("nowplaying_streaming")),
 	)
 
 	return nil

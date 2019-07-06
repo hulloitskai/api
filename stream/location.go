@@ -20,25 +20,23 @@ type (
 		geocoder geo.Geocoder
 		log      *logrus.Logger
 
-		mux      sync.Mutex
-		lastSeen *geo.Coordinate
-		err      error
-	}
-
-	// A LocationHistorian can get the latest coordinates for a particular person.
-	LocationHistorian interface {
-		LatestCoordinates() (*geo.Coordinate, error)
+		mux     sync.Mutex
+		segment *geo.Segment
+		err     error
 	}
 
 	// An LSOption configures a LocationPreloader.
 	LSOption func(*LocationService)
+
+	// A RecentLocationsService can fetch data relating to one's recent locations.
+	RecentLocationsService interface{ LastSegment() (*geo.Segment, error) }
 )
 
 var _ api.LocationService = (*LocationService)(nil)
 
 // NewLocationPreloader creates a new LocationPreloader.
 func NewLocationPreloader(
-	historian LocationHistorian,
+	locations RecentLocationsService,
 	geo geo.Geocoder,
 	interval time.Duration,
 	opts ...LSOption,
@@ -52,9 +50,7 @@ func NewLocationPreloader(
 	}
 
 	// Configure streamer.
-	action := func() (zero.Interface, error) {
-		return historian.LatestCoordinates()
-	}
+	action := func() (zero.Interface, error) { return locations.LastSegment() }
 	ls.streamer = NewPollStreamer(action, interval)
 
 	go ls.populateCache()
@@ -69,23 +65,23 @@ func WithLSLogger(log *logrus.Logger) LSOption {
 func (ls *LocationService) populateCache() {
 	for result := range ls.streamer.Stream() {
 		var (
-			lastSeen *geo.Coordinate
-			err      error
+			segment *geo.Segment
+			err     error
 		)
 
 		switch v := result.(type) {
 		case error:
 			err = v
 			ls.log.WithError(err).Error("Failed to load last seen position.")
-		case *geo.Coordinate:
-			lastSeen = v
+		case *geo.Segment:
+			segment = v
 		default:
 			ls.log.WithField("value", v).Error("Unexpected value from upstream.")
 			err = errors.Errorf("stream: unexpected value '%s' from upstream")
 		}
 
 		ls.mux.Lock()
-		ls.lastSeen = lastSeen
+		ls.segment = segment
 		ls.err = err
 		ls.mux.Unlock()
 	}
@@ -94,16 +90,31 @@ func (ls *LocationService) populateCache() {
 // Stop stops the LocationPreloader.
 func (ls *LocationService) Stop() { ls.streamer.Stop() }
 
-// LastSeen returns the authenticated user's last seen location.
-func (ls *LocationService) LastSeen() (*geo.Coordinate, error) {
+// LastSegment returns the authenticated user's latest location history segment.
+func (ls *LocationService) LastSegment() (*geo.Segment, error) {
 	ls.mux.Lock()
 	defer ls.mux.Unlock()
-	return ls.lastSeen, ls.err
+	copy := *ls.segment
+	return &copy, nil
+}
+
+// LastPosition returns the authenticated user's last known position.
+func (ls *LocationService) LastPosition() (*geo.Coordinate, error) {
+	ls.mux.Lock()
+	defer ls.mux.Unlock()
+
+	coords := ls.segment.Coordinates
+	if len(coords) == 0 {
+		return nil, nil
+	}
+	copy := coords[len(coords)-1]
+
+	return &copy, nil
 }
 
 // CurrentCity returns the authenticated user's current city.
 func (ls *LocationService) CurrentCity() (city string, err error) {
-	coord, err := ls.LastSeen()
+	coord, err := ls.LastPosition()
 	if err != nil {
 		return "", errors.Errorf("stream: determining last seen position: %w", err)
 	}
@@ -115,7 +126,7 @@ func (ls *LocationService) CurrentCity() (city string, err error) {
 
 // CurrentRegion returns the authenticated user's current region.
 func (ls *LocationService) CurrentRegion() (*geo.Location, error) {
-	coord, err := ls.LastSeen()
+	coord, err := ls.LastPosition()
 	if err != nil {
 		return nil, errors.Errorf("stream: determining last seen position: %w", err)
 	}

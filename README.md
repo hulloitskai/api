@@ -12,15 +12,16 @@ _A personal API._
 
 ## REST Endpoints
 
-| Path                                                           | Description                                  |
-| -------------------------------------------------------------- | -------------------------------------------- |
-| [`/v1/`](https://api.stevenxie.me/v1/)                         | API server metadata.                         |
-| [`/v1/about`](https://api.stevenxie.me/v1/about)               | General personal information.                |
-| [`/v1/commits`](https://api.stevenxie.me/v1/commits)           | Recent commits from GitHub.                  |
-| [`/v1/nowplaying`](https://api.stevenxie.me/v1/nowplaying)     | Currently playing track from Spotify.        |
-| [`/v1/productivity`](https://api.stevenxie.me/v1/productivity) | Productivity metrics from RescueTime.        |
-| [`/v1/availability`](https://api.stevenxie.me/v1/availability) | Personal availability information from GCal. |
-| [`/v1/location`](https://api.stevenxie.me/v1/location)         | Current location data from Google Maps.      |
+| Path                                                                   | Description                                  |
+| ---------------------------------------------------------------------- | -------------------------------------------- |
+| [`/v1/`](https://api.stevenxie.me/v1/)                                 | API server metadata.                         |
+| [`/v1/about`](https://api.stevenxie.me/v1/about)                       | General personal information.                |
+| [`/v1/commits`](https://api.stevenxie.me/v1/commits)                   | Recent commits from GitHub.                  |
+| [`/v1/nowplaying`](https://api.stevenxie.me/v1/nowplaying)             | Currently playing track from Spotify.        |
+| [`/v1/productivity`](https://api.stevenxie.me/v1/productivity)         | Productivity metrics from RescueTime.        |
+| [`/v1/availability`](https://api.stevenxie.me/v1/availability)         | Personal availability information from GCal. |
+| [`/v1/location`](https://api.stevenxie.me/v1/location)                 | Current location data from Google Maps.      |
+| [`/v1/location/history`](https://api.stevenxie.me/v1/location/history) | Recent location history from Google Maps.    |
 
 ## Websocket Endpoints
 

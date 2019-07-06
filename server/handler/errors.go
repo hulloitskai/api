@@ -31,7 +31,7 @@ func ErrorHandler(log *logrus.Logger) echo.HTTPErrorHandler {
 		if herr, ok := err.(*echo.HTTPError); ok {
 			statusCode = herr.Code
 			data.Error = fmt.Sprint(herr.Message)
-			goto send
+			goto Send
 		}
 
 		// Retrieve status code from request context.
@@ -49,7 +49,7 @@ func ErrorHandler(log *logrus.Logger) echo.HTTPErrorHandler {
 			data.Cause = ecause.Error()
 		}
 
-	send:
+	Send:
 		// Send error, handle JSON marshalling failures.
 		if err = c.JSONPretty(statusCode, &data, jsonPrettyIndent); err != nil {
 			const msg = "Failed to write JSON error."

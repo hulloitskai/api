@@ -26,11 +26,11 @@ var _ api.AboutService = (*AboutService)(nil)
 // NewAboutService creates a new AboutService that reads Info from a GitHub
 // gist.
 func NewAboutService(
-	gr GistRepo, gistID, file string,
+	repo GistRepo, gistID, file string,
 	location api.LocationService,
 ) *AboutService {
 	return &AboutService{
-		repo:   gr,
+		repo:   repo,
 		gistID: gistID, file: file,
 		location: location,
 	}

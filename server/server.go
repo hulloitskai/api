@@ -3,6 +3,7 @@ package server
 import (
 	"context"
 	"io/ioutil"
+	"net/http"
 	"os"
 
 	errors "golang.org/x/xerrors"
@@ -24,9 +25,11 @@ type (
 		about        api.AboutService
 		productivity api.ProductivityService
 		availability api.AvailabilityService
-		location     api.LocationService
 		commits      api.GitCommitsService
 		music        api.MusicStreamingService
+
+		location       api.LocationService
+		locationAccess api.LocationAccessService
 	}
 
 	// An Option configures a Server.
@@ -38,14 +41,24 @@ func New(
 	about api.AboutService,
 	availability api.AvailabilityService,
 	commits api.GitCommitsService,
-	location api.LocationService,
 	music api.MusicStreamingService,
 	productivity api.ProductivityService,
+
+	location api.LocationService,
+	locationAccess api.LocationAccessService,
+
 	opts ...Option,
 ) *Server {
 	// Configure echo.
 	echo := echo.New()
 	echo.Logger.SetOutput(ioutil.Discard) // disable logger
+
+	// Configure middleware.
+	echo.Pre(middleware.RemoveTrailingSlashWithConfig(
+		middleware.TrailingSlashConfig{
+			RedirectCode: http.StatusPermanentRedirect,
+		},
+	))
 	echo.Use(middleware.Recover())
 
 	// Enable Access-Control-Allow-Origin: * during development.
@@ -61,9 +74,11 @@ func New(
 		about:        about,
 		availability: availability,
 		commits:      commits,
-		location:     location,
 		music:        music,
 		productivity: productivity,
+
+		location:       location,
+		locationAccess: locationAccess,
 	}
 	for _, opt := range opts {
 		opt(srv)

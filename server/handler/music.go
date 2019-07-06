@@ -22,13 +22,13 @@ type NowPlayingProvider struct {
 func NewNowPlayingProvider(
 	svc api.MusicService,
 	streamer api.MusicStreamingService,
-) *NowPlayingProvider {
-	return &NowPlayingProvider{svc: svc, streamer: streamer}
+) NowPlayingProvider {
+	return NowPlayingProvider{svc: svc, streamer: streamer}
 }
 
 // RESTHandler handles GET requests for the currently playing track on my
 // Spotify account.
-func (p *NowPlayingProvider) RESTHandler(log *logrus.Logger) echo.HandlerFunc {
+func (p NowPlayingProvider) RESTHandler(log *logrus.Logger) echo.HandlerFunc {
 	return func(c echo.Context) error {
 		cplaying, err := p.svc.NowPlaying()
 		if err != nil {
@@ -42,7 +42,7 @@ func (p *NowPlayingProvider) RESTHandler(log *logrus.Logger) echo.HandlerFunc {
 }
 
 // StreamingHandler handles requests for NowPlaying event streams.
-func (p *NowPlayingProvider) StreamingHandler(
+func (p NowPlayingProvider) StreamingHandler(
 	log *logrus.Logger,
 ) echo.HandlerFunc {
 	// Configure Melody.

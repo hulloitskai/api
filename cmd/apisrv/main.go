@@ -8,6 +8,8 @@ import (
 	"os/signal"
 	"time"
 
+	"github.com/stevenxie/api/provider/airtable"
+
 	errors "golang.org/x/xerrors"
 
 	"github.com/sirupsen/logrus"
@@ -89,6 +91,21 @@ func run(c *cli.Context) error {
 		stream.WithLSLogger(log.WithField("service", "location_preloader").Logger),
 	)
 
+	// Build location access service.
+	airc, err := airtable.NewClient()
+	if err != nil {
+		return errors.Errorf("creating Airtable client: %w", err)
+	}
+	var (
+		airtableCfg    = &cfg.Location.Airtable
+		locationAccess = airtable.NewLocationAccessService(
+			airc,
+			airtableCfg.BaseID,
+			airtableCfg.Table,
+			airtableCfg.View,
+		)
+	)
+
 	// Build about service.
 	github, err := gh.New()
 	if err != nil {
@@ -147,9 +164,11 @@ func run(c *cli.Context) error {
 		about,
 		availability,
 		commits,
-		location,
 		nowplaying,
 		rescuetime,
+
+		location,
+		locationAccess,
 
 		server.WithLogger(log),
 		server.WithRaven(raven),

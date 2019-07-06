@@ -16,6 +16,10 @@ music:
   pollInterval: Duration
 
 location:
+  airtable:
+    baseID: String
+    table: String
+    view: String
   here:
     appID: String
   pollInterval: Duration
