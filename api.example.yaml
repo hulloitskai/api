@@ -16,6 +16,7 @@ availability:
 
 music:
   polling:
+    enabled: Bool
     interval: Duration
 
 location:

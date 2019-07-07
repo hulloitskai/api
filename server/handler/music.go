@@ -12,25 +12,11 @@ import (
 	"github.com/stevenxie/api/pkg/zero"
 )
 
-// NowPlayingProvider provides handlers relating to music.
-type NowPlayingProvider struct {
-	svc      api.MusicService
-	streamer api.MusicStreamingService
-}
-
-// NewNowPlayingProvider creates a new NowPlayingProvider.
-func NewNowPlayingProvider(
-	svc api.MusicService,
-	streamer api.MusicStreamingService,
-) NowPlayingProvider {
-	return NowPlayingProvider{svc: svc, streamer: streamer}
-}
-
-// RESTHandler handles GET requests for the currently playing track on my
+// NowPlayingHandler handles requests for the currently playing track on my
 // Spotify account.
-func (p NowPlayingProvider) RESTHandler(log *logrus.Logger) echo.HandlerFunc {
+func NowPlayingHandler(svc api.MusicService, log *logrus.Logger) echo.HandlerFunc {
 	return func(c echo.Context) error {
-		cplaying, err := p.svc.NowPlaying()
+		cplaying, err := svc.NowPlaying()
 		if err != nil {
 			log.WithError(err).Error("Failed to get currently playing track.")
 			return errors.Errorf("getting currently playing track: %w", err)
@@ -41,8 +27,9 @@ func (p NowPlayingProvider) RESTHandler(log *logrus.Logger) echo.HandlerFunc {
 	}
 }
 
-// StreamingHandler handles requests for NowPlaying event streams.
-func (p NowPlayingProvider) StreamingHandler(
+// NowPlayingStreamingHandler handles requests for NowPlaying event streams.
+func NowPlayingStreamingHandler(
+	svc api.MusicStreamingService,
 	log *logrus.Logger,
 ) echo.HandlerFunc {
 	// Configure Melody.
@@ -53,7 +40,7 @@ func (p NowPlayingProvider) StreamingHandler(
 
 	connlog := log.WithField("stage", "connect").Logger
 	mel.HandleConnect(func(s *melody.Session) {
-		np, err := p.svc.NowPlaying()
+		np, err := svc.NowPlaying()
 		if err != nil {
 			connlog.
 				WithError(err).
@@ -74,10 +61,13 @@ func (p NowPlayingProvider) StreamingHandler(
 		}
 	})
 
-	go func(stream <-chan api.MaybeNowPlaying) {
+	go func(stream <-chan struct {
+		NowPlaying *api.NowPlaying
+		Err        error
+	}) {
 		broadlog := log.WithField("stage", "broadcast")
 		for maybe := range stream {
-			message, err := serializer.SerializeMaybe(maybe)
+			message, err := serializer.Serialize(maybe.NowPlaying, maybe.Err)
 			if err != nil {
 				broadlog.
 					WithError(err).
@@ -93,7 +83,7 @@ func (p NowPlayingProvider) StreamingHandler(
 				continue
 			}
 		}
-	}(p.streamer.NowPlayingStream())
+	}(svc.NowPlayingStream())
 
 	handlelog := log.WithField("stage", "handle").Logger
 	return func(c echo.Context) error {
@@ -104,38 +94,41 @@ func (p NowPlayingProvider) StreamingHandler(
 	}
 }
 
-type nowPlayingStateSerializer struct{ prev api.MaybeNowPlaying }
+type nowPlayingStateSerializer struct {
+	prevNP  *api.NowPlaying
+	prevErr error
+}
 
-func (serializer *nowPlayingStateSerializer) SerializeMaybe(
-	maybe api.MaybeNowPlaying,
+func (serializer *nowPlayingStateSerializer) Serialize(
+	currNP *api.NowPlaying,
+	currErr error,
 ) (message []byte, err error) {
-	var (
-		data nowPlayingStreamMessage
-		curr = maybe.NowPlaying
-		prev = serializer.prev.NowPlaying
-	)
-
-	defer func() { serializer.prev = maybe }()
+	var data nowPlayingStreamMessage
+	defer func() {
+		serializer.prevNP = currNP
+		serializer.prevErr = currErr
+	}()
 
 	// Fancy state machinery.
+	prevNP := serializer.prevNP
 	switch {
-	case maybe.IsError():
+	case err != nil:
 		data.Event = npEventError
-		data.Payload = maybe.Err
+		data.Payload = err
 
-	case (prev == nil) && (curr == nil):
+	case (prevNP == nil) && (currNP == nil):
 		return nil, nil
 
-	case (prev == nil && curr != nil) ||
-		(curr == nil && prev != nil) ||
-		curr.Playing != prev.Playing ||
-		curr.Track.URL != prev.Track.URL:
+	case (prevNP == nil && currNP != nil) ||
+		(currNP == nil && prevNP != nil) ||
+		currNP.Playing != prevNP.Playing ||
+		currNP.Track.URL != prevNP.Track.URL:
 		data.Event = npEventNowPlaying
-		data.Payload = maybe.NowPlaying
+		data.Payload = currNP
 
-	case curr.Playing:
+	case currNP.Playing:
 		data.Event = npEventProgress
-		data.Payload = curr.Progress
+		data.Payload = currNP.Progress
 
 	default:
 		return nil, nil

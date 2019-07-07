@@ -187,19 +187,22 @@ func run(c *cli.Context) error {
 	}
 
 	// Create music service.
-	var music api.MusicStreamingService
+	var music api.MusicService
 	{
 		spotify, err := spotify.New()
 		if err != nil {
 			return errors.Errorf("creating Spotify client: %w", err)
 		}
-		streamer := stream.NewMusicStreamer(
-			spotify,
-			cfg.Music.Polling.Interval,
-			stream.WithMSLogger(log.WithField("service", "music_streamer").Logger),
-		)
-		music = streamer
-		finalizers = append(finalizers, streamer)
+		music = spotify
+		if polling := &cfg.Music.Polling; polling.Enabled {
+			streamer := stream.NewMusicStreamer(
+				spotify,
+				cfg.Music.Polling.Interval,
+				stream.WithMSLogger(log.WithField("service", "music_streamer").Logger),
+			)
+			music = streamer
+			finalizers = append(finalizers, streamer)
+		}
 	}
 
 	// Create productivity service.
@@ -236,6 +239,7 @@ func run(c *cli.Context) error {
 	}
 
 	// Run all finalizers.
+	log.Info("Stopping finalizers...")
 	for _, finalizer := range finalizers {
 		finalizer.Stop()
 	}

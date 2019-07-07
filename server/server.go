@@ -26,7 +26,7 @@ type (
 		productivity api.ProductivityService
 		availability api.AvailabilityService
 		commits      api.GitCommitsService
-		music        api.MusicStreamingService
+		music        api.MusicService
 
 		location       api.LocationService
 		locationAccess api.LocationAccessService
@@ -41,7 +41,7 @@ func New(
 	about api.AboutService,
 	availability api.AvailabilityService,
 	commits api.GitCommitsService,
-	music api.MusicStreamingService,
+	music api.MusicService,
 	productivity api.ProductivityService,
 
 	location api.LocationService,

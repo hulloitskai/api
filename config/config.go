@@ -32,6 +32,7 @@ type Config struct {
 
 	Music struct {
 		Polling struct {
+			Enabled  bool          `yaml:"enabled"`
 			Interval time.Duration `yaml:"interval"`
 		} `yaml:"polling"`
 	} `yaml:"music"`

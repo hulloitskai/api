@@ -18,10 +18,14 @@ type (
 		streamer *PollStreamer
 		log      *logrus.Logger
 
-		stream chan api.MaybeNowPlaying
+		stream chan struct {
+			NowPlaying *api.NowPlaying
+			Err        error
+		}
 
-		mux    sync.Mutex
-		latest api.MaybeNowPlaying
+		mux        sync.Mutex
+		nowPlaying *api.NowPlaying
+		err        error
 	}
 
 	// An MSOption configures a MusicStreamer.
@@ -50,8 +54,11 @@ func NewMusicStreamer(
 		action   = func() (zero.Interface, error) { return svc.NowPlaying() }
 		streamer = &MusicStreamer{
 			streamer: NewPollStreamer(action, interval),
-			stream:   make(chan api.MaybeNowPlaying),
-			log:      zero.Logger(),
+			stream: make(chan struct {
+				NowPlaying *api.NowPlaying
+				Err        error
+			}),
+			log: zero.Logger(),
 		}
 	)
 	for _, opt := range opts {
@@ -63,27 +70,33 @@ func NewMusicStreamer(
 
 func (ms *MusicStreamer) startStreaming() {
 	for result := range ms.streamer.Stream() {
-		var maybe api.MaybeNowPlaying
+		var (
+			nowPlaying *api.NowPlaying
+			err        error
+		)
+
 		switch v := result.(type) {
 		case error:
-			maybe = api.MaybeNowPlaying{Err: v}
-			ms.log.WithError(maybe.Err).Error("Failed to load now-playing data.")
+			err = v
+			ms.log.WithError(err).Error("Failed to load now-playing data.")
 		case *api.NowPlaying:
-			maybe = api.MaybeNowPlaying{NowPlaying: v}
+			nowPlaying = v
 		default:
 			ms.log.WithField("value", v).Error("Unexpected value from upstream.")
-			maybe = api.MaybeNowPlaying{
-				Err: errors.Errorf("stream: unexpected upstream value (%v)", v),
-			}
+			err = errors.Errorf("stream: unexpected upstream value (%v)", v)
 		}
 
 		// Safely write maybe to latest.
 		ms.mux.Lock()
-		ms.latest = maybe
+		ms.nowPlaying = nowPlaying
+		ms.err = err
 		ms.mux.Unlock()
 
 		// Write maybe to stream.
-		ms.stream <- maybe
+		ms.stream <- struct {
+			NowPlaying *api.NowPlaying
+			Err        error
+		}{nowPlaying, err}
 	}
 }
 
@@ -91,7 +104,10 @@ func (ms *MusicStreamer) startStreaming() {
 func (ms *MusicStreamer) Stop() { ms.streamer.Stop() }
 
 // NowPlayingStream exposes a stream of NowPlaying objects.
-func (ms *MusicStreamer) NowPlayingStream() <-chan api.MaybeNowPlaying {
+func (ms *MusicStreamer) NowPlayingStream() <-chan struct {
+	NowPlaying *api.NowPlaying
+	Err        error
+} {
 	return ms.stream
 }
 
@@ -99,5 +115,5 @@ func (ms *MusicStreamer) NowPlayingStream() <-chan api.MaybeNowPlaying {
 func (ms *MusicStreamer) NowPlaying() (*api.NowPlaying, error) {
 	ms.mux.Lock()
 	defer ms.mux.Unlock()
-	return ms.latest.NowPlaying, ms.latest.Err
+	return ms.nowPlaying, ms.err
 }

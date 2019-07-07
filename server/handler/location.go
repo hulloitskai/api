@@ -31,13 +31,18 @@ func (p LocationProvider) RegionHandler(log *logrus.Logger) echo.HandlerFunc {
 			return err
 		}
 
-		data := struct {
-			*geo.Location
-			Shape [][]float64 `json:"shape"`
-		}{
-			Location: location,
-			Shape:    make([][]float64, len(location.Shape)),
-		}
+		var (
+			pos  = &location.Position
+			data = struct {
+				*geo.Location
+				Position []float64   `json:"position"`
+				Shape    [][]float64 `json:"shape"`
+			}{
+				Location: location,
+				Position: []float64{pos.X, pos.Y},
+				Shape:    make([][]float64, len(location.Shape)),
+			}
+		)
 		for i, shape := range data.Location.Shape {
 			data.Shape[i] = []float64{shape.X, shape.Y}
 		}
