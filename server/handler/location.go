@@ -83,6 +83,9 @@ func (p LocationProvider) RecentHistoryHandler(
 			log.WithError(err).Error("Failed to get last position.")
 			return errors.Errorf("failed to get last position: %w", err)
 		}
+		if segment == nil {
+			return errors.New("no location history segments found")
+		}
 
 		coordinates := make([][]float64, len(segment.Coordinates))
 		for i, coord := range segment.Coordinates {

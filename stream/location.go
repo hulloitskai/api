@@ -102,13 +102,14 @@ func (ls *LocationService) LastSegment() (*geo.Segment, error) {
 func (ls *LocationService) LastPosition() (*geo.Coordinate, error) {
 	ls.mux.Lock()
 	defer ls.mux.Unlock()
-
+	if ls.segment == nil {
+		return nil, nil
+	}
 	coords := ls.segment.Coordinates
 	if len(coords) == 0 {
 		return nil, nil
 	}
 	copy := coords[len(coords)-1]
-
 	return &copy, nil
 }
 

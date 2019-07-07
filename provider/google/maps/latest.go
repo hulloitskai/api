@@ -12,5 +12,8 @@ func (h *Historian) LastSegment() (*geo.Segment, error) {
 	if err != nil {
 		return nil, err
 	}
+	if len(segments) == 0 {
+		return nil, nil
+	}
 	return segments[len(segments)-1], nil
 }
