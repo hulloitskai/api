@@ -1,22 +1,36 @@
 package airtable
 
 import (
+	"bytes"
 	"encoding/json"
 	"fmt"
+	"net/http"
 	"net/url"
+	"time"
 
-	"github.com/stevenxie/api/pkg/api"
+	"github.com/stevenxie/api/pkg/zero"
 
 	errors "golang.org/x/xerrors"
+
+	"github.com/sirupsen/logrus"
+	"github.com/stevenxie/api/pkg/api"
 )
 
-// A LocationAccessService can validate location access codes.
-type LocationAccessService struct {
-	client *Client
-	baseID string
-	table  string
-	view   string
-}
+type (
+	// A LocationAccessService can validate location access codes.
+	LocationAccessService struct {
+		client *Client
+		baseID string
+		table  string
+		view   string
+
+		timezone *time.Location
+		log      *logrus.Logger
+	}
+
+	// A LASOption configures a LocationAccessService.
+	LASOption func(svc *LocationAccessService)
+)
 
 var _ api.LocationAccessService = (*LocationAccessService)(nil)
 
@@ -25,13 +39,30 @@ var _ api.LocationAccessService = (*LocationAccessService)(nil)
 func NewLocationAccessService(
 	c *Client,
 	baseID, table, view string,
+	opts ...LASOption,
 ) *LocationAccessService {
-	return &LocationAccessService{
+	svc := &LocationAccessService{
 		client: c,
 		baseID: baseID,
 		table:  table,
 		view:   view,
+		log:    zero.Logger(),
 	}
+	for _, opt := range opts {
+		opt(svc)
+	}
+	return svc
+}
+
+// WithLASTimezone configures a LocationAccessService to specify a particular
+// timezone with making requests to the Airtable API.
+func WithLASTimezone(tz *time.Location) LASOption {
+	return func(svc *LocationAccessService) { svc.timezone = tz }
+}
+
+// WithLASLogger configures a LocationAccessService to write logs with log.
+func WithLASLogger(log *logrus.Logger) LASOption {
+	return func(svc *LocationAccessService) { svc.log = log }
 }
 
 // IsValidCode returns true if code is a valid location access code, and false
@@ -41,15 +72,18 @@ func (svc *LocationAccessService) IsValidCode(code string) (bool, error) {
 
 Fetch:
 	// Create and send request.
-	url, err := url.Parse(fmt.Sprintf("%s/%s/location", baseURL, svc.baseID))
+	url, err := url.Parse(svc.tableURL())
 	if err != nil {
-		panic(err)
+		return false, errors.Errorf("airtable: building request URL: %w", err)
 	}
 	{
 		ps := url.Query()
 		ps.Set("view", svc.view)
 		if offset != nil {
 			ps.Set("offset", *offset)
+		}
+		if svc.timezone != nil {
+			ps.Set("timezone", svc.timezone.String())
 		}
 		url.RawQuery = ps.Encode()
 	}
@@ -65,7 +99,8 @@ Fetch:
 		Records []struct {
 			ID     string `json:"id"`
 			Fields struct {
-				Code string `json:"code"`
+				Code     string `json:"code"`
+				Accesses int    `json:"accesses"`
 			} `json:"fields"`
 		} `json:"records"`
 		Offset *string `json:"offset"`
@@ -79,7 +114,9 @@ Fetch:
 
 	// Determine of code is included in data.Records.
 	for _, record := range data.Records {
-		if record.Fields.Code == code {
+		fields := &record.Fields
+		if fields.Code == code {
+			go svc.recordAccess(record.ID, fields.Accesses+1) // async update
 			return true, nil
 		}
 	}
@@ -88,4 +125,46 @@ Fetch:
 		goto Fetch
 	}
 	return false, nil
+}
+
+func (svc *LocationAccessService) tableURL() string {
+	return fmt.Sprintf("%s/%s/%s", baseURL, svc.baseID, svc.table)
+}
+
+func (svc *LocationAccessService) recordAccess(id string, accesses int) {
+	entry := svc.log.WithField("id", id)
+
+	var data struct {
+		Fields struct {
+			Accesses     int    `json:"accesses"`
+			LastAccessed string `json:"last-accessed"`
+		} `json:"fields"`
+	}
+	data.Fields.Accesses = accesses
+	data.Fields.LastAccessed = time.Now().In(svc.timezone).Format(time.RFC3339)
+
+	// Encode data as JSON.
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(data); err != nil {
+		entry.WithError(err).Error("Failed to encode access update as JSON.")
+	}
+
+	var (
+		url      = fmt.Sprintf("%s/%s", svc.tableURL(), id)
+		req, err = http.NewRequest(http.MethodPatch, url, &buf)
+	)
+	if err != nil {
+		panic(err)
+	}
+	req.Header.Set("Content-Type", "application/json")
+
+	res, err := svc.client.Do(req)
+	if err != nil {
+		entry.WithError(err).Error("Failed to send access update.")
+	}
+	if res.StatusCode != http.StatusOK {
+		entry.
+			WithField("status", res.StatusCode).
+			Error("Bad status in access update response.")
+	}
 }

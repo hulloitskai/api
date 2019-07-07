@@ -60,7 +60,7 @@ func (c *Client) Do(req *http.Request) (*http.Response, error) {
 
 // Get sends an authenticated HTTP GET request.
 func (c *Client) Get(url string) (*http.Response, error) {
-	req, err := http.NewRequest("GET", url, nil)
+	req, err := http.NewRequest(http.MethodGet, url, nil)
 	if err != nil {
 		return nil, err
 	}

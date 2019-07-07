@@ -8,27 +8,26 @@ import (
 	"os/signal"
 	"time"
 
-	"github.com/stevenxie/api/pkg/geo"
-
-	"github.com/stevenxie/api/pkg/api"
-
-	"github.com/stevenxie/api/provider/airtable"
-
 	errors "golang.org/x/xerrors"
 
 	"github.com/sirupsen/logrus"
 	ess "github.com/unixpickle/essentials"
 	"github.com/urfave/cli"
 
-	"github.com/stevenxie/api/config"
-	"github.com/stevenxie/api/internal/info"
-	"github.com/stevenxie/api/pkg/cmdutil"
+	// Providers (service implementations):
+	"github.com/stevenxie/api/provider/airtable"
 	gh "github.com/stevenxie/api/provider/github"
 	gcal "github.com/stevenxie/api/provider/google/calendar"
 	gmaps "github.com/stevenxie/api/provider/google/maps"
 	"github.com/stevenxie/api/provider/here"
 	"github.com/stevenxie/api/provider/rescuetime"
 	"github.com/stevenxie/api/provider/spotify"
+
+	"github.com/stevenxie/api/config"
+	"github.com/stevenxie/api/internal/info"
+	"github.com/stevenxie/api/pkg/api"
+	"github.com/stevenxie/api/pkg/cmdutil"
+	"github.com/stevenxie/api/pkg/geo"
 	"github.com/stevenxie/api/server"
 	"github.com/stevenxie/api/stream"
 )
@@ -83,6 +82,23 @@ func run(c *cli.Context) error {
 	// Finalizers should be stopped before the program terminates.
 	var finalizers []interface{ Stop() }
 
+	// Create availability service.
+	var availability api.AvailabilityService
+	{
+		client, err := gcal.NewClient()
+		if err != nil {
+			return errors.Errorf("creating GCal client: %w", err)
+		}
+		availability = gcal.NewAvailabilityService(
+			client,
+			cfg.Availability.GCal.CalendarIDs,
+		)
+	}
+	timezone, err := availability.Timezone()
+	if err != nil {
+		return errors.Errorf("fetching current timezone: %w", err)
+	}
+
 	// Build location service.
 	var location api.LocationService
 	{
@@ -93,15 +109,9 @@ func run(c *cli.Context) error {
 
 		var recent geo.RecentLocationsService
 		{
-			var options []gmaps.HOption
-			if timezone := cfg.Location.Historian.Timezone; timezone != nil {
-				location, err := time.LoadLocation(*timezone)
-				if err != nil {
-					return errors.Errorf("loading Historian timezone: %w", err)
-				}
-				options = append(options, gmaps.WithHTimezone(location))
-			}
-			if recent, err = gmaps.NewHistorian(options...); err != nil {
+			if recent, err = gmaps.NewHistorian(
+				gmaps.WithHTimezone(timezone),
+			); err != nil {
 				return errors.Errorf("creating historian: %w", err)
 			}
 		}
@@ -133,6 +143,11 @@ func run(c *cli.Context) error {
 			config.BaseID,
 			config.Table,
 			config.View,
+
+			airtable.WithLASTimezone(timezone),
+			airtable.WithLASLogger(
+				log.WithField("service", "location_access").Logger,
+			),
 		)
 	}
 
@@ -160,6 +175,7 @@ func run(c *cli.Context) error {
 			preloader := stream.NewCommitsPreloader(
 				github,
 				polling.Interval,
+
 				stream.WithCPLimit(polling.Limit),
 				stream.WithCPLogger(
 					log.WithField("service", "commits_preloader").Logger,
@@ -180,35 +196,19 @@ func run(c *cli.Context) error {
 		streamer := stream.NewMusicStreamer(
 			spotify,
 			cfg.Music.Polling.Interval,
-			stream.WithMSLogger(
-				log.WithField("service", "music_streamer").Logger,
-			),
+			stream.WithMSLogger(log.WithField("service", "music_streamer").Logger),
 		)
 		music = streamer
 		finalizers = append(finalizers, streamer)
 	}
 
-	// Create availability service.
-	var availability api.AvailabilityService
+	// Create productivity service.
+	var productivity api.ProductivityService
 	{
-		client, err := gcal.NewClient()
+		productivity, err = rescuetime.New(rescuetime.WithTimezone(timezone))
 		if err != nil {
-			return errors.Errorf("creating GCal client: %w", err)
+			return errors.Errorf("creating RescueTime client: %w", err)
 		}
-		availability = gcal.NewAvailabilityService(
-			client,
-			cfg.Availability.GCal.CalendarIDs,
-		)
-	}
-
-	// Create and configure RescueTime client.
-	timezone, err := availability.Timezone()
-	if err != nil {
-		return errors.Errorf("failed to load current timezone from GCal: %w", err)
-	}
-	rescuetime, err := rescuetime.New(rescuetime.WithTimezone(timezone))
-	if err != nil {
-		return errors.Errorf("creating RescueTime client: %w", err)
 	}
 
 	// Create and configure server.
@@ -218,7 +218,7 @@ func run(c *cli.Context) error {
 		availability,
 		commits,
 		music,
-		rescuetime,
+		productivity,
 
 		location,
 		locationAccess,

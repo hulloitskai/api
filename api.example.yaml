@@ -29,7 +29,5 @@ location:
     view: String
   here:
     appID: String
-  historian:
-    timezone: String
 
 shutdownTimeout: Duration
