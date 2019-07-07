@@ -22,7 +22,9 @@ type (
 	}
 
 	// A RecentLocationsService can fetch data relating to one's recent locations.
-	RecentLocationsService interface{ LastSegment() (*Segment, error) }
+	RecentLocationsService interface {
+		RecentSegments() ([]*Segment, error)
+	}
 )
 
 // NewLocationService creates a new LocationService.
@@ -36,9 +38,21 @@ func NewLocationService(
 	}
 }
 
+// RecentSegments returns the authenticated user's recent location history.
+func (svc LocationService) RecentSegments() ([]*Segment, error) {
+	return svc.locations.RecentSegments()
+}
+
 // LastSegment returns the authenticated user's latest location history segment.
 func (svc LocationService) LastSegment() (*Segment, error) {
-	return svc.locations.LastSegment()
+	segments, err := svc.RecentSegments()
+	if err != nil {
+		return nil, err
+	}
+	if len(segments) == 0 {
+		return nil, nil
+	}
+	return segments[len(segments)-1], nil
 }
 
 // LastPosition returns the authenticated user's last known position.

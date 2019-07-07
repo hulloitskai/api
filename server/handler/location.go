@@ -77,28 +77,28 @@ func (p LocationProvider) RecentHistoryHandler(
 			return errors.New("access code is invalid or expired")
 		}
 
-		// Retrieve last location history segment.
-		segment, err := p.svc.LastSegment()
+		// Retrieve recent location history segments.
+		segments, err := p.svc.RecentSegments()
 		if err != nil {
-			log.WithError(err).Error("Failed to get last position.")
-			return errors.Errorf("failed to get last position: %w", err)
-		}
-		if segment == nil {
-			return errors.New("no location history segments found")
+			log.WithError(err).Error("Failed to get recent location history.")
+			return errors.Errorf("failed to get recent location history: %w", err)
 		}
 
-		coordinates := make([][]float64, len(segment.Coordinates))
-		for i, coord := range segment.Coordinates {
-			coordinates[i] = []float64{coord.X, coord.Y}
-		}
-
-		data := struct {
+		type segment struct {
 			*geo.Segment
 			Coordinates [][]float64 `json:"coordinates"`
-		}{
-			Segment:     segment,
-			Coordinates: coordinates,
 		}
-		return jsonPretty(c, data)
+		results := make([]segment, len(segments))
+		for i, seg := range segments {
+			coordinates := make([][]float64, len(seg.Coordinates))
+			for j, coord := range seg.Coordinates {
+				coordinates[j] = []float64{coord.X, coord.Y}
+			}
+			results[i] = segment{
+				Segment:     seg,
+				Coordinates: coordinates,
+			}
+		}
+		return jsonPretty(c, results)
 	}
 }

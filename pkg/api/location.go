@@ -11,6 +11,7 @@ type (
 		CurrentRegion() (*geo.Location, error)
 		LastPosition() (*geo.Coordinate, error)
 		LastSegment() (*geo.Segment, error)
+		RecentSegments() ([]*geo.Segment, error)
 	}
 
 	// A LocationAccessService can validate location access codes.
