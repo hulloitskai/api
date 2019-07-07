@@ -122,5 +122,13 @@ func (h *Historian) LocationHistory(date time.Time) ([]*geo.Segment, error) {
 
 // RecentSegments returns the authenticated user's recent location history.
 func (h *Historian) RecentSegments() ([]*geo.Segment, error) {
-	return h.LocationHistory(time.Now().In(h.timezone))
+	date := time.Now().In(h.timezone)
+	segments, err := h.LocationHistory(date)
+	if err != nil {
+		return nil, err
+	}
+	if len(segments) > 0 {
+		return segments, nil
+	}
+	return h.LocationHistory(date.Add(-24 * time.Hour))
 }
