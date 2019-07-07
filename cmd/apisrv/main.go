@@ -8,6 +8,8 @@ import (
 	"os/signal"
 	"time"
 
+	"github.com/stevenxie/api/pkg/geo"
+
 	"github.com/stevenxie/api/provider/airtable"
 
 	errors "golang.org/x/xerrors"
@@ -85,11 +87,7 @@ func run(c *cli.Context) error {
 	if err != nil {
 		return errors.Errorf("creating historian: %w", err)
 	}
-	location := stream.NewLocationPreloader(
-		historian, geocoder,
-		cfg.Location.PollInterval,
-		stream.WithLSLogger(log.WithField("service", "location_preloader").Logger),
-	)
+	location := geo.NewLocationService(historian, geocoder)
 
 	// Build location access service.
 	airc, err := airtable.NewClient()
@@ -183,7 +181,6 @@ func run(c *cli.Context) error {
 	}
 
 	// Stop preloaders and streamers.
-	location.Stop()
 	commits.Stop()
 	nowplaying.Stop()
 

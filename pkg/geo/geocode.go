@@ -2,8 +2,6 @@ package geo
 
 import (
 	"fmt"
-
-	errors "golang.org/x/xerrors"
 )
 
 type (
@@ -102,34 +100,3 @@ type (
 		Number     string `json:"number,omitempty"`
 	}
 )
-
-// CityAt uses a Geocoder to determine the city located at coord.
-func CityAt(geo Geocoder, coord Coordinate) (city string, err error) {
-	results, err := geo.ReverseGeocode(coord, WithRGLevel(CityLevel))
-	if err != nil {
-		return "", errors.Errorf("geo: reverse-geocoding position: %w", err)
-	}
-	if len(results) == 0 {
-		return "", errors.New("geo: no locations found at given position")
-	}
-	addr := results[0].Address
-	return fmt.Sprintf("%s, %s, %s", addr.County, addr.State, addr.Country), nil
-}
-
-// RegionAt uses a Geocoder to look up the region that coord is situated in.
-//
-// It will also request for the shape of the region area.
-func RegionAt(geo Geocoder, coord Coordinate) (*Location, error) {
-	results, err := geo.ReverseGeocode(
-		coord,
-		WithRGLevel(CityLevel),
-		WithRGShape(),
-	)
-	if err != nil {
-		return nil, errors.Errorf("geo: reverse-geocoding position: %w", err)
-	}
-	if len(results) == 0 {
-		return nil, errors.New("geo: no locations found at given position")
-	}
-	return &results[0].Location, nil
-}

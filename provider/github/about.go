@@ -62,9 +62,9 @@ func (svc *AboutService) About() (*api.About, error) {
 	data.About.Age = time.Since(bday).Truncate(365 * 24 * time.Hour)
 
 	// Fill in whereabouts using location service.
-	if data.About.Whereabouts, err = svc.location.CurrentCity(); err != nil {
-		return nil, errors.Errorf("github: getting current location: %w", err)
+	data.About.Whereabouts = "Unknown"
+	if whereabouts, _ := svc.location.CurrentCity(); whereabouts != "" {
+		data.About.Whereabouts = whereabouts
 	}
-
 	return data.About, nil
 }

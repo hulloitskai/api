@@ -7,15 +7,14 @@ import (
 	"github.com/sirupsen/logrus"
 	errors "golang.org/x/xerrors"
 
-	"github.com/stevenxie/api/pkg/api"
 	"github.com/stevenxie/api/pkg/geo"
 	"github.com/stevenxie/api/pkg/zero"
 )
 
 type (
-	// A LocationService implements a latest-coordinates-preloading
-	// api.LocationService using a geo.Geocoder and a Coordinator.
-	LocationService struct {
+	// A RecentLocationsPreloader implements a geo.RecentLocationsService that
+	// preloads recent locations data.
+	RecentLocationsPreloader struct {
 		streamer *PollStreamer
 		geocoder geo.Geocoder
 		log      *logrus.Logger
@@ -26,22 +25,19 @@ type (
 	}
 
 	// An LSOption configures a LocationPreloader.
-	LSOption func(*LocationService)
-
-	// A RecentLocationsService can fetch data relating to one's recent locations.
-	RecentLocationsService interface{ LastSegment() (*geo.Segment, error) }
+	LSOption func(*RecentLocationsPreloader)
 )
 
-var _ api.LocationService = (*LocationService)(nil)
+var _ geo.RecentLocationsService = (*RecentLocationsPreloader)(nil)
 
-// NewLocationPreloader creates a new LocationPreloader.
-func NewLocationPreloader(
-	locations RecentLocationsService,
+// NewRecentLocationsPreloader creates a new LocationPreloader.
+func NewRecentLocationsPreloader(
+	locations geo.RecentLocationsService,
 	geo geo.Geocoder,
 	interval time.Duration,
 	opts ...LSOption,
-) *LocationService {
-	ls := &LocationService{
+) *RecentLocationsPreloader {
+	ls := &RecentLocationsPreloader{
 		geocoder: geo,
 		log:      zero.Logger(),
 	}
@@ -59,10 +55,10 @@ func NewLocationPreloader(
 
 // WithLSLogger configures a LocationPreloader's logger.
 func WithLSLogger(log *logrus.Logger) LSOption {
-	return func(lp *LocationService) { lp.log = log }
+	return func(lp *RecentLocationsPreloader) { lp.log = log }
 }
 
-func (ls *LocationService) populateCache() {
+func (ls *RecentLocationsPreloader) populateCache() {
 	for result := range ls.streamer.Stream() {
 		var (
 			segment *geo.Segment
@@ -88,51 +84,12 @@ func (ls *LocationService) populateCache() {
 }
 
 // Stop stops the LocationPreloader.
-func (ls *LocationService) Stop() { ls.streamer.Stop() }
+func (ls *RecentLocationsPreloader) Stop() { ls.streamer.Stop() }
 
 // LastSegment returns the authenticated user's latest location history segment.
-func (ls *LocationService) LastSegment() (*geo.Segment, error) {
+func (ls *RecentLocationsPreloader) LastSegment() (*geo.Segment, error) {
 	ls.mux.Lock()
 	defer ls.mux.Unlock()
 	copy := *ls.segment
 	return &copy, nil
-}
-
-// LastPosition returns the authenticated user's last known position.
-func (ls *LocationService) LastPosition() (*geo.Coordinate, error) {
-	ls.mux.Lock()
-	defer ls.mux.Unlock()
-	if ls.segment == nil {
-		return nil, nil
-	}
-	coords := ls.segment.Coordinates
-	if len(coords) == 0 {
-		return nil, nil
-	}
-	copy := coords[len(coords)-1]
-	return &copy, nil
-}
-
-// CurrentCity returns the authenticated user's current city.
-func (ls *LocationService) CurrentCity() (city string, err error) {
-	coord, err := ls.LastPosition()
-	if err != nil {
-		return "", errors.Errorf("stream: determining last seen position: %w", err)
-	}
-	if coord == nil {
-		return "", errors.New("stream: no position data available")
-	}
-	return geo.CityAt(ls.geocoder, *coord)
-}
-
-// CurrentRegion returns the authenticated user's current region.
-func (ls *LocationService) CurrentRegion() (*geo.Location, error) {
-	coord, err := ls.LastPosition()
-	if err != nil {
-		return nil, errors.Errorf("stream: determining last seen position: %w", err)
-	}
-	if coord == nil {
-		return nil, errors.New("stream: no position data available")
-	}
-	return geo.RegionAt(ls.geocoder, *coord)
 }
