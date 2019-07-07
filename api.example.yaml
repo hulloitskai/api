@@ -22,6 +22,8 @@ location:
     view: String
   here:
     appID: String
+  historian:
+    timezone: String
   pollInterval: Duration
 
 shutdownTimeout: Duration

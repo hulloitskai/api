@@ -83,7 +83,16 @@ func run(c *cli.Context) error {
 	if err != nil {
 		return errors.Errorf("creating MapBox client: %w", err)
 	}
-	historian, err := gmaps.NewHistorian()
+
+	var historianOpts []gmaps.HOption
+	if timezone := cfg.Location.Historian.Timezone; timezone != nil {
+		location, err := time.LoadLocation(*timezone)
+		if err != nil {
+			return errors.Errorf("loading Historian timezone: %w", err)
+		}
+		historianOpts = append(historianOpts, gmaps.WithHTimezone(location))
+	}
+	historian, err := gmaps.NewHistorian(historianOpts...)
 	if err != nil {
 		return errors.Errorf("creating historian: %w", err)
 	}
@@ -109,10 +118,12 @@ func run(c *cli.Context) error {
 	if err != nil {
 		return errors.Errorf("creating GitHub client: %w", err)
 	}
-	gistID, gistFile := cfg.AboutGistInfo()
-	about := gh.NewAboutService(
-		github, gistID, gistFile,
-		location,
+	var (
+		gist  = &cfg.About.Gist
+		about = gh.NewAboutService(
+			github, gist.ID, gist.File,
+			location,
+		)
 	)
 
 	// Build commits service.
@@ -143,7 +154,7 @@ func run(c *cli.Context) error {
 	}
 	availability := gcal.NewAvailabilityService(
 		gcalc,
-		cfg.GCalCalendarIDs(),
+		cfg.Availability.GCal.CalendarIDs,
 	)
 
 	// Create and configure RescueTime client.

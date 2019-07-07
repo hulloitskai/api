@@ -41,6 +41,9 @@ type Config struct {
 			Table  string `yaml:"table"`
 			View   string `yaml:"view"`
 		} `yaml:"airtable"`
+		Historian struct {
+			Timezone *string `yaml:"timezone"`
+		} `yaml:"historian"`
 	} `yaml:"location"`
 
 	// Miscellaneous:

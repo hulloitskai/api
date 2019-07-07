@@ -5,6 +5,7 @@ import (
 	"net/http"
 	"os"
 	"strings"
+	"time"
 
 	errors "golang.org/x/xerrors"
 
@@ -16,7 +17,8 @@ type (
 	// A Historian can load the authenticated user's location history from
 	// Google Maps.
 	Historian struct {
-		client *http.Client
+		client   *http.Client
+		timezone *time.Location
 	}
 
 	// A HOption configures a Historian.
@@ -71,4 +73,10 @@ func NewHistorian(opts ...HOption) (*Historian, error) {
 // WithHClient configures a Historian to make HTTP requests with c.
 func WithHClient(c *http.Client) HOption {
 	return func(h *Historian) { h.client = c }
+}
+
+// WithHTimezone configures a Historian to load recent segments using a
+// particular timezone.
+func WithHTimezone(tz *time.Location) HOption {
+	return func(h *Historian) { h.timezone = tz }
 }

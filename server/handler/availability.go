@@ -4,9 +4,9 @@ import (
 	"net/http"
 	"time"
 
+	echo "github.com/labstack/echo/v4"
 	errors "golang.org/x/xerrors"
 
-	echo "github.com/labstack/echo/v4"
 	"github.com/sirupsen/logrus"
 	"github.com/stevenxie/api/pkg/api"
 	"github.com/stevenxie/api/pkg/httputil"
