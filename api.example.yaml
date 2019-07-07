@@ -4,8 +4,10 @@ about:
     file: String
 
 commits:
-  limit: Int
-  pollInterval: Duration
+  polling:
+    enabled: Bool
+    interval: Duration
+    limit: Int
 
 availability:
   gcal:
@@ -13,9 +15,14 @@ availability:
       - String # Calendar ID
 
 music:
-  pollInterval: Duration
+  polling:
+    interval: Duration
 
 location:
+  polling:
+    enabled: Bool
+    interval: Duration
+
   airtable:
     baseID: String
     table: String
@@ -24,6 +31,5 @@ location:
     appID: String
   historian:
     timezone: String
-  pollInterval: Duration
 
 shutdownTimeout: Duration

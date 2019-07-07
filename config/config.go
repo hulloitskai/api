@@ -17,8 +17,11 @@ type Config struct {
 	} `yaml:"about"`
 
 	Commits struct {
-		Limit        int           `yaml:"limit"`
-		PollInterval time.Duration `yaml:"pollInterval"`
+		Polling struct {
+			Enabled  bool          `yaml:"enabled"`
+			Limit    int           `yaml:"limit"`
+			Interval time.Duration `yaml:"interval"`
+		} `yaml:"polling"`
 	} `yaml:"commits"`
 
 	Availability struct {
@@ -28,19 +31,27 @@ type Config struct {
 	} `yaml:"availability"`
 
 	Music struct {
-		PollInterval time.Duration `yaml:"pollInterval"`
+		Polling struct {
+			Interval time.Duration `yaml:"interval"`
+		} `yaml:"polling"`
 	} `yaml:"music"`
 
 	Location struct {
-		PollInterval time.Duration `yaml:"pollInterval"`
-		Here         struct {
-			AppID string `yaml:"appID"`
+		Polling struct {
+			Enabled  bool          `yaml:"enabled"`
+			Interval time.Duration `yaml:"interval"`
+		} `yaml:"polling"`
+
+		Here struct {
+			AppID string `yaml:"appID" valid:"nonzero"`
 		} `yaml:"here"`
+
 		Airtable struct {
 			BaseID string `yaml:"baseID"`
 			Table  string `yaml:"table"`
 			View   string `yaml:"view"`
 		} `yaml:"airtable"`
+
 		Historian struct {
 			Timezone *string `yaml:"timezone"`
 		} `yaml:"historian"`
@@ -52,10 +63,12 @@ type Config struct {
 
 func defaultConfig() *Config {
 	cfg := new(Config)
-	cfg.Commits.Limit = 5
-	cfg.Commits.PollInterval = time.Minute
-	cfg.Music.PollInterval = 5 * time.Second
-	cfg.Location.PollInterval = time.Minute
+
+	cfg.Commits.Polling.Limit = 5
+	cfg.Commits.Polling.Interval = time.Minute
+
+	cfg.Music.Polling.Interval = 5 * time.Second
+	cfg.Location.Polling.Interval = time.Minute
 	return cfg
 }
 

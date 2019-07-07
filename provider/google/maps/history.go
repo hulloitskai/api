@@ -130,5 +130,6 @@ func (h *Historian) RecentSegments() ([]*geo.Segment, error) {
 	if len(segments) > 0 {
 		return segments, nil
 	}
+	// Fallback to previous date if no history is recorded.
 	return h.LocationHistory(date.Add(-24 * time.Hour))
 }

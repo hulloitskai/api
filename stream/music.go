@@ -24,27 +24,27 @@ type (
 		latest api.MaybeNowPlaying
 	}
 
-	// An NPSOption configures a NowPlayingStreamer.
-	NPSOption func(*MusicStreamer)
+	// An MSOption configures a MusicStreamer.
+	MSOption func(*MusicStreamer)
 )
 
-// Ensure that a NowPlayingStreamer implements both api.MusicService and
+// Ensure that a MusicStreamer implements both api.MusicService and
 // api.MusicStreamingService.
 var (
 	_ api.MusicService          = (*MusicStreamer)(nil)
 	_ api.MusicStreamingService = (*MusicStreamer)(nil)
 )
 
-// WithNPSLogger adds an logger to a NowPlayingStreamer.
-func WithNPSLogger(log *logrus.Logger) NPSOption {
-	return func(nps *MusicStreamer) { nps.log = log }
+// WithMSLogger adds an logger to a MusicStreamer.
+func WithMSLogger(log *logrus.Logger) MSOption {
+	return func(ms *MusicStreamer) { ms.log = log }
 }
 
-// NewNowPlayingStreamer creates a new NowPlayingStreamer.
-func NewNowPlayingStreamer(
+// NewMusicStreamer creates a new MusicStreamer.
+func NewMusicStreamer(
 	svc api.MusicService,
 	interval time.Duration,
-	opts ...NPSOption,
+	opts ...MSOption,
 ) *MusicStreamer {
 	var (
 		action   = func() (zero.Interface, error) { return svc.NowPlaying() }
@@ -61,43 +61,43 @@ func NewNowPlayingStreamer(
 	return streamer
 }
 
-func (nps *MusicStreamer) startStreaming() {
-	for result := range nps.streamer.Stream() {
+func (ms *MusicStreamer) startStreaming() {
+	for result := range ms.streamer.Stream() {
 		var maybe api.MaybeNowPlaying
 		switch v := result.(type) {
 		case error:
 			maybe = api.MaybeNowPlaying{Err: v}
-			nps.log.WithError(maybe.Err).Error("Failed to load now-playing data.")
+			ms.log.WithError(maybe.Err).Error("Failed to load now-playing data.")
 		case *api.NowPlaying:
 			maybe = api.MaybeNowPlaying{NowPlaying: v}
 		default:
-			nps.log.WithField("value", v).Error("Unexpected value from upstream.")
+			ms.log.WithField("value", v).Error("Unexpected value from upstream.")
 			maybe = api.MaybeNowPlaying{
 				Err: errors.Errorf("stream: unexpected upstream value (%v)", v),
 			}
 		}
 
 		// Safely write maybe to latest.
-		nps.mux.Lock()
-		nps.latest = maybe
-		nps.mux.Unlock()
+		ms.mux.Lock()
+		ms.latest = maybe
+		ms.mux.Unlock()
 
 		// Write maybe to stream.
-		nps.stream <- maybe
+		ms.stream <- maybe
 	}
 }
 
-// Stop stops the NowPlayingStreamer.
-func (nps *MusicStreamer) Stop() { nps.streamer.Stop() }
+// Stop stops the MusicStreamer.
+func (ms *MusicStreamer) Stop() { ms.streamer.Stop() }
 
 // NowPlayingStream exposes a stream of NowPlaying objects.
-func (nps *MusicStreamer) NowPlayingStream() <-chan api.MaybeNowPlaying {
-	return nps.stream
+func (ms *MusicStreamer) NowPlayingStream() <-chan api.MaybeNowPlaying {
+	return ms.stream
 }
 
 // NowPlaying returns the latest NowPlaying stream result.
-func (nps *MusicStreamer) NowPlaying() (*api.NowPlaying, error) {
-	nps.mux.Lock()
-	defer nps.mux.Unlock()
-	return nps.latest.NowPlaying, nps.latest.Err
+func (ms *MusicStreamer) NowPlaying() (*api.NowPlaying, error) {
+	ms.mux.Lock()
+	defer ms.mux.Unlock()
+	return ms.latest.NowPlaying, ms.latest.Err
 }

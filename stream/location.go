@@ -16,7 +16,6 @@ type (
 	// preloads recent locations data.
 	RecentLocationsPreloader struct {
 		streamer *PollStreamer
-		geocoder geo.Geocoder
 		log      *logrus.Logger
 
 		mux      sync.Mutex
@@ -24,42 +23,40 @@ type (
 		err      error
 	}
 
-	// An LSOption configures a LocationPreloader.
-	LSOption func(*RecentLocationsPreloader)
+	// An RLPOption configures a RecentLocationsPreloader.
+	RLPOption func(*RecentLocationsPreloader)
 )
 
 var _ geo.RecentLocationsService = (*RecentLocationsPreloader)(nil)
 
-// NewRecentLocationsPreloader creates a new LocationPreloader.
+// NewRecentLocationsPreloader creates a new RecentLocationsPreloader.
 func NewRecentLocationsPreloader(
 	locations geo.RecentLocationsService,
-	geo geo.Geocoder,
 	interval time.Duration,
-	opts ...LSOption,
+	opts ...RLPOption,
 ) *RecentLocationsPreloader {
-	ls := &RecentLocationsPreloader{
-		geocoder: geo,
-		log:      zero.Logger(),
+	rlp := &RecentLocationsPreloader{
+		log: zero.Logger(),
 	}
 	for _, opt := range opts {
-		opt(ls)
+		opt(rlp)
 	}
 
 	// Configure streamer.
 	action := func() (zero.Interface, error) { return locations.RecentSegments() }
-	ls.streamer = NewPollStreamer(action, interval)
+	rlp.streamer = NewPollStreamer(action, interval)
 
-	go ls.populateCache()
-	return ls
+	go rlp.populateCache()
+	return rlp
 }
 
 // WithLSLogger configures a LocationPreloader's logger.
-func WithLSLogger(log *logrus.Logger) LSOption {
-	return func(lp *RecentLocationsPreloader) { lp.log = log }
+func WithLSLogger(log *logrus.Logger) RLPOption {
+	return func(rlp *RecentLocationsPreloader) { rlp.log = log }
 }
 
-func (ls *RecentLocationsPreloader) populateCache() {
-	for result := range ls.streamer.Stream() {
+func (rlp *RecentLocationsPreloader) populateCache() {
+	for result := range rlp.streamer.Stream() {
 		var (
 			segments []*geo.Segment
 			err      error
@@ -68,27 +65,27 @@ func (ls *RecentLocationsPreloader) populateCache() {
 		switch v := result.(type) {
 		case error:
 			err = v
-			ls.log.WithError(err).Error("Failed to load last seen position.")
+			rlp.log.WithError(err).Error("Failed to load last seen position.")
 		case []*geo.Segment:
 			segments = v
 		default:
-			ls.log.WithField("value", v).Error("Unexpected value from upstream.")
+			rlp.log.WithField("value", v).Error("Unexpected value from upstream.")
 			err = errors.Errorf("stream: unexpected value '%s' from upstream")
 		}
 
-		ls.mux.Lock()
-		ls.segments = segments
-		ls.err = err
-		ls.mux.Unlock()
+		rlp.mux.Lock()
+		rlp.segments = segments
+		rlp.err = err
+		rlp.mux.Unlock()
 	}
 }
 
-// Stop stops the LocationPreloader.
-func (ls *RecentLocationsPreloader) Stop() { ls.streamer.Stop() }
+// Stop stops the RecentLocationPreloader.
+func (rlp *RecentLocationsPreloader) Stop() { rlp.streamer.Stop() }
 
 // RecentSegments returns the authenticated user's recent location history.
-func (ls *RecentLocationsPreloader) RecentSegments() ([]*geo.Segment, error) {
-	ls.mux.Lock()
-	defer ls.mux.Unlock()
-	return ls.segments, nil
+func (rlp *RecentLocationsPreloader) RecentSegments() ([]*geo.Segment, error) {
+	rlp.mux.Lock()
+	defer rlp.mux.Unlock()
+	return rlp.segments, nil
 }

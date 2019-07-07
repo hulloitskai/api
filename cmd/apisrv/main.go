@@ -10,6 +10,8 @@ import (
 
 	"github.com/stevenxie/api/pkg/geo"
 
+	"github.com/stevenxie/api/pkg/api"
+
 	"github.com/stevenxie/api/provider/airtable"
 
 	errors "golang.org/x/xerrors"
@@ -78,84 +80,126 @@ func run(c *cli.Context) error {
 	// Initialize services:
 	log.Info("Initializing services...")
 
-	// Build location service.
-	geocoder, err := here.New(cfg.Location.Here.AppID)
-	if err != nil {
-		return errors.Errorf("creating MapBox client: %w", err)
-	}
+	// Finalizers should be stopped before the program terminates.
+	var finalizers []interface{ Stop() }
 
-	var historianOpts []gmaps.HOption
-	if timezone := cfg.Location.Historian.Timezone; timezone != nil {
-		location, err := time.LoadLocation(*timezone)
+	// Build location service.
+	var location api.LocationService
+	{
+		geocoder, err := here.New(cfg.Location.Here.AppID)
 		if err != nil {
-			return errors.Errorf("loading Historian timezone: %w", err)
+			return errors.Errorf("creating MapBox client: %w", err)
 		}
-		historianOpts = append(historianOpts, gmaps.WithHTimezone(location))
+
+		var recent geo.RecentLocationsService
+		{
+			var options []gmaps.HOption
+			if timezone := cfg.Location.Historian.Timezone; timezone != nil {
+				location, err := time.LoadLocation(*timezone)
+				if err != nil {
+					return errors.Errorf("loading Historian timezone: %w", err)
+				}
+				options = append(options, gmaps.WithHTimezone(location))
+			}
+			if recent, err = gmaps.NewHistorian(options...); err != nil {
+				return errors.Errorf("creating historian: %w", err)
+			}
+		}
+
+		if polling := &cfg.Location.Polling; polling.Enabled {
+			preloader := stream.NewRecentLocationsPreloader(
+				recent, polling.Interval,
+				stream.WithLSLogger(
+					log.WithField("service", "recent_locations_preloader").Logger,
+				),
+			)
+			recent = preloader
+			finalizers = append(finalizers, preloader)
+		}
+
+		location = geo.NewLocationService(recent, geocoder)
 	}
-	historian, err := gmaps.NewHistorian(historianOpts...)
-	if err != nil {
-		return errors.Errorf("creating historian: %w", err)
-	}
-	location := geo.NewLocationService(historian, geocoder)
 
 	// Build location access service.
-	airc, err := airtable.NewClient()
-	if err != nil {
-		return errors.Errorf("creating Airtable client: %w", err)
-	}
-	var (
-		airtableCfg    = &cfg.Location.Airtable
+	var locationAccess api.LocationAccessService
+	{
+		client, err := airtable.NewClient()
+		if err != nil {
+			return errors.Errorf("creating Airtable client: %w", err)
+		}
+		config := &cfg.Location.Airtable
 		locationAccess = airtable.NewLocationAccessService(
-			airc,
-			airtableCfg.BaseID,
-			airtableCfg.Table,
-			airtableCfg.View,
+			client,
+			config.BaseID,
+			config.Table,
+			config.View,
 		)
-	)
+	}
 
-	// Build about service.
+	// Build GitHub client, a shared dependenncy.
 	github, err := gh.New()
 	if err != nil {
 		return errors.Errorf("creating GitHub client: %w", err)
 	}
-	var (
-		gist  = &cfg.About.Gist
+
+	// Build about service.
+	var about api.AboutService
+	{
+		gist := &cfg.About.Gist
 		about = gh.NewAboutService(
 			github, gist.ID, gist.File,
 			location,
 		)
-	)
+	}
 
 	// Build commits service.
-	commits := stream.NewCommitsPreloader(
-		github,
-		cfg.Commits.PollInterval,
-		stream.WithCPLimit(cfg.Commits.Limit),
-		stream.WithCPLogger(log.WithField("service", "commits_preloader").Logger),
-	)
-
-	// Create now-playing service.
-	spotify, err := spotify.New()
-	if err != nil {
-		return errors.Errorf("creating Spotify client: %w", err)
+	var commits api.GitCommitsService
+	{
+		commits = github
+		if polling := &cfg.Commits.Polling; polling.Enabled {
+			preloader := stream.NewCommitsPreloader(
+				github,
+				polling.Interval,
+				stream.WithCPLimit(polling.Limit),
+				stream.WithCPLogger(
+					log.WithField("service", "commits_preloader").Logger,
+				),
+			)
+			commits = preloader
+			finalizers = append(finalizers, preloader)
+		}
 	}
-	nowplaying := stream.NewNowPlayingStreamer(
-		spotify,
-		cfg.Music.PollInterval,
-		stream.WithNPSLogger(
-			log.WithField("service", "nowplaying_streamer").Logger,
-		),
-	)
 
-	// Create gcal client.
-	gcalc, err := gcal.NewClient()
-	if err != nil {
-		return errors.Errorf("creating GCal client: %w", err)
+	// Create music service.
+	var music api.MusicStreamingService
+	{
+		spotify, err := spotify.New()
+		if err != nil {
+			return errors.Errorf("creating Spotify client: %w", err)
+		}
+		streamer := stream.NewMusicStreamer(
+			spotify,
+			cfg.Music.Polling.Interval,
+			stream.WithMSLogger(
+				log.WithField("service", "music_streamer").Logger,
+			),
+		)
+		music = streamer
+		finalizers = append(finalizers, streamer)
 	}
-	availability := gcal.NewAvailabilityService(
-		gcalc,
-		cfg.Availability.GCal.CalendarIDs,
-	)
+
+	// Create availability service.
+	var availability api.AvailabilityService
+	{
+		client, err := gcal.NewClient()
+		if err != nil {
+			return errors.Errorf("creating GCal client: %w", err)
+		}
+		availability = gcal.NewAvailabilityService(
+			client,
+			cfg.Availability.GCal.CalendarIDs,
+		)
+	}
 
 	// Create and configure RescueTime client.
 	timezone, err := availability.Timezone()
@@ -173,7 +217,7 @@ func run(c *cli.Context) error {
 		about,
 		availability,
 		commits,
-		nowplaying,
+		music,
 		rescuetime,
 
 		location,
@@ -191,10 +235,10 @@ func run(c *cli.Context) error {
 		return errors.Errorf("starting server: %w", err)
 	}
 
-	// Stop preloaders and streamers.
-	commits.Stop()
-	nowplaying.Stop()
-
+	// Run all finalizers.
+	for _, finalizer := range finalizers {
+		finalizer.Stop()
+	}
 	return nil
 }
 
