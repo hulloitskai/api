@@ -39,11 +39,6 @@ var (
 	_ api.MusicStreamingService = (*MusicStreamer)(nil)
 )
 
-// WithMSLogger adds an logger to a MusicStreamer.
-func WithMSLogger(log *logrus.Logger) MSOption {
-	return func(ms *MusicStreamer) { ms.log = log }
-}
-
 // NewMusicStreamer creates a new MusicStreamer.
 func NewMusicStreamer(
 	svc api.MusicService,
@@ -51,8 +46,8 @@ func NewMusicStreamer(
 	opts ...MSOption,
 ) *MusicStreamer {
 	var (
-		action   = func() (zero.Interface, error) { return svc.NowPlaying() }
-		streamer = &MusicStreamer{
+		action = func() (zero.Interface, error) { return svc.NowPlaying() }
+		ms     = &MusicStreamer{
 			streamer: NewPollStreamer(action, interval),
 			stream: make(chan struct {
 				NowPlaying *api.NowPlaying
@@ -62,10 +57,15 @@ func NewMusicStreamer(
 		}
 	)
 	for _, opt := range opts {
-		opt(streamer)
+		opt(ms)
 	}
-	go streamer.startStreaming()
-	return streamer
+	go ms.startStreaming()
+	return ms
+}
+
+// WithMSLogger adds an logger to a MusicStreamer.
+func WithMSLogger(log *logrus.Logger) MSOption {
+	return func(ms *MusicStreamer) { ms.log = log }
 }
 
 func (ms *MusicStreamer) startStreaming() {
@@ -86,13 +86,13 @@ func (ms *MusicStreamer) startStreaming() {
 			err = errors.Errorf("stream: unexpected upstream value (%v)", v)
 		}
 
-		// Safely write maybe to latest.
+		// Cache values.
 		ms.mux.Lock()
 		ms.nowPlaying = nowPlaying
 		ms.err = err
 		ms.mux.Unlock()
 
-		// Write maybe to stream.
+		// Write values to stream.
 		ms.stream <- struct {
 			NowPlaying *api.NowPlaying
 			Err        error
@@ -103,7 +103,7 @@ func (ms *MusicStreamer) startStreaming() {
 // Stop stops the MusicStreamer.
 func (ms *MusicStreamer) Stop() { ms.streamer.Stop() }
 
-// NowPlayingStream exposes a stream of NowPlaying objects.
+// NowPlayingStream returns a stream of NowPlaying objects.
 func (ms *MusicStreamer) NowPlayingStream() <-chan struct {
 	NowPlaying *api.NowPlaying
 	Err        error

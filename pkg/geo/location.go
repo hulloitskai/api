@@ -15,32 +15,32 @@ type Coordinate struct {
 
 type (
 	// A LocationService implements an api.LocationService using a
-	// LocationHistoryService and a Geocoder.
+	// SegmentSource and a Geocoder.
 	LocationService struct {
-		locations RecentLocationsService
-		geocoder  Geocoder
+		source   SegmentSource
+		geocoder Geocoder
 	}
 
-	// A RecentLocationsService can fetch data relating to one's recent locations.
-	RecentLocationsService interface {
+	// A SegmentSource can fetch recent location history segments.
+	SegmentSource interface {
 		RecentSegments() ([]*Segment, error)
 	}
 )
 
 // NewLocationService creates a new LocationService.
 func NewLocationService(
-	locations RecentLocationsService,
+	source SegmentSource,
 	g Geocoder,
 ) LocationService {
 	return LocationService{
-		locations: locations,
-		geocoder:  g,
+		source:   source,
+		geocoder: g,
 	}
 }
 
 // RecentSegments returns the authenticated user's recent location history.
 func (svc LocationService) RecentSegments() ([]*Segment, error) {
-	return svc.locations.RecentSegments()
+	return svc.source.RecentSegments()
 }
 
 // LastSegment returns the authenticated user's latest location history segment.
@@ -115,4 +115,42 @@ func (svc LocationService) CurrentRegion() (*Location, error) {
 		return nil, errors.New("geo: no locations found at given position")
 	}
 	return &results[0].Location, nil
+}
+
+type (
+	// A LocationStreamingService implements an api.LocationStreamingService using
+	// a LocationService and a Geocoder.
+	LocationStreamingService struct {
+		LocationService
+		source StreamingSegmentSource
+	}
+
+	// A StreamingSegmentSource is a SegmentSource that can also stream location
+	// history segments.
+	StreamingSegmentSource interface {
+		SegmentSource
+		SegmentsStream() <-chan struct {
+			Segment *Segment
+			Err     error
+		}
+	}
+)
+
+// NewLocationStreamingService creates a new LocationStreamingService.
+func NewLocationStreamingService(
+	source StreamingSegmentSource,
+	g Geocoder,
+) *LocationStreamingService {
+	return &LocationStreamingService{
+		LocationService: NewLocationService(source, g),
+		source:          source,
+	}
+}
+
+// SegmentsStream returns a stream of location history segments.
+func (svc *LocationStreamingService) SegmentsStream() <-chan struct {
+	Segment *Segment
+	Err     error
+} {
+	return svc.source.SegmentsStream()
 }

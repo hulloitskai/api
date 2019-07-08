@@ -106,28 +106,23 @@ func run(c *cli.Context) error {
 		if err != nil {
 			return errors.Errorf("creating MapBox client: %w", err)
 		}
-
-		var recent geo.RecentLocationsService
-		{
-			if recent, err = gmaps.NewHistorian(
-				gmaps.WithHTimezone(timezone),
-			); err != nil {
-				return errors.Errorf("creating historian: %w", err)
-			}
+		source, err := gmaps.NewHistorian(gmaps.WithHTimezone(timezone))
+		if err != nil {
+			return errors.Errorf("creating historian: %w", err)
 		}
 
 		if polling := &cfg.Location.Polling; polling.Enabled {
-			preloader := stream.NewRecentLocationsPreloader(
-				recent, polling.Interval,
+			streamer := stream.NewSegmentsStreamer(
+				source, polling.Interval,
 				stream.WithLSLogger(
 					log.WithField("service", "recent_locations_preloader").Logger,
 				),
 			)
-			recent = preloader
-			finalizers = append(finalizers, preloader)
+			location = geo.NewLocationStreamingService(streamer, geocoder)
+			finalizers = append(finalizers, streamer)
+		} else {
+			location = geo.NewLocationService(source, geocoder)
 		}
-
-		location = geo.NewLocationService(recent, geocoder)
 	}
 
 	// Build location access service.

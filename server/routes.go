@@ -8,8 +8,6 @@ import (
 
 func (srv *Server) registerRoutes() error {
 	e := srv.echo
-
-	// Register error handler.
 	e.HTTPErrorHandler = handler.ErrorHandler(srv.hlog("error"))
 
 	// Register routes.
@@ -32,13 +30,13 @@ func (srv *Server) registerRoutes() error {
 	location := handler.NewLocationProvider(srv.location)
 	e.GET(
 		"/location",
-		location.RegionHandler(srv.hlog("location")),
+		location.CurrentRegionHandler(srv.hlog("location_region")),
 	)
 	e.GET(
 		"/location/history",
-		location.RecentHistoryHandler(
+		location.HistoryHandler(
 			srv.locationAccess,
-			srv.hlog("recent_history"),
+			srv.hlog("location_recent_history"),
 		),
 	)
 

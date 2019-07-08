@@ -27,7 +27,8 @@ func NowPlayingHandler(svc api.MusicService, log *logrus.Logger) echo.HandlerFun
 	}
 }
 
-// NowPlayingStreamingHandler handles requests for NowPlaying event streams.
+// NowPlayingStreamingHandler handles requests for current playing track
+// streams.
 func NowPlayingStreamingHandler(
 	svc api.MusicStreamingService,
 	log *logrus.Logger,
@@ -35,71 +36,79 @@ func NowPlayingStreamingHandler(
 	// Configure Melody.
 	var (
 		mel        = melody.New()
-		serializer nowPlayingStateSerializer
+		serializer nowPlayingStreamSerializer
 	)
 
-	connlog := log.WithField("stage", "connect").Logger
+	connEntry := log.WithField("stage", "connect")
 	mel.HandleConnect(func(s *melody.Session) {
 		np, err := svc.NowPlaying()
 		if err != nil {
-			connlog.
+			connEntry.
 				WithError(err).
 				Error("Error getting latest NowPlaying from upstream.")
 			return
 		}
 
-		data, err := json.Marshal(nowPlayingStreamMessage{
+		message, err := json.Marshal(nowPlayingStreamMessage{
 			Event:   npEventNowPlaying,
 			Payload: np,
 		})
 		if err != nil {
-			log.WithError(err).Error("Failed to marshal JSON message.")
+			connEntry.
+				WithError(err).
+				Error("Failed to marshal JSON message.")
+			return
 		}
 
-		if err := s.Write(data); err != nil {
-			log.WithError(err).Error("Failed to write to socket.")
+		if err = s.Write(message); err != nil {
+			connEntry.
+				WithError(err).
+				Error("Failed to write to socket.")
 		}
 	})
 
+	broadEntry := log.WithField("stage", "broadcast")
 	go func(stream <-chan struct {
 		NowPlaying *api.NowPlaying
 		Err        error
 	}) {
-		broadlog := log.WithField("stage", "broadcast")
-		for maybe := range stream {
-			message, err := serializer.Serialize(maybe.NowPlaying, maybe.Err)
+		for value := range stream {
+			message, err := serializer.Serialize(value.NowPlaying, value.Err)
 			if err != nil {
-				broadlog.
+				broadEntry.
 					WithError(err).
-					Error("Error while marshalling stream response.")
+					Error("Error while marshalling stream value.")
 				continue
 			}
-
 			if message == nil {
 				continue
 			}
 			if err = mel.Broadcast(message); err != nil {
-				broadlog.WithError(err).Error("Failed to broadcast stream object.")
-				continue
+				broadEntry.
+					WithError(err).
+					Error("Failed to broadcast stream object.")
 			}
 		}
 	}(svc.NowPlayingStream())
 
-	handlelog := log.WithField("stage", "handle").Logger
+	handleEntry := log.WithField("stage", "handle")
 	return func(c echo.Context) error {
 		if err := mel.HandleRequest(c.Response().Writer, c.Request()); err != nil {
-			handlelog.WithError(err).Error("Melody failed to handle request.")
+			handleEntry.
+				WithError(err).
+				Error("Melody failed to handle request.")
+			return err
 		}
 		return nil
 	}
 }
 
-type nowPlayingStateSerializer struct {
+type nowPlayingStreamSerializer struct {
 	prevNP  *api.NowPlaying
 	prevErr error
 }
 
-func (serializer *nowPlayingStateSerializer) Serialize(
+func (serializer *nowPlayingStreamSerializer) Serialize(
 	currNP *api.NowPlaying,
 	currErr error,
 ) (message []byte, err error) {
