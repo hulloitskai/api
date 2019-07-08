@@ -1,8 +1,6 @@
 package geo
 
 import (
-	"fmt"
-
 	errors "golang.org/x/xerrors"
 )
 
@@ -89,8 +87,7 @@ func (svc LocationService) CurrentCity() (city string, err error) {
 	if len(results) == 0 {
 		return "", errors.New("geo: no locations found at given position")
 	}
-	addr := results[0].Address
-	return fmt.Sprintf("%s, %s, %s", addr.County, addr.State, addr.Country), nil
+	return results[0].Address.Label, nil
 }
 
 // CurrentRegion returns the authenticated user's current region.
