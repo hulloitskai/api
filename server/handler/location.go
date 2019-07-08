@@ -1,12 +1,10 @@
 package handler
 
 import (
-	"encoding/json"
 	"net/http"
 	"strings"
 
 	errors "golang.org/x/xerrors"
-	melody "gopkg.in/olahol/melody.v1"
 
 	echo "github.com/labstack/echo/v4"
 	"github.com/sirupsen/logrus"
@@ -14,7 +12,6 @@ import (
 	"github.com/stevenxie/api/pkg/api"
 	"github.com/stevenxie/api/pkg/geo"
 	"github.com/stevenxie/api/pkg/httputil"
-	"github.com/stevenxie/api/pkg/zero"
 )
 
 // A LocationProvider can create handlers that use location data.
@@ -125,96 +122,3 @@ func locationAccessValidationMiddlware(
 		}
 	}
 }
-
-// LocationStreamingHandler handles requests for current location streams.
-func LocationStreamingHandler(
-	svc api.LocationStreamingService,
-	access api.LocationAccessService,
-	log *logrus.Logger,
-) echo.HandlerFunc {
-	// Configure Melody.
-	mel := melody.New()
-
-	connEntry := log.WithField("stage", "connect")
-	mel.HandleConnect(func(s *melody.Session) {
-		segments, err := svc.RecentSegments()
-		if err != nil {
-			connEntry.
-				WithError(err).
-				Error("Error getting recent location history from upstream.")
-			return
-		}
-
-		message, err := json.Marshal(locationStreamMessage{
-			Event:   locationEventInitial,
-			Payload: segments,
-		})
-		if err != nil {
-			connEntry.
-				WithError(err).
-				Error("Failed to marshal JSON message.")
-			return
-		}
-
-		if err = s.Write(message); err != nil {
-			connEntry.
-				WithError(err).
-				Error("Failed to write to socket.")
-		}
-	})
-
-	broadEntry := log.WithField("stage", "broadcast")
-	go func(stream <-chan struct {
-		Segment *geo.Segment
-		Err     error
-	}) {
-		for value := range stream {
-			var m locationStreamMessage
-			if value.Err != nil {
-				m.Event = locationEventError
-				m.Payload = value.Err
-			} else {
-				m.Event = locationEventUpdate
-				m.Payload = value.Segment
-			}
-
-			message, err := json.Marshal(m)
-			if err != nil {
-				broadEntry.
-					WithError(err).
-					Error("Error while marshalling stream value.")
-				continue
-			}
-
-			if err = mel.Broadcast(message); err != nil {
-				broadEntry.
-					WithError(err).
-					Error("Failed to broadcast stream object.")
-			}
-		}
-	}(svc.SegmentsStream())
-
-	handleEntry := log.WithField("stage", "handle")
-	handler := func(c echo.Context) error {
-		if err := mel.HandleRequest(c.Response().Writer, c.Request()); err != nil {
-			handleEntry.
-				WithError(err).
-				Error("Melody failed to handle request.")
-			return err
-		}
-		return nil
-	}
-
-	return locationAccessValidationMiddlware(access, log)(handler)
-}
-
-type locationStreamMessage struct {
-	Event   string         `json:"event"`
-	Payload zero.Interface `json:"payload"`
-}
-
-const (
-	locationEventInitial = "initial"
-	locationEventUpdate  = "update"
-	locationEventError   = "error"
-)

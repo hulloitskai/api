@@ -30,13 +30,13 @@ func (srv *Server) registerRoutes() error {
 	location := handler.NewLocationProvider(srv.location)
 	e.GET(
 		"/location",
-		location.CurrentRegionHandler(srv.hlog("location_region")),
+		location.CurrentRegionHandler(srv.hlog("location_currrent_region")),
 	)
 	e.GET(
 		"/location/history",
 		location.HistoryHandler(
 			srv.locationAccess,
-			srv.hlog("location_recent_history"),
+			srv.hlog("location_history"),
 		),
 	)
 

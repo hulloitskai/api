@@ -14,15 +14,6 @@ type (
 		RecentSegments() ([]*geo.Segment, error)
 	}
 
-	// A LocationStreamingService can stream my current location.
-	LocationStreamingService interface {
-		LocationService
-		SegmentsStream() <-chan struct {
-			Segment *geo.Segment
-			Err     error
-		}
-	}
-
 	// A LocationAccessService can validate location access codes.
 	LocationAccessService interface {
 		IsValidCode(code string) (valid bool, err error)
