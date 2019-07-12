@@ -17,12 +17,15 @@ type (
 	// Client can access the RescueTime API.
 	Client struct {
 		httpc    *http.Client
-		key      string
 		timezone *time.Location
+		key      string
 	}
 
-	// An Option configures a Client.
-	Option func(c *Client)
+	// An ClientConfig configures a Client.
+	ClientConfig struct {
+		HTTPClient *http.Client
+		Timezone   *time.Location
+	}
 )
 
 var _ api.ProductivityService = (*Client)(nil)
@@ -31,26 +34,22 @@ var _ api.ProductivityService = (*Client)(nil)
 //
 // It reads RESCUETIME_KEY (an API key) from the environment; if no such
 // variable is found, an error will be returned.
-func New(opts ...Option) (*Client, error) {
+func New(opts ...func(*ClientConfig)) (*Client, error) {
+	cfg := ClientConfig{HTTPClient: new(http.Client)}
+	for _, opt := range opts {
+		opt(&cfg)
+	}
+
 	key := os.Getenv(strings.ToUpper(Namespace) + "_KEY")
 	if key == "" {
 		return nil, ErrBadEnvKey
 	}
 
-	c := &Client{
-		httpc: new(http.Client),
-		key:   key,
-	}
-	for _, opt := range opts {
-		opt(c)
-	}
-	return c, nil
-}
-
-// WithTimezone configures the timezone that the Client will use to make
-// time/date queries.
-func WithTimezone(tz *time.Location) Option {
-	return func(c *Client) { c.timezone = tz }
+	return &Client{
+		httpc:    cfg.HTTPClient,
+		timezone: cfg.Timezone,
+		key:      key,
+	}, nil
 }
 
 // ErrBadEnvKey means that no 'RESCUETIME_KEY' environment variable was found.

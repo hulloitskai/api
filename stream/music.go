@@ -27,8 +27,8 @@ type (
 		err        error
 	}
 
-	// An MSOption configures a MusicStreamer.
-	MSOption func(*MusicStreamer)
+	// An MSConfig configures a MusicStreamer.
+	MSConfig struct{ Logger *logrus.Logger }
 )
 
 // Ensure that a MusicStreamer implements both api.MusicService and
@@ -42,29 +42,26 @@ var (
 func NewMusicStreamer(
 	svc api.MusicService,
 	interval time.Duration,
-	opts ...MSOption,
+	opts ...func(*MSConfig),
 ) *MusicStreamer {
-	var (
-		action = func() (zero.Interface, error) { return svc.NowPlaying() }
-		ms     = &MusicStreamer{
-			streamer: NewPollStreamer(action, interval),
-			stream: make(chan struct {
-				NowPlaying *api.NowPlaying
-				Err        error
-			}),
-			log: zero.Logger(),
-		}
-	)
+	cfg := MSConfig{Logger: zero.Logger()}
 	for _, opt := range opts {
-		opt(ms)
+		opt(&cfg)
+	}
+
+	ms := &MusicStreamer{
+		streamer: NewPollStreamer(
+			func() (zero.Interface, error) { return svc.NowPlaying() },
+			interval,
+		),
+		stream: make(chan struct {
+			NowPlaying *api.NowPlaying
+			Err        error
+		}),
+		log: zero.Logger(),
 	}
 	go ms.startStreaming()
 	return ms
-}
-
-// WithMSLogger adds an logger to a MusicStreamer.
-func WithMSLogger(log *logrus.Logger) MSOption {
-	return func(ms *MusicStreamer) { ms.log = log }
 }
 
 func (ms *MusicStreamer) startStreaming() {

@@ -8,44 +8,27 @@ type (
 	// A Geocoder can look up geographical features that correspond to a set of
 	// coordinates.
 	Geocoder interface {
-		ReverseGeocode(coord Coordinate, opts ...RGOption) ([]*RGResult, error)
+		ReverseGeocode(
+			coord Coordinate,
+			opts ...func(*ReverseGeocodeConfig),
+		) ([]*ReverseGeocodeResult, error)
 	}
 
-	// A RGResult is the result of a reverse-geocoding search.
-	RGResult struct {
+	// A ReverseGeocodeResult is the result of a reverse-geocoding search.
+	ReverseGeocodeResult struct {
 		Location  `json:"location"`
 		Relevance float32 `json:"relevance"`
 		Distance  float32 `json:"distance"`
 	}
 
-	// RGOptions are a set of configurable options for a reverse-geocoding
-	// request.
-	RGOptions struct {
+	// ReverseGeocodeConfig are a set of configurable options for a
+	// reverse-geocoding request.
+	ReverseGeocodeConfig struct {
 		Level        GeocodeLevel
 		Radius       uint
 		IncludeShape bool
 	}
-
-	// A RGOption configures a reverse-geocoding request.
-	RGOption func(*RGOptions)
 )
-
-// WithRGLevel configures a reverse-geocoding request to limit the search scope
-// specified geocoding match level.
-func WithRGLevel(l GeocodeLevel) RGOption {
-	return func(opts *RGOptions) { opts.Level = l }
-}
-
-// WithRGRadius configures a reverse-geocoding request to limit the search scope
-// to the specified radius.
-func WithRGRadius(radius uint) RGOption {
-	return func(opts *RGOptions) { opts.Radius = radius }
-}
-
-// WithRGShape confiures a reverse-geocoding request to include an area shape.
-func WithRGShape() RGOption {
-	return func(opts *RGOptions) { opts.IncludeShape = true }
-}
 
 // A GeocodeLevel represents the type of a feature.
 type GeocodeLevel uint8

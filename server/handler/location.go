@@ -81,6 +81,7 @@ func (p LocationProvider) HistoryHandler(
 				Coordinates: coordinates,
 			}
 		}
+
 		return jsonPretty(c, results)
 	}
 
@@ -117,7 +118,6 @@ func locationAccessValidationMiddlware(
 				httputil.SetEchoStatusCode(c, http.StatusUnauthorized)
 				return errors.New("access code is invalid or expired")
 			}
-
 			return next(c)
 		}
 	}

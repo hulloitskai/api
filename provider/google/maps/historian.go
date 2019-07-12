@@ -20,8 +20,11 @@ type (
 		timezone *time.Location
 	}
 
-	// A HOption configures a Historian.
-	HOption func(h *Historian)
+	// A HistorianConfig configures a Historian.
+	HistorianConfig struct {
+		Client   *http.Client
+		Timezone *time.Location
+	}
 )
 
 var _ geo.LocationHistoryService = (*Historian)(nil)
@@ -37,13 +40,13 @@ var _ geo.LocationHistoryService = (*Historian)(nil)
 // These environment variables can be gleaned from the application cookies
 // set by Google when you log in to Google Maps (check your web console for the
 // cookies named 'SID', 'HSID', and 'SSID').
-func NewHistorian(opts ...HOption) (*Historian, error) {
-	h := new(Historian)
+func NewHistorian(opts ...func(*HistorianConfig)) (*Historian, error) {
+	var cfg HistorianConfig
 	for _, opt := range opts {
-		opt(h)
+		opt(&cfg)
 	}
 
-	if h.client == nil { // derive authenticated client from envvars
+	if cfg.Client == nil { // derive authenticated client from envvars
 		var (
 			vars   = []string{"HSID", "SID", "SSID"}
 			varmap = make(map[string]string, len(vars))
@@ -63,19 +66,11 @@ func NewHistorian(opts ...HOption) (*Historian, error) {
 		if err != nil {
 			return nil, errors.Wrap(err, "maps: constructing cookies")
 		}
-		h.client = &http.Client{Jar: jar}
+		cfg.Client = &http.Client{Jar: jar}
 	}
 
-	return h, nil
-}
-
-// WithHClient configures a Historian to make HTTP requests with c.
-func WithHClient(c *http.Client) HOption {
-	return func(h *Historian) { h.client = c }
-}
-
-// WithHTimezone configures a Historian to load recent segments using a
-// particular timezone.
-func WithHTimezone(tz *time.Location) HOption {
-	return func(h *Historian) { h.timezone = tz }
+	return &Historian{
+		client:   cfg.Client,
+		timezone: cfg.Timezone,
+	}, nil
 }

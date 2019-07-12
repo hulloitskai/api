@@ -23,12 +23,17 @@ type (
 		token string
 	}
 
-	// A ClientOption configures a Client.
-	ClientOption func(*Client)
+	// A ClientConfig configures a Client.
+	ClientConfig struct{ HTTPClient *http.Client }
 )
 
 // NewClient creates a new Client.
-func NewClient(opts ...ClientOption) (*Client, error) {
+func NewClient(opts ...func(*ClientConfig)) (*Client, error) {
+	cfg := ClientConfig{HTTPClient: new(http.Client)}
+	for _, opt := range opts {
+		opt(&cfg)
+	}
+
 	var (
 		envvar    = fmt.Sprintf("%s_API_KEY", strings.ToUpper(Namespace))
 		token, ok = os.LookupEnv(envvar)
@@ -38,18 +43,10 @@ func NewClient(opts ...ClientOption) (*Client, error) {
 	}
 
 	c := &Client{
-		httpc: new(http.Client),
+		httpc: cfg.HTTPClient,
 		token: token,
 	}
-	for _, opt := range opts {
-		opt(c)
-	}
 	return c, nil
-}
-
-// WithHTTPClient configures a Client to make network requests using httpc.
-func WithHTTPClient(httpc *http.Client) ClientOption {
-	return func(c *Client) { c.httpc = httpc }
 }
 
 // Do sends an authenticated HTTP request.

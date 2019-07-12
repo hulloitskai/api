@@ -106,16 +106,17 @@ func run(c *cli.Context) error {
 			return errors.Wrap(err, "creating MapBox client")
 		}
 		var source geo.SegmentSource
-		source, err = gmaps.NewHistorian(gmaps.WithHTimezone(timezone))
-		if err != nil {
+		if source, err = gmaps.NewHistorian(func(cfg *gmaps.HistorianConfig) {
+			cfg.Timezone = timezone
+		}); err != nil {
 			return errors.Wrap(err, "creating historian")
 		}
 		if polling := &cfg.Location.Polling; polling.Enabled {
 			preloader := stream.NewSegmentsPreloader(
 				source, polling.Interval,
-				stream.WithSPLogger(
-					log.WithField("service", "segments_preloader").Logger,
-				),
+				func(cfg *stream.SPConfig) {
+					cfg.Logger = log.WithField("service", "segments_preloader").Logger
+				},
 			)
 			source = preloader
 			finalizers = append(finalizers, preloader)
@@ -137,10 +138,10 @@ func run(c *cli.Context) error {
 			config.Table,
 			config.View,
 
-			airtable.WithLASTimezone(timezone),
-			airtable.WithLASLogger(
-				log.WithField("service", "location_access").Logger,
-			),
+			func(cfg *airtable.LASConfig) {
+				cfg.Timezone = timezone
+				cfg.Logger = log.WithField("service", "location_access").Logger
+			},
 		)
 	}
 
@@ -169,10 +170,10 @@ func run(c *cli.Context) error {
 				github,
 				polling.Interval,
 
-				stream.WithCPLimit(polling.Limit),
-				stream.WithCPLogger(
-					log.WithField("service", "commits_preloader").Logger,
-				),
+				func(cfg *stream.CPConfig) {
+					cfg.Limit = polling.Limit
+					cfg.Logger = log.WithField("service", "commits_preloader").Logger
+				},
 			)
 			commits = preloader
 			finalizers = append(finalizers, preloader)
@@ -191,7 +192,9 @@ func run(c *cli.Context) error {
 			streamer := stream.NewMusicStreamer(
 				spotify,
 				cfg.Music.Polling.Interval,
-				stream.WithMSLogger(log.WithField("service", "music_streamer").Logger),
+				func(cfg *stream.MSConfig) {
+					cfg.Logger = log.WithField("service", "music_streamer").Logger
+				},
 			)
 			music = streamer
 			finalizers = append(finalizers, streamer)
@@ -201,7 +204,9 @@ func run(c *cli.Context) error {
 	// Create productivity service.
 	var productivity api.ProductivityService
 	{
-		productivity, err = rescuetime.New(rescuetime.WithTimezone(timezone))
+		productivity, err = rescuetime.New(func(cfg *rescuetime.ClientConfig) {
+			cfg.Timezone = timezone
+		})
 		if err != nil {
 			return errors.Wrap(err, "creating RescueTime client")
 		}
@@ -219,8 +224,10 @@ func run(c *cli.Context) error {
 		location,
 		locationAccess,
 
-		server.WithLogger(log),
-		server.WithRaven(raven),
+		func(cfg *server.Config) {
+			cfg.Logger = log
+			cfg.Raven = raven
+		},
 	)
 
 	// Shut down server gracefully upon interrupt.

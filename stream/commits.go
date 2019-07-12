@@ -15,18 +15,19 @@ type (
 	// api.GitCommitService interface.
 	CommitsPreloader struct {
 		streamer *PollStreamer
+		cfg      *CPConfig
 		log      *logrus.Logger
-
-		// Configurable options.
-		limit int
 
 		mux     sync.Mutex
 		commits []*api.GitCommit
 		err     error
 	}
 
-	// A CPOption configures a CommitsPreloader.
-	CPOption func(*CommitsPreloader)
+	// A CPConfig configures a CommitsPreloader.
+	CPConfig struct {
+		Logger *logrus.Logger
+		Limit  int
+	}
 )
 
 var _ api.GitCommitsService = (*CommitsPreloader)(nil)
@@ -35,36 +36,29 @@ var _ api.GitCommitsService = (*CommitsPreloader)(nil)
 func NewCommitsPreloader(
 	svc api.GitCommitsService,
 	interval time.Duration,
-	opts ...CPOption,
+	opts ...func(*CPConfig),
 ) *CommitsPreloader {
-	cp := &CommitsPreloader{
-		log:     zero.Logger(),
-		limit:   10,
-		commits: make([]*api.GitCommit, 0),
+	cfg := &CPConfig{
+		Logger: zero.Logger(),
+		Limit:  10,
 	}
 	for _, opt := range opts {
-		opt(cp)
+		opt(cfg)
 	}
 
-	// Configure streamer.
-	action := func() (zero.Interface, error) {
-		return svc.RecentGitCommits(cp.limit)
+	cp := &CommitsPreloader{
+		cfg:     cfg,
+		log:     cfg.Logger,
+		commits: make([]*api.GitCommit, 0),
+		streamer: NewPollStreamer(
+			func() (zero.Interface, error) {
+				return svc.RecentGitCommits(cfg.Limit)
+			},
+			interval,
+		),
 	}
-	cp.streamer = NewPollStreamer(action, interval)
-
 	go cp.populateCache()
 	return cp
-}
-
-// WithCPLogger configures a CommitPreloader's logger.
-func WithCPLogger(log *logrus.Logger) CPOption {
-	return func(cp *CommitsPreloader) { cp.log = log }
-}
-
-// WithCPLimit sets the maximum number of commits that a CommitPreloader will
-// preload.
-func WithCPLimit(limit int) CPOption {
-	return func(cp *CommitsPreloader) { cp.limit = limit }
 }
 
 func (cp *CommitsPreloader) populateCache() {
@@ -99,13 +93,13 @@ func (cp *CommitsPreloader) Stop() { cp.streamer.Stop() }
 func (cp *CommitsPreloader) RecentGitCommits(limit int) ([]*api.GitCommit,
 	error) {
 	// Check limit argument.
-	if cp.limit < limit {
+	if cp.cfg.Limit < limit {
 		cp.log.WithFields(logrus.Fields{
-			"limit":     cp.limit,
+			"limit":     cp.cfg.Limit,
 			"requested": limit,
 		}).Warn("Commits were requested with a limit greater than the internal" +
 			"limit.")
-		limit = cp.limit
+		limit = cp.cfg.Limit
 	}
 
 	// Guard access to cp.commits and cp.err.

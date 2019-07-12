@@ -26,8 +26,11 @@ type (
 		log      *logrus.Logger
 	}
 
-	// A LASOption configures a LocationAccessService.
-	LASOption func(svc *LocationAccessService)
+	// A LASConfig configures a LocationAccessService.
+	LASConfig struct {
+		Timezone *time.Location
+		Logger   *logrus.Logger
+	}
 )
 
 var _ api.LocationAccessService = (*LocationAccessService)(nil)
@@ -37,30 +40,21 @@ var _ api.LocationAccessService = (*LocationAccessService)(nil)
 func NewLocationAccessService(
 	c *Client,
 	baseID, table, view string,
-	opts ...LASOption,
+	opts ...func(*LASConfig),
 ) *LocationAccessService {
-	svc := &LocationAccessService{
+	cfg := LASConfig{Logger: zero.Logger()}
+	for _, opt := range opts {
+		opt(&cfg)
+	}
+	return &LocationAccessService{
 		client: c,
 		baseID: baseID,
 		table:  table,
 		view:   view,
-		log:    zero.Logger(),
-	}
-	for _, opt := range opts {
-		opt(svc)
-	}
-	return svc
-}
 
-// WithLASTimezone configures a LocationAccessService to specify a particular
-// timezone with making requests to the Airtable API.
-func WithLASTimezone(tz *time.Location) LASOption {
-	return func(svc *LocationAccessService) { svc.timezone = tz }
-}
-
-// WithLASLogger configures a LocationAccessService to write logs with log.
-func WithLASLogger(log *logrus.Logger) LASOption {
-	return func(svc *LocationAccessService) { svc.log = log }
+		timezone: cfg.Timezone,
+		log:      cfg.Logger,
+	}
 }
 
 // IsValidCode returns true if code is a valid location access code, and false

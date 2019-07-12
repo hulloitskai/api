@@ -20,15 +20,15 @@ const reverseGeocodeURL = "https://reverse.geocoder.api.here.com/6.2/" +
 // option is set.
 func (c *Client) ReverseGeocode(
 	coord geo.Coordinate,
-	opts ...geo.RGOption,
-) ([]*geo.RGResult, error) {
-	var options geo.RGOptions
+	opts ...func(cfg *geo.ReverseGeocodeConfig),
+) ([]*geo.ReverseGeocodeResult, error) {
+	var cfg geo.ReverseGeocodeConfig
 	for _, opt := range opts {
-		opt(&options)
+		opt(&cfg)
 	}
 
-	// Validate options.
-	if options.IncludeShape && (options.Level == 0) {
+	// Validate config.
+	if cfg.IncludeShape && (cfg.Level == 0) {
 		return nil, errors.New("here: cannot include area shape without level " +
 			"selection")
 	}
@@ -42,9 +42,9 @@ func (c *Client) ReverseGeocode(
 	params.Set("gen", "9")
 	params.Set("locationattributes", "address")
 
-	if options.Level > 0 {
-		level := options.Level.String()
-		if options.Level == geo.PostcodeLevel {
+	if cfg.Level > 0 {
+		level := cfg.Level.String()
+		if cfg.Level == geo.PostcodeLevel {
 			level = "postalCode"
 		}
 		params.Set("level", level)
@@ -52,12 +52,12 @@ func (c *Client) ReverseGeocode(
 	}
 	{
 		var radius uint = 50
-		if options.Radius > 0 {
-			radius = options.Radius
+		if cfg.Radius > 0 {
+			radius = cfg.Radius
 		}
 		params.Set("prox", fmt.Sprintf("%f,%f,%d", coord.Y, coord.X, radius))
 	}
-	if options.IncludeShape {
+	if cfg.IncludeShape {
 		params.Set("additionalData", "IncludeShapeLevel,default")
 	}
 
@@ -115,7 +115,7 @@ func (c *Client) ReverseGeocode(
 
 	var (
 		matches = data.Response.View[0].Result
-		results = make([]*geo.RGResult, len(matches))
+		results = make([]*geo.ReverseGeocodeResult, len(matches))
 	)
 	for i, match := range matches {
 		var (
@@ -152,7 +152,7 @@ func (c *Client) ReverseGeocode(
 		}
 
 	EncodeResult:
-		results[i] = &geo.RGResult{
+		results[i] = &geo.ReverseGeocodeResult{
 			Location: geo.Location{
 				ID:       loc.ID,
 				Level:    match.MatchLevel,

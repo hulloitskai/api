@@ -21,15 +21,20 @@ type (
 		id, code string
 	}
 
-	// An Option configures a Client.
-	Option func(*Client)
+	// An ClientConfig configures a Client.
+	ClientConfig struct{ HTTPClient *http.Client }
 )
 
 var _ geo.Geocoder = (*Client)(nil)
 
 // New creates a new Client. It reads the app code from the environment
 // variable 'HERE_APP_CODE'.
-func New(appID string, opts ...Option) (*Client, error) {
+func New(appID string, opts ...func(*ClientConfig)) (*Client, error) {
+	cfg := ClientConfig{HTTPClient: new(http.Client)}
+	for _, opt := range opts {
+		opt(&cfg)
+	}
+
 	var (
 		envvar   = fmt.Sprintf("%s_APP_CODE", strings.ToUpper(Namespace))
 		code, ok = os.LookupEnv(envvar)
@@ -38,20 +43,11 @@ func New(appID string, opts ...Option) (*Client, error) {
 		return nil, errors.Newf("here: no such envvar '%s'", envvar)
 	}
 
-	c := &Client{
-		httpc: new(http.Client),
+	return &Client{
+		httpc: cfg.HTTPClient,
 		id:    appID,
 		code:  code,
-	}
-	for _, opt := range opts {
-		opt(c)
-	}
-	return c, nil
-}
-
-// WithHTTPClient configures a Client to make HTTP requests with httpc.
-func WithHTTPClient(httpc *http.Client) Option {
-	return func(c *Client) { c.httpc = httpc }
+	}, nil
 }
 
 func (c *Client) beginQuery(url *url.URL) url.Values {

@@ -7,6 +7,7 @@ import (
 	"os"
 
 	"github.com/cockroachdb/errors"
+	"github.com/getsentry/raven-go"
 	echo "github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"
 	"github.com/sirupsen/logrus"
@@ -31,8 +32,11 @@ type (
 		locationAccess api.LocationAccessService
 	}
 
-	// An Option configures a Server.
-	Option func(*Server)
+	// An Config configures a Server.
+	Config struct {
+		Logger *logrus.Logger
+		Raven  *raven.Client
+	}
 )
 
 // New creates a new Server.
@@ -46,8 +50,13 @@ func New(
 	location api.LocationService,
 	locationAccess api.LocationAccessService,
 
-	opts ...Option,
+	opts ...func(*Config),
 ) *Server {
+	cfg := Config{Logger: zero.Logger()}
+	for _, opt := range opts {
+		opt(&cfg)
+	}
+
 	// Configure echo.
 	echo := echo.New()
 	echo.Logger.SetOutput(ioutil.Discard) // disable logger
@@ -58,7 +67,9 @@ func New(
 			RedirectCode: http.StatusPermanentRedirect,
 		},
 	))
-	echo.Use(middleware.Recover())
+	if cfg.Raven != nil {
+		echo.Use(SentryRecoverMiddleware(cfg.Raven, cfg.Logger))
+	}
 
 	// Enable Access-Control-Allow-Origin: * during development.
 	if os.Getenv("GOENV") == "development" {
@@ -66,9 +77,9 @@ func New(
 	}
 
 	// Create and configure server.
-	srv := &Server{
+	return &Server{
 		echo: echo,
-		log:  zero.Logger(),
+		log:  cfg.Logger,
 
 		about:        about,
 		availability: availability,
@@ -79,10 +90,6 @@ func New(
 		location:       location,
 		locationAccess: locationAccess,
 	}
-	for _, opt := range opts {
-		opt(srv)
-	}
-	return srv
 }
 
 // ListenAndServe listens and serves on the specified address.

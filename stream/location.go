@@ -22,8 +22,8 @@ type (
 		err      error
 	}
 
-	// An SSOption configures a SegmentsPreloader.
-	SSOption func(*SegmentsPreloader)
+	// An SPConfig configures a SegmentsPreloader.
+	SPConfig struct{ Logger *logrus.Logger }
 )
 
 var _ geo.SegmentSource = (*SegmentsPreloader)(nil)
@@ -32,25 +32,22 @@ var _ geo.SegmentSource = (*SegmentsPreloader)(nil)
 func NewSegmentsPreloader(
 	source geo.SegmentSource,
 	interval time.Duration,
-	opts ...SSOption,
+	opts ...func(*SPConfig),
 ) *SegmentsPreloader {
-	var (
-		action = func() (zero.Interface, error) { return source.RecentSegments() }
-		ss     = &SegmentsPreloader{
-			streamer: NewPollStreamer(action, interval),
-			log:      zero.Logger(),
-		}
-	)
+	cfg := SPConfig{Logger: zero.Logger()}
 	for _, opt := range opts {
-		opt(ss)
+		opt(&cfg)
 	}
-	go ss.populateCache()
-	return ss
-}
 
-// WithSPLogger configures a LocationPreloader's logger.
-func WithSPLogger(log *logrus.Logger) SSOption {
-	return func(sp *SegmentsPreloader) { sp.log = log }
+	sp := &SegmentsPreloader{
+		streamer: NewPollStreamer(
+			func() (zero.Interface, error) { return source.RecentSegments() },
+			interval,
+		),
+		log: cfg.Logger,
+	}
+	go sp.populateCache()
+	return sp
 }
 
 func (sp *SegmentsPreloader) populateCache() {

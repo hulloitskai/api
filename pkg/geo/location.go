@@ -77,7 +77,10 @@ func (svc LocationService) CurrentCity() (city string, err error) {
 		return "", errors.New("geo: no position data available")
 	}
 
-	results, err := svc.geocoder.ReverseGeocode(*coord, WithRGLevel(CityLevel))
+	results, err := svc.geocoder.ReverseGeocode(
+		*coord,
+		func(cfg *ReverseGeocodeConfig) { cfg.Level = CityLevel },
+	)
 	if err != nil {
 		return "", errors.Wrap(err, "geo: reverse-geocoding position")
 	}
@@ -99,8 +102,10 @@ func (svc LocationService) CurrentRegion() (*Location, error) {
 
 	results, err := svc.geocoder.ReverseGeocode(
 		*coord,
-		WithRGLevel(CityLevel),
-		WithRGShape(),
+		func(cfg *ReverseGeocodeConfig) {
+			cfg.Level = CityLevel
+			cfg.IncludeShape = true
+		},
 	)
 	if err != nil {
 		return nil, errors.Wrap(err, "geo: reverse-geocoding position")
