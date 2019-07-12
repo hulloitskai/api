@@ -1,8 +1,6 @@
 package geo
 
-import (
-	errors "golang.org/x/xerrors"
-)
+import "github.com/cockroachdb/errors"
 
 // A Coordinate represents a point in 3D space.
 type Coordinate struct {
@@ -57,8 +55,7 @@ func (svc LocationService) LastSegment() (*Segment, error) {
 func (svc LocationService) LastPosition() (*Coordinate, error) {
 	segment, err := svc.LastSegment()
 	if err != nil {
-		return nil, errors.Errorf("geo: fetching last location history segment: %w",
-			err)
+		return nil, errors.Wrap(err, "geo: fetching last location history segment")
 	}
 	if segment == nil {
 		return nil, nil
@@ -74,7 +71,7 @@ func (svc LocationService) LastPosition() (*Coordinate, error) {
 func (svc LocationService) CurrentCity() (city string, err error) {
 	coord, err := svc.LastPosition()
 	if err != nil {
-		return "", errors.Errorf("geo: determining last seen position: %w", err)
+		return "", errors.Wrap(err, "geo: determining last seen position")
 	}
 	if coord == nil {
 		return "", errors.New("geo: no position data available")
@@ -82,7 +79,7 @@ func (svc LocationService) CurrentCity() (city string, err error) {
 
 	results, err := svc.geocoder.ReverseGeocode(*coord, WithRGLevel(CityLevel))
 	if err != nil {
-		return "", errors.Errorf("geo: reverse-geocoding position: %w", err)
+		return "", errors.Wrap(err, "geo: reverse-geocoding position")
 	}
 	if len(results) == 0 {
 		return "", errors.New("geo: no locations found at given position")
@@ -94,7 +91,7 @@ func (svc LocationService) CurrentCity() (city string, err error) {
 func (svc LocationService) CurrentRegion() (*Location, error) {
 	coord, err := svc.LastPosition()
 	if err != nil {
-		return nil, errors.Errorf("geo: determining last seen position: %w", err)
+		return nil, errors.Wrap(err, "geo: determining last seen position")
 	}
 	if coord == nil {
 		return nil, errors.New("geo: no position data available")
@@ -106,7 +103,7 @@ func (svc LocationService) CurrentRegion() (*Location, error) {
 		WithRGShape(),
 	)
 	if err != nil {
-		return nil, errors.Errorf("geo: reverse-geocoding position: %w", err)
+		return nil, errors.Wrap(err, "geo: reverse-geocoding position")
 	}
 	if len(results) == 0 {
 		return nil, errors.New("geo: no locations found at given position")

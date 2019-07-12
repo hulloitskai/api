@@ -3,9 +3,8 @@ package httputil
 import (
 	"strings"
 
+	"github.com/cockroachdb/errors"
 	"github.com/labstack/echo/v4"
-
-	errors "golang.org/x/xerrors"
 )
 
 // WithContentType is middleware that executes the next handler if the request
@@ -15,7 +14,7 @@ func WithContentType(contentType string) echo.MiddlewareFunc {
 		return func(c echo.Context) error {
 			ctype := c.Request().Header.Get("Content-Type")
 			if !strings.HasPrefix(ctype, contentType) {
-				return errors.Errorf("unexpected Content-Type header '%s'", ctype)
+				return errors.Newf("unexpected Content-Type header '%s'", ctype)
 			}
 
 			// Call next handler.

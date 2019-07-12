@@ -7,8 +7,8 @@ import (
 	"strings"
 
 	"golang.org/x/oauth2"
-	errors "golang.org/x/xerrors"
 
+	"github.com/cockroachdb/errors"
 	"github.com/google/go-github/v25/github"
 	"github.com/stevenxie/api/pkg/api"
 )
@@ -51,5 +51,7 @@ func New() (*Client, error) {
 }
 
 // ErrBadEnvToken means that no 'GITHUB_TOKEN' environment variable was found.
-var ErrBadEnvToken = errors.Errorf("github: no such environment variable "+
-	"'%s_TOKEN'", strings.ToUpper(Namespace))
+var ErrBadEnvToken = errors.Newf(
+	"github: no such environment variable '%s_TOKEN'",
+	strings.ToUpper(Namespace),
+)

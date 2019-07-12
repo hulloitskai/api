@@ -3,7 +3,7 @@ package github
 import (
 	"context"
 
-	errors "golang.org/x/xerrors"
+	"github.com/cockroachdb/errors"
 )
 
 // GistFile reads a file stored on GitHub Gists.
@@ -20,5 +20,5 @@ func (c *Client) GistFile(id, file string) ([]byte, error) {
 			return []byte(f.GetContent()), nil
 		}
 	}
-	return nil, errors.Errorf("github: gist does not contain the file '%s'", file)
+	return nil, errors.Newf("github: gist does not contain the file '%s'", file)
 }

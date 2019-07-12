@@ -3,11 +3,12 @@ package handler
 import (
 	"encoding/json"
 
-	errors "golang.org/x/xerrors"
-	"gopkg.in/olahol/melody.v1"
+	melody "gopkg.in/olahol/melody.v1"
 
+	"github.com/cockroachdb/errors"
 	echo "github.com/labstack/echo/v4"
 	"github.com/sirupsen/logrus"
+
 	"github.com/stevenxie/api/pkg/api"
 	"github.com/stevenxie/api/pkg/zero"
 )
@@ -19,7 +20,7 @@ func NowPlayingHandler(svc api.MusicService, log *logrus.Logger) echo.HandlerFun
 		cplaying, err := svc.NowPlaying()
 		if err != nil {
 			log.WithError(err).Error("Failed to get currently playing track.")
-			return errors.Errorf("getting currently playing track: %w", err)
+			return errors.Wrap(err, "getting currently playing track")
 		}
 
 		// Send info as JSON.

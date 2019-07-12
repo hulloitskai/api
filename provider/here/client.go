@@ -7,8 +7,8 @@ import (
 	"os"
 	"strings"
 
+	"github.com/cockroachdb/errors"
 	"github.com/stevenxie/api/pkg/geo"
-	errors "golang.org/x/xerrors"
 )
 
 // Namespace is the package namespace used for things like envvar prefixes.
@@ -35,7 +35,7 @@ func New(appID string, opts ...Option) (*Client, error) {
 		code, ok = os.LookupEnv(envvar)
 	)
 	if !ok {
-		return nil, errors.Errorf("here: no such envvar '%s'", envvar)
+		return nil, errors.Newf("here: no such envvar '%s'", envvar)
 	}
 
 	c := &Client{

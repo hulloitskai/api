@@ -8,12 +8,10 @@ import (
 	"net/url"
 	"time"
 
-	"github.com/stevenxie/api/pkg/zero"
-
-	errors "golang.org/x/xerrors"
-
+	"github.com/cockroachdb/errors"
 	"github.com/sirupsen/logrus"
 	"github.com/stevenxie/api/pkg/api"
+	"github.com/stevenxie/api/pkg/zero"
 )
 
 type (
@@ -74,7 +72,7 @@ Fetch:
 	// Create and send request.
 	url, err := url.Parse(svc.tableURL())
 	if err != nil {
-		return false, errors.Errorf("airtable: building request URL: %w", err)
+		return false, errors.Wrap(err, "airtable: building request URL")
 	}
 	{
 		ps := url.Query()
@@ -106,10 +104,10 @@ Fetch:
 		Offset *string `json:"offset"`
 	}
 	if err = json.NewDecoder(res.Body).Decode(&data); err != nil {
-		return false, errors.Errorf("airtable: decoding response as JSON: %w", err)
+		return false, errors.Wrap(err, "airtable: decoding response as JSON")
 	}
 	if err = res.Body.Close(); err != nil {
-		return false, errors.Errorf("airtable: closing response body: %w", err)
+		return false, errors.Wrap(err, "airtable: closing response body")
 	}
 
 	// Determine of code is included in data.Records.

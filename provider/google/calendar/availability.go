@@ -4,9 +4,9 @@ import (
 	"sort"
 	"time"
 
-	errors "golang.org/x/xerrors"
 	calendar "google.golang.org/api/calendar/v3"
 
+	"github.com/cockroachdb/errors"
 	"github.com/stevenxie/api/pkg/api"
 )
 
@@ -66,17 +66,19 @@ func (svc *AvailabilityService) BusyPeriods(date time.Time) ([]*api.TimePeriod,
 	busy := make([]*api.TimePeriod, 0)
 	for _, cal := range res.Calendars {
 		if len(cal.Errors) > 0 {
-			return nil, errors.Errorf("calendar: error in calendars response: %w",
-				cal.Errors[0])
+			err = errors.New("calendar: error in calendar response")
+			for _, cerr := range cal.Errors {
+				err = errors.WithDetail(err, cerr.Reason)
+			}
 		}
 		for _, period := range cal.Busy {
 			start, err := time.ParseInLocation(time.RFC3339, period.Start, timezone)
 			if err != nil {
-				return nil, errors.Errorf("calendar: parsing start time: %w", err)
+				return nil, errors.Wrap(err, "calendar: parsing start time")
 			}
 			end, err := time.ParseInLocation(time.RFC3339, period.End, timezone)
 			if err != nil {
-				return nil, errors.Errorf("calendar: parsing end time: %w", err)
+				return nil, errors.Wrap(err, "calendar: parsing end time")
 			}
 			busy = append(busy, &api.TimePeriod{
 				Start: start,
@@ -99,7 +101,7 @@ func (svc *AvailabilityService) Timezone() (*time.Location, error) {
 
 		loc, err := time.LoadLocation(setting.Value)
 		if err != nil {
-			return nil, errors.Errorf("calendar: failed to parse timezone: %w", err)
+			return nil, errors.Wrap(err, "calendar: failed to parse timezone")
 		}
 		svc.timezone = loc
 	}

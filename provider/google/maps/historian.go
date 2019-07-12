@@ -7,8 +7,7 @@ import (
 	"strings"
 	"time"
 
-	errors "golang.org/x/xerrors"
-
+	"github.com/cockroachdb/errors"
 	"github.com/stevenxie/api/pkg/geo"
 	"github.com/stevenxie/api/provider/google"
 )
@@ -55,14 +54,14 @@ func NewHistorian(opts ...HOption) (*Historian, error) {
 				val, ok = os.LookupEnv(name)
 			)
 			if !ok {
-				return nil, errors.Errorf("maps: no such envvar '%s'", name)
+				return nil, errors.Newf("maps: no such envvar '%s'", name)
 			}
 			varmap[v] = val
 		}
 
 		jar, err := cookiesFromMap(varmap)
 		if err != nil {
-			return nil, errors.Errorf("maps: constructing cookies: %w", err)
+			return nil, errors.Wrap(err, "maps: constructing cookies")
 		}
 		h.client = &http.Client{Jar: jar}
 	}

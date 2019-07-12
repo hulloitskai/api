@@ -4,8 +4,8 @@ import (
 	"encoding/json"
 	"time"
 
+	"github.com/cockroachdb/errors"
 	"github.com/stevenxie/api/pkg/api"
-	errors "golang.org/x/xerrors"
 )
 
 // AboutService reads an about.Info from a file stored in Github Gists.
@@ -40,7 +40,7 @@ func NewAboutService(
 func (svc *AboutService) About() (*api.About, error) {
 	raw, err := svc.repo.GistFile(svc.gistID, svc.file)
 	if err != nil {
-		return nil, errors.Errorf("github: getting gist: %w", err)
+		return nil, errors.Wrap(err, "github: getting gist")
 	}
 
 	// Decode gist contents.
@@ -49,15 +49,16 @@ func (svc *AboutService) About() (*api.About, error) {
 		Birthday string `json:"birthday"`
 	}
 	if err = json.Unmarshal(raw, &data); err != nil {
-		return nil, errors.Errorf("github: decoding gist file contents as JSON: %w",
-			err)
+		return nil, errors.Wrap(err, "github: decoding gist file contents as JSON")
 	}
 
 	// Derive age from birthday.
 	bday, err := time.Parse("2006-01-02", data.Birthday)
 	if err != nil {
-		return nil, errors.Errorf("github: failed to parse birthday '%s': %w",
-			data.Birthday, err)
+		return nil, errors.Wrapf(
+			err,
+			"github: failed to parse birthday '%s'", data.Birthday,
+		)
 	}
 	data.About.Age = time.Since(bday).Truncate(365 * 24 * time.Hour)
 

@@ -6,8 +6,8 @@ import (
 	"sort"
 	"time"
 
+	"github.com/cockroachdb/errors"
 	"github.com/stevenxie/api/pkg/api"
-	errors "golang.org/x/xerrors"
 )
 
 const (
@@ -45,10 +45,10 @@ func (c *Client) CurrentProductivity() ([]*api.ProductivitySegment, error) {
 		Rows [][]int `json:"rows"`
 	}
 	if err = json.NewDecoder(res.Body).Decode(&data); err != nil {
-		return nil, errors.Errorf("rescuetime: decoding response as JSON: %w", err)
+		return nil, errors.Wrap(err, "rescuetime: decoding response as JSON")
 	}
 	if err = res.Body.Close(); err != nil {
-		return nil, errors.Errorf("rescuetime: closing response body: %w", err)
+		return nil, errors.Wrap(err, "rescuetime: closing response body")
 	}
 
 	// Parse productivity data.
@@ -67,8 +67,10 @@ func (c *Client) CurrentProductivity() ([]*api.ProductivitySegment, error) {
 		case -2:
 			name = "Very Distracting"
 		default:
-			return nil, errors.Errorf("rescuetime: unknown productivity ID '%d'",
-				row[3])
+			return nil, errors.Newf(
+				"rescuetime: unknown productivity ID '%d'",
+				row[3],
+			)
 		}
 
 		segs[i] = &api.ProductivitySegment{

@@ -1,8 +1,7 @@
 package handler
 
 import (
-	errors "golang.org/x/xerrors"
-
+	"github.com/cockroachdb/errors"
 	echo "github.com/labstack/echo/v4"
 	"github.com/sirupsen/logrus"
 	"github.com/stevenxie/api/pkg/api"
@@ -14,7 +13,7 @@ func AboutHandler(svc api.AboutService, log *logrus.Logger) echo.HandlerFunc {
 		about, err := svc.About()
 		if err != nil {
 			log.WithError(err).Error("Failed to load about info.")
-			return errors.Errorf("fetching about info: %w", err)
+			return errors.Wrap(err, "fetching about info")
 		}
 
 		// Send info as JSON.

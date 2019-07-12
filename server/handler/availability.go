@@ -4,10 +4,10 @@ import (
 	"net/http"
 	"time"
 
+	"github.com/cockroachdb/errors"
 	echo "github.com/labstack/echo/v4"
-	errors "golang.org/x/xerrors"
-
 	"github.com/sirupsen/logrus"
+
 	"github.com/stevenxie/api/pkg/api"
 	"github.com/stevenxie/api/pkg/httputil"
 )
@@ -23,25 +23,27 @@ func AvailabilityHandler(
 			timezone *time.Location
 			err      error
 		)
-		if timezonep := c.QueryParam("timezone"); timezonep != "" {
+		const timezoneParamName = "timezone"
+		if timezonep := c.QueryParam(timezoneParamName); timezonep != "" {
 			if timezone, err = time.LoadLocation(timezonep); err != nil {
 				httputil.SetEchoStatusCode(c, http.StatusBadRequest)
-				return errors.Errorf("bad paremter 'timezone': %w", err)
+				return errors.Wrapf(err, "bad parameter '%s'", timezoneParamName)
 			}
 		} else {
 			if timezone, err = svc.Timezone(); err != nil {
 				log.WithError(err).Error("Failed to load default timezone.")
-				return errors.Errorf("failed to load default timezone: %w", err)
+				return errors.Wrap(err, "failed to load default timezone")
 			}
 		}
 
 		// Derive date.
 		date := time.Now().In(timezone)
-		if datep := c.QueryParam("date"); datep != "" {
+		const dateParamName = "date"
+		if datep := c.QueryParam(dateParamName); datep != "" {
 			date, err = time.ParseInLocation("2006-01-02", datep, timezone)
 			if err != nil {
 				httputil.SetEchoStatusCode(c, http.StatusBadRequest)
-				return errors.Errorf("bad parameter 'date': %w", err)
+				return errors.Wrapf(err, "bad parameter '%s'", dateParamName)
 			}
 		}
 

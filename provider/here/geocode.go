@@ -7,8 +7,8 @@ import (
 	"strconv"
 	"strings"
 
+	"github.com/cockroachdb/errors"
 	"github.com/stevenxie/api/pkg/geo"
-	errors "golang.org/x/xerrors"
 )
 
 const reverseGeocodeURL = "https://reverse.geocoder.api.here.com/6.2/" +
@@ -29,7 +29,7 @@ func (c *Client) ReverseGeocode(
 
 	// Validate options.
 	if options.IncludeShape && (options.Level == 0) {
-		return nil, errors.Errorf("here: cannot include area shape without level " +
+		return nil, errors.New("here: cannot include area shape without level " +
 			"selection")
 	}
 
@@ -102,10 +102,10 @@ func (c *Client) ReverseGeocode(
 		}
 	}
 	if err = json.NewDecoder(res.Body).Decode(&data); err != nil {
-		return nil, errors.Errorf("here: decoding response body: %w", err)
+		return nil, errors.Wrap(err, "here: decoding response body")
 	}
 	if err = res.Body.Close(); err != nil {
-		return nil, errors.Errorf("here: closing response body: %w", err)
+		return nil, errors.Wrap(err, "here: closing response body")
 	}
 
 	// Parse response.
@@ -141,8 +141,10 @@ func (c *Client) ReverseGeocode(
 				)
 				for j, coord := range coords {
 					if fcs[j], err = strconv.ParseFloat(coord, 64); err != nil {
-						return nil, errors.Errorf("here: parsing half-coordinate '%s': %w",
-							coord, err)
+						return nil, errors.Wrapf(
+							err,
+							"here: parsing half-coordinate '%s'", coord,
+						)
 					}
 				}
 				shape = append(shape, geo.Coordinate{X: fcs[0], Y: fcs[1]})

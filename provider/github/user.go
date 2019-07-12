@@ -3,7 +3,7 @@ package github
 import (
 	"encoding/json"
 
-	errors "golang.org/x/xerrors"
+	"github.com/cockroachdb/errors"
 )
 
 // CurrentUserLogin gets the login of the authenticated user.
@@ -19,7 +19,7 @@ func (c *Client) CurrentUserLogin() (string, error) {
 			Login string `json:"login"`
 		}
 		if err = json.NewDecoder(res.Body).Decode(&data); err != nil {
-			return "", errors.Errorf("github: decoding response as JSON: %w", err)
+			return "", errors.Wrap(err, "github: decoding response as JSON")
 		}
 		c.currentUserLogin = data.Login
 	}

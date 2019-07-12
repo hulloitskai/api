@@ -4,10 +4,10 @@ import (
 	"sync"
 	"time"
 
+	"github.com/cockroachdb/errors"
 	"github.com/sirupsen/logrus"
 	"github.com/stevenxie/api/pkg/api"
 	"github.com/stevenxie/api/pkg/zero"
-	errors "golang.org/x/xerrors"
 )
 
 type (
@@ -82,7 +82,7 @@ func (cp *CommitsPreloader) populateCache() {
 			commits = v
 		default:
 			cp.log.WithField("value", v).Error("Unexpected value from upstream.")
-			err = errors.Errorf("stream: unexpected value '%s' from upstream")
+			err = errors.Newf("stream: unexpected upstream value '%s'", v)
 		}
 
 		cp.mux.Lock()

@@ -4,8 +4,7 @@ import (
 	"net/http"
 	"strings"
 
-	errors "golang.org/x/xerrors"
-
+	"github.com/cockroachdb/errors"
 	echo "github.com/labstack/echo/v4"
 	"github.com/sirupsen/logrus"
 
@@ -64,7 +63,7 @@ func (p LocationProvider) HistoryHandler(
 		segments, err := p.svc.RecentSegments()
 		if err != nil {
 			log.WithError(err).Error("Failed to get recent location history.")
-			return errors.Errorf("failed to get recent location history: %w", err)
+			return errors.Wrap(err, "failed to get recent location history")
 		}
 
 		type segment struct {
@@ -102,8 +101,9 @@ func locationAccessValidationMiddlware(
 			}
 			if !strings.HasPrefix(authHeader, bearerTokenPrefix) {
 				httputil.SetEchoStatusCode(c, http.StatusBadRequest)
-				return errors.New("invalid authorization header: invalid bearer token " +
-					"format")
+				return errors.New(
+					"invalid authorization header: invalid bearer token format",
+				)
 			}
 			token := strings.TrimPrefix(authHeader, bearerTokenPrefix)
 
@@ -111,7 +111,7 @@ func locationAccessValidationMiddlware(
 			valid, err := svc.IsValidCode(token)
 			if err != nil {
 				log.WithError(err).Error("Failed to validate access token.")
-				return errors.Errorf("failed to validate access code: %w", err)
+				return errors.Wrap(err, "failed to validate access code")
 			}
 			if !valid {
 				httputil.SetEchoStatusCode(c, http.StatusUnauthorized)

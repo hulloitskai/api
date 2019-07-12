@@ -8,8 +8,7 @@ import (
 	"os/signal"
 	"time"
 
-	errors "golang.org/x/xerrors"
-
+	"github.com/cockroachdb/errors"
 	"github.com/sirupsen/logrus"
 	ess "github.com/unixpickle/essentials"
 	"github.com/urfave/cli"
@@ -73,7 +72,7 @@ func run(c *cli.Context) error {
 		cfg, err = config.Load()
 	)
 	if err != nil {
-		return errors.Errorf("loading config: %w", err)
+		return errors.Wrap(err, "loading config")
 	}
 
 	// Initialize services:
@@ -87,7 +86,7 @@ func run(c *cli.Context) error {
 	{
 		client, err := gcal.NewClient()
 		if err != nil {
-			return errors.Errorf("creating GCal client: %w", err)
+			return errors.Wrap(err, "creating GCal client")
 		}
 		availability = gcal.NewAvailabilityService(
 			client,
@@ -96,7 +95,7 @@ func run(c *cli.Context) error {
 	}
 	timezone, err := availability.Timezone()
 	if err != nil {
-		return errors.Errorf("fetching current timezone: %w", err)
+		return errors.Wrap(err, "fetching current timezone")
 	}
 
 	// Build location service.
@@ -104,12 +103,12 @@ func run(c *cli.Context) error {
 	{
 		geocoder, err := here.New(cfg.Location.Here.AppID)
 		if err != nil {
-			return errors.Errorf("creating MapBox client: %w", err)
+			return errors.Wrap(err, "creating MapBox client")
 		}
 		var source geo.SegmentSource
 		source, err = gmaps.NewHistorian(gmaps.WithHTimezone(timezone))
 		if err != nil {
-			return errors.Errorf("creating historian: %w", err)
+			return errors.Wrap(err, "creating historian")
 		}
 		if polling := &cfg.Location.Polling; polling.Enabled {
 			preloader := stream.NewSegmentsPreloader(
@@ -129,7 +128,7 @@ func run(c *cli.Context) error {
 	{
 		client, err := airtable.NewClient()
 		if err != nil {
-			return errors.Errorf("creating Airtable client: %w", err)
+			return errors.Wrap(err, "creating Airtable client")
 		}
 		config := &cfg.Location.Airtable
 		locationAccess = airtable.NewLocationAccessService(
@@ -148,7 +147,7 @@ func run(c *cli.Context) error {
 	// Build GitHub client, a shared dependenncy.
 	github, err := gh.New()
 	if err != nil {
-		return errors.Errorf("creating GitHub client: %w", err)
+		return errors.Wrap(err, "creating GitHub client")
 	}
 
 	// Build about service.
@@ -185,7 +184,7 @@ func run(c *cli.Context) error {
 	{
 		spotify, err := spotify.New()
 		if err != nil {
-			return errors.Errorf("creating Spotify client: %w", err)
+			return errors.Wrap(err, "creating Spotify client")
 		}
 		music = spotify
 		if polling := &cfg.Music.Polling; polling.Enabled {
@@ -204,7 +203,7 @@ func run(c *cli.Context) error {
 	{
 		productivity, err = rescuetime.New(rescuetime.WithTimezone(timezone))
 		if err != nil {
-			return errors.Errorf("creating RescueTime client: %w", err)
+			return errors.Wrap(err, "creating RescueTime client")
 		}
 	}
 
@@ -229,7 +228,7 @@ func run(c *cli.Context) error {
 
 	err = srv.ListenAndServe(fmt.Sprintf(":%d", c.Int("port")))
 	if (err != nil) && (err != http.ErrServerClosed) {
-		return errors.Errorf("starting server: %w", err)
+		return errors.Wrap(err, "starting server")
 	}
 
 	// Run all finalizers.

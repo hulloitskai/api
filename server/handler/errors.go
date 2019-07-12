@@ -5,11 +5,11 @@ import (
 	"io"
 	"net/http"
 
-	"golang.org/x/xerrors"
-
+	"github.com/cockroachdb/errors"
 	echo "github.com/labstack/echo/v4"
 	"github.com/sirupsen/logrus"
-	"github.com/stevenxie/api/pkg/errors"
+
+	xerrors "github.com/stevenxie/api/pkg/errors"
 	"github.com/stevenxie/api/pkg/httputil"
 )
 
@@ -41,11 +41,11 @@ func ErrorHandler(log *logrus.Logger) echo.HTTPErrorHandler {
 
 		// Build error response.
 		data.Error = err.Error()
-		if wcode, ok := err.(errors.WithCode); ok { // check error code
+		if wcode, ok := err.(xerrors.WithCode); ok { // check error code
 			code := wcode.Code()
 			data.Code = &code
 		}
-		if ecause := xerrors.Unwrap(err); ecause != nil { // check underlying cause
+		if ecause := errors.Unwrap(err); ecause != nil { // check underlying cause
 			data.Cause = ecause.Error()
 		}
 

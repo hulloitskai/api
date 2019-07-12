@@ -6,7 +6,7 @@ import (
 	"os"
 	"strings"
 
-	errors "golang.org/x/xerrors"
+	"github.com/cockroachdb/errors"
 )
 
 const (
@@ -34,7 +34,7 @@ func NewClient(opts ...ClientOption) (*Client, error) {
 		token, ok = os.LookupEnv(envvar)
 	)
 	if !ok {
-		return nil, errors.Errorf("airtable: no such envvar '%s'", envvar)
+		return nil, errors.Newf("airtable: no such envvar '%s'", envvar)
 	}
 
 	c := &Client{

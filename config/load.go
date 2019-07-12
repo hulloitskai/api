@@ -4,9 +4,9 @@ import (
 	"io"
 	"os"
 
-	errors "golang.org/x/xerrors"
 	"gopkg.in/yaml.v2"
 
+	"github.com/cockroachdb/errors"
 	"github.com/stevenxie/api/internal/info"
 )
 
@@ -22,7 +22,7 @@ var DefaultFilepaths = []string{
 func LoadFile(name string) (*Config, error) {
 	file, err := os.Open(name)
 	if err != nil {
-		return nil, errors.Errorf("config: opening file: %w", err)
+		return nil, errors.Wrap(err, "config: opening file")
 	}
 	defer file.Close()
 
@@ -32,7 +32,7 @@ func LoadFile(name string) (*Config, error) {
 	}
 
 	if err = file.Close(); err != nil {
-		return nil, errors.Errorf("config: closing file: %w", err)
+		return nil, errors.Wrap(err, "config: closing file")
 	}
 	return cfg, nil
 }
@@ -48,7 +48,7 @@ func Load() (*Config, error) {
 			return LoadFile(path)
 		}
 		if !os.IsNotExist(err) {
-			return nil, errors.Errorf("config: checking file '%s': %w", path, err)
+			return nil, errors.Wrapf(err, "config: checking file '%s'", path)
 		}
 	}
 	return nil, ErrNoFilesFound
@@ -67,7 +67,7 @@ func ReadFrom(r io.Reader) (*Config, error) {
 		cfg = defaultConfig()
 	)
 	if err := dec.Decode(cfg); err != nil {
-		return nil, errors.Errorf("config: decoding YAML: %w", err)
+		return nil, errors.Wrap(err, "config: decoding YAML")
 	}
 	return cfg, nil
 }

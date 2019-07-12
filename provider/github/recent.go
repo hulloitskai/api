@@ -4,8 +4,7 @@ import (
 	"context"
 	"fmt"
 
-	errors "golang.org/x/xerrors"
-
+	"github.com/cockroachdb/errors"
 	"github.com/google/go-github/v25/github"
 	"github.com/stevenxie/api/pkg/api"
 	"github.com/stevenxie/api/pkg/zero"
@@ -36,7 +35,7 @@ func (c *Client) recentCommits(
 	// Get current user.
 	login, err := c.CurrentUserLogin()
 	if err != nil {
-		return nil, errors.Errorf("github: getting current user: %w", err)
+		return nil, errors.Wrap(err, "github: getting current user")
 	}
 
 	// List user events.
@@ -61,8 +60,7 @@ func (c *Client) recentCommits(
 
 		payload, err := e.ParsePayload()
 		if err != nil {
-			return nil, errors.Errorf("github: failed to parse event payload: %w",
-				err)
+			return nil, errors.Wrap(err, "github: failed to parse event payload")
 		}
 		pushPayload := payload.(*github.PushEvent)
 		if len(pushPayload.Commits) == 0 {

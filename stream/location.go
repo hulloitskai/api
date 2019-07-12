@@ -4,9 +4,8 @@ import (
 	"sync"
 	"time"
 
+	"github.com/cockroachdb/errors"
 	"github.com/sirupsen/logrus"
-	errors "golang.org/x/xerrors"
-
 	"github.com/stevenxie/api/pkg/geo"
 	"github.com/stevenxie/api/pkg/zero"
 )
@@ -69,7 +68,7 @@ func (sp *SegmentsPreloader) populateCache() {
 			segments = v
 		default:
 			sp.log.WithField("value", v).Error("Unexpected value from upstream.")
-			err = errors.Errorf("stream: unexpected value '%s' from upstream")
+			err = errors.Newf("stream: unexpected upstream value '%s'", v)
 		}
 
 		sp.mux.Lock()

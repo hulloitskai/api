@@ -6,8 +6,7 @@ import (
 	"net/http"
 	"os"
 
-	errors "golang.org/x/xerrors"
-
+	"github.com/cockroachdb/errors"
 	echo "github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"
 	"github.com/sirupsen/logrus"
@@ -94,7 +93,7 @@ func (srv *Server) ListenAndServe(addr string) error {
 
 	// Register routes.
 	if err := srv.registerRoutes(); err != nil {
-		return errors.Errorf("server: registering routes: %w", err)
+		return errors.Wrap(err, "server: registering routes")
 	}
 
 	// Listen for connections.
@@ -106,7 +105,7 @@ func (srv *Server) ListenAndServe(addr string) error {
 // connections.
 func (srv *Server) Shutdown(ctx context.Context) error {
 	if err := srv.echo.Shutdown(ctx); err != nil {
-		return errors.Errorf("server: shutting down Echo: %w", err)
+		return errors.Wrap(err, "server: shutting down Echo")
 	}
 	return nil
 }

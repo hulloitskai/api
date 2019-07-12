@@ -4,15 +4,14 @@ import (
 	"context"
 
 	"golang.org/x/oauth2"
-	"golang.org/x/oauth2/google"
-	errors "golang.org/x/xerrors"
-
+	googleauth "golang.org/x/oauth2/google"
 	calendar "google.golang.org/api/calendar/v3"
 	"google.golang.org/api/option"
 	"gopkg.in/go-validator/validator.v2"
 
+	"github.com/cockroachdb/errors"
 	"github.com/kelseyhightower/envconfig"
-	googleprov "github.com/stevenxie/api/provider/google"
+	"github.com/stevenxie/api/provider/google"
 )
 
 // A Client can interact with the Google Calendar API.
@@ -28,13 +27,13 @@ func NewClient() (*Client, error) {
 		ID     string `validate:"nonzero"`
 		Secret string `validate:"nonzero"`
 	}
-	if err := envconfig.Process(googleprov.Namespace, &data); err != nil {
-		return nil, errors.Errorf("calendar: reading envvars: %w", err)
+	if err := envconfig.Process(google.Namespace, &data); err != nil {
+		return nil, errors.Wrap(err, "calendar: reading envvars")
 	}
 
 	// Validate data.
 	if err := validator.Validate(&data); err != nil {
-		return nil, errors.Errorf("calendar: validating envvars: %w", err)
+		return nil, errors.Wrap(err, "calendar: validating envvars")
 	}
 
 	// Create authenticated calendar service.
@@ -42,7 +41,7 @@ func NewClient() (*Client, error) {
 		config = oauth2.Config{
 			ClientID:     data.ID,
 			ClientSecret: data.Secret,
-			Endpoint:     google.Endpoint,
+			Endpoint:     googleauth.Endpoint,
 		}
 		token   = &oauth2.Token{RefreshToken: data.Token, TokenType: "Bearer"}
 		tsource = config.TokenSource(context.Background(), token)

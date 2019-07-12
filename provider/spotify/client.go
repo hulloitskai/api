@@ -5,8 +5,8 @@ import (
 	"strings"
 
 	"golang.org/x/oauth2"
-	errors "golang.org/x/xerrors"
 
+	"github.com/cockroachdb/errors"
 	"github.com/stevenxie/api/pkg/api"
 	"github.com/zmb3/spotify"
 )
@@ -37,5 +37,7 @@ func New() (*Client, error) {
 }
 
 // ErrBadEnvToken means that no 'SPOTIFY_TOKEN' environment variable was found.
-var ErrBadEnvToken = errors.Errorf("spotify: no such environment variable "+
-	"'%s_TOKEN'", strings.ToUpper(Namespace))
+var ErrBadEnvToken = errors.Newf(
+	"spotify: no such environment variable '%s_TOKEN'",
+	strings.ToUpper(Namespace),
+)

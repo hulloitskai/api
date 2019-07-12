@@ -6,8 +6,8 @@ import (
 	"strings"
 	"time"
 
+	"github.com/cockroachdb/errors"
 	"github.com/stevenxie/api/pkg/api"
-	errors "golang.org/x/xerrors"
 )
 
 // Namespace is the package namespace, used for things like envvars.
@@ -54,5 +54,7 @@ func WithTimezone(tz *time.Location) Option {
 }
 
 // ErrBadEnvKey means that no 'RESCUETIME_KEY' environment variable was found.
-var ErrBadEnvKey = errors.Errorf("rescuetime: no such environment variable "+
-	"'%s_KEY'", strings.ToUpper(Namespace))
+var ErrBadEnvKey = errors.Newf(
+	"rescuetime: no such environment variable '%s_KEY'",
+	strings.ToUpper(Namespace),
+)

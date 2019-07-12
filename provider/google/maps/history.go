@@ -8,8 +8,8 @@ import (
 	"strings"
 	"time"
 
+	"github.com/cockroachdb/errors"
 	"github.com/stevenxie/api/pkg/geo"
-	errors "golang.org/x/xerrors"
 )
 
 const kmlURL = "https://www.google.com/maps/timeline/kml"
@@ -30,7 +30,7 @@ func (h *Historian) LocationHistory(date time.Time) ([]*geo.Segment, error) {
 		return nil, nil
 	}
 	if res.StatusCode != http.StatusOK {
-		return nil, errors.Errorf("maps: bad response status '%d'", res.StatusCode)
+		return nil, errors.Newf("maps: bad response status '%d'", res.StatusCode)
 	}
 	defer res.Body.Close()
 
@@ -53,10 +53,10 @@ func (h *Historian) LocationHistory(date time.Time) ([]*geo.Segment, error) {
 		} `xml:"Document>Placemark"`
 	}
 	if err = xml.NewDecoder(res.Body).Decode(&data); err != nil {
-		return nil, errors.Errorf("maps: decoding response as XML: %w", err)
+		return nil, errors.Wrap(err, "maps: decoding response as XML")
 	}
 	if err = res.Body.Close(); err != nil {
-		return nil, errors.Errorf("maps: closing response body: %w", err)
+		return nil, errors.Wrap(err, "maps: closing response body")
 	}
 
 	results := make([]*geo.Segment, len(data.Placemarks))
@@ -81,7 +81,7 @@ func (h *Historian) LocationHistory(date time.Time) ([]*geo.Segment, error) {
 				segment.Category = data.Value
 			case "Distance":
 				if segment.Distance, err = strconv.Atoi(data.Value); err != nil {
-					return nil, errors.Errorf("maps: parsing distance as int: %w", err)
+					return nil, errors.Wrap(err, "maps: parsing distance as int")
 				}
 			}
 		}
@@ -105,8 +105,7 @@ func (h *Historian) LocationHistory(date time.Time) ([]*geo.Segment, error) {
 				)
 				for k, us := range unitStrings {
 					if units[k], err = strconv.ParseFloat(us, 64); err != nil {
-						return nil, errors.Errorf("maps: parsing coordinate unit as "+
-							"int: %w", err)
+						return nil, errors.Wrap(err, "maps: parsing coordinate unit as int")
 					}
 				}
 				coords[j] = geo.Coordinate{X: units[0], Y: units[1], Z: units[2]}

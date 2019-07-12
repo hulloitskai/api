@@ -5,10 +5,10 @@ import (
 
 	"github.com/dmksnnk/sentryhook"
 	raven "github.com/getsentry/raven-go"
-	"github.com/sirupsen/logrus"
-	ess "github.com/unixpickle/essentials"
 
+	"github.com/sirupsen/logrus"
 	"github.com/stevenxie/api/internal/info"
+	ess "github.com/unixpickle/essentials"
 )
 
 func buildRaven() *raven.Client {

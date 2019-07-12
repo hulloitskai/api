@@ -4,10 +4,9 @@ import (
 	"io"
 	"time"
 
-	"github.com/stevenxie/api/pkg/music"
-
+	"github.com/cockroachdb/errors"
 	"github.com/stevenxie/api/pkg/api"
-	errors "golang.org/x/xerrors"
+	"github.com/stevenxie/api/pkg/music"
 )
 
 const extURLKeySpotify = "spotify"

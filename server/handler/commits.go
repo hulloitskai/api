@@ -4,10 +4,10 @@ import (
 	"net/http"
 	"strconv"
 
-	errors "golang.org/x/xerrors"
-
+	"github.com/cockroachdb/errors"
 	echo "github.com/labstack/echo/v4"
 	"github.com/sirupsen/logrus"
+
 	"github.com/stevenxie/api/pkg/api"
 	"github.com/stevenxie/api/pkg/httputil"
 )
@@ -19,11 +19,12 @@ func RecentCommitsHandler(
 ) echo.HandlerFunc {
 	return func(c echo.Context) error {
 		limit := 5
-		if qlim := c.QueryParam("limit"); qlim != "" {
+		const limitParamName = "limit"
+		if qlim := c.QueryParam(limitParamName); qlim != "" {
 			var err error
 			if limit, err = strconv.Atoi(qlim); err != nil {
 				httputil.SetEchoStatusCode(c, http.StatusBadRequest)
-				return errors.Errorf("parsing 'limit' parameter", err)
+				return errors.Wrapf(err, "bad parameter '%s'", limitParamName)
 			}
 		}
 
@@ -31,7 +32,7 @@ func RecentCommitsHandler(
 		commits, err := svc.RecentGitCommits(limit)
 		if err != nil {
 			log.WithError(err).Error("Failed to get recent commits.")
-			return errors.Errorf("getting recent commits: %w", err)
+			return errors.Wrap(err, "getting recent commits")
 		}
 
 		return jsonPretty(c, commits)

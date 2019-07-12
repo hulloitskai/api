@@ -4,8 +4,7 @@ import (
 	"sync"
 	"time"
 
-	errors "golang.org/x/xerrors"
-
+	"github.com/cockroachdb/errors"
 	"github.com/sirupsen/logrus"
 	"github.com/stevenxie/api/pkg/api"
 	"github.com/stevenxie/api/pkg/zero"
@@ -83,7 +82,7 @@ func (ms *MusicStreamer) startStreaming() {
 			nowPlaying = v
 		default:
 			ms.log.WithField("value", v).Error("Unexpected value from upstream.")
-			err = errors.Errorf("stream: unexpected upstream value (%v)", v)
+			err = errors.Newf("stream: unexpected upstream value '%v'", v)
 		}
 
 		// Cache values.
