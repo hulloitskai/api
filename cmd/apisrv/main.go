@@ -121,7 +121,24 @@ func run(c *cli.Context) error {
 			source = preloader
 			finalizers = append(finalizers, preloader)
 		}
-		location = geo.NewLocationService(source, geocoder)
+
+		// Decode geocode level from config string.
+		var regionGeocodeLevel geo.GeocodeLevel
+		if level := cfg.Location.Region.GeocodeLevel; level != "" {
+			if regionGeocodeLevel, err = geo.ParseGeocodeLevel(level); err != nil {
+				return errors.Wrapf(err, "parsing region geocode level '%s'", level)
+			}
+		}
+
+		// Create location service.
+		location = geo.NewLocationService(
+			source, geocoder,
+			func(lsc *geo.LSConfig) {
+				if regionGeocodeLevel != 0 {
+					lsc.RegionGeocodeLevel = regionGeocodeLevel
+				}
+			},
+		)
 	}
 
 	// Build location access service.

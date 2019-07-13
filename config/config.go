@@ -43,6 +43,10 @@ type Config struct {
 			Interval time.Duration `yaml:"interval"`
 		} `yaml:"polling"`
 
+		Region struct {
+			GeocodeLevel string `yaml:"geocodeLevel"`
+		} `yaml:"region"`
+
 		Here struct {
 			AppID string `yaml:"appID" valid:"nonzero"`
 		} `yaml:"here"`

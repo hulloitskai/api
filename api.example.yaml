@@ -24,10 +24,21 @@ location:
     enabled: Bool
     interval: Duration
 
+  region:
+    # One of:
+    #  - Country
+    #  - State
+    #  - County
+    #  - City
+    #  - District
+    #  - Postcode
+    geocodeLevel: GeocodeLevel
+
   airtable:
     baseID: String
     table: String
     view: String
+
   here:
     appID: String
 

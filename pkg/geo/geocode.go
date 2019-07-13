@@ -2,6 +2,8 @@ package geo
 
 import (
 	"fmt"
+
+	"github.com/cockroachdb/errors"
 )
 
 type (
@@ -44,12 +46,12 @@ const (
 )
 
 var geocodeLevelNames = map[GeocodeLevel]string{
-	CountryLevel:  "country",
-	StateLevel:    "state",
-	CountyLevel:   "county",
-	CityLevel:     "city",
-	DistrictLevel: "district",
-	PostcodeLevel: "postcode",
+	CountryLevel:  "Country",
+	StateLevel:    "State",
+	CountyLevel:   "County",
+	CityLevel:     "City",
+	DistrictLevel: "District",
+	PostcodeLevel: "Postcode",
 }
 
 func (level GeocodeLevel) String() string {
@@ -58,6 +60,21 @@ func (level GeocodeLevel) String() string {
 	}
 	return fmt.Sprintf("GeocodeLevel(%d)", uint8(level))
 }
+
+// ParseGeocodeLevel parses a string representing a geocode level into a
+// GeocodeLevel.
+func ParseGeocodeLevel(s string) (GeocodeLevel, error) {
+	for key, val := range geocodeLevelNames {
+		if val == s {
+			return key, nil
+		}
+	}
+	return 0, ErrInvalidGeocodeLevel
+}
+
+// ErrInvalidGeocodeLevel is an error returned by ParseGeocodeLevel when no
+// matching geocode level name is found.
+var ErrInvalidGeocodeLevel = errors.New("geo: invalid geocode level")
 
 type (
 	// A Location is a geographical location.

@@ -43,7 +43,7 @@ func (c *Client) ReverseGeocode(
 	params.Set("locationattributes", "address")
 
 	if cfg.Level > 0 {
-		level := cfg.Level.String()
+		level := strings.ToLower(cfg.Level.String())
 		if cfg.Level == geo.PostcodeLevel {
 			level = "postalCode"
 		}

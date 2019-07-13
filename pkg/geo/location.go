@@ -13,8 +13,14 @@ type (
 	// A LocationService implements an api.LocationService using a
 	// SegmentSource and a Geocoder.
 	LocationService struct {
-		source   SegmentSource
-		geocoder Geocoder
+		source      SegmentSource
+		geocoder    Geocoder
+		regionLevel GeocodeLevel
+	}
+
+	// A LSConfig configures a LocationService.
+	LSConfig struct {
+		RegionGeocodeLevel GeocodeLevel
 	}
 
 	// A SegmentSource can fetch recent location history segments.
@@ -27,10 +33,16 @@ type (
 func NewLocationService(
 	source SegmentSource,
 	g Geocoder,
+	opts ...func(*LSConfig),
 ) LocationService {
+	cfg := LSConfig{RegionGeocodeLevel: CityLevel}
+	for _, opt := range opts {
+		opt(&cfg)
+	}
 	return LocationService{
-		source:   source,
-		geocoder: g,
+		source:      source,
+		geocoder:    g,
+		regionLevel: cfg.RegionGeocodeLevel,
 	}
 }
 
@@ -103,7 +115,7 @@ func (svc LocationService) CurrentRegion() (*Location, error) {
 	results, err := svc.geocoder.ReverseGeocode(
 		*coord,
 		func(cfg *ReverseGeocodeConfig) {
-			cfg.Level = CityLevel
+			cfg.Level = svc.regionLevel
 			cfg.IncludeShape = true
 		},
 	)
