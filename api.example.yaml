@@ -1,3 +1,6 @@
+server:
+  shutdownTimeout: Duration
+
 about:
   gist:
     id: String
@@ -42,4 +45,3 @@ location:
   here:
     appID: String
 
-shutdownTimeout: Duration

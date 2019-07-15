@@ -4,12 +4,13 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"strings"
 
 	"github.com/cockroachdb/errors"
 	echo "github.com/labstack/echo/v4"
 	"github.com/sirupsen/logrus"
 
-	xerrors "github.com/stevenxie/api/pkg/errors"
+	errorspkg "github.com/stevenxie/api/pkg/errors"
 	"github.com/stevenxie/api/pkg/httputil"
 )
 
@@ -20,9 +21,10 @@ func ErrorHandler(log *logrus.Logger) echo.HTTPErrorHandler {
 	return func(err error, c echo.Context) {
 		var (
 			data struct {
-				Error string `json:"error"`
-				Cause string `json:"cause,omitempty"`
-				Code  *int   `json:"code,omitempty"`
+				Error   string   `json:"error"`
+				Cause   string   `json:"cause,omitempty"`
+				Code    *int     `json:"code,omitempty"`
+				Details []string `json:"details,omitempty"`
 			}
 			statusCode = http.StatusInternalServerError
 		)
@@ -30,7 +32,7 @@ func ErrorHandler(log *logrus.Logger) echo.HTTPErrorHandler {
 		// Check if error comes from Echo.
 		if herr, ok := err.(*echo.HTTPError); ok {
 			statusCode = herr.Code
-			data.Error = fmt.Sprint(herr.Message)
+			data.Error = strings.ToLower(fmt.Sprint(herr.Message))
 			goto Send
 		}
 
@@ -41,17 +43,21 @@ func ErrorHandler(log *logrus.Logger) echo.HTTPErrorHandler {
 
 		// Build error response.
 		data.Error = err.Error()
-		if wcode, ok := err.(xerrors.WithCode); ok { // check error code
+		if wcode, ok := err.(errorspkg.WithCode); ok { // check error code
 			code := wcode.Code()
 			data.Code = &code
 		}
-		if ecause := errors.Unwrap(err); ecause != nil { // check underlying cause
-			data.Cause = ecause.Error()
+		if cause := errors.UnwrapAll(err); (cause != nil) &&
+			!errors.Is(cause, err) {
+			data.Error = cause.Error()
+		}
+		if details := errors.GetAllDetails(err); len(details) > 0 {
+			data.Details = details
 		}
 
 	Send:
 		// Send error, handle JSON marshalling failures.
-		if err = c.JSONPretty(statusCode, &data, jsonPrettyIndent); err != nil {
+		if err = c.JSON(statusCode, &data); err != nil {
 			const msg = "Failed to write JSON error."
 			c.Response().WriteHeader(http.StatusInternalServerError)
 			io.WriteString(c.Response(), msg)

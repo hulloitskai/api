@@ -248,7 +248,7 @@ func run(c *cli.Context) error {
 	)
 
 	// Shut down server gracefully upon interrupt.
-	go shutdownUponInterrupt(srv, log, cfg.ShutdownTimeout)
+	go shutdownUponInterrupt(srv, log, cfg.Server.ShutdownTimeout)
 
 	err = srv.ListenAndServe(fmt.Sprintf(":%d", c.Int("port")))
 	if (err != nil) && (err != http.ErrServerClosed) {

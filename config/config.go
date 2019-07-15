@@ -9,6 +9,10 @@ import (
 // Config maps to a configuration YAML that can configure programs in this
 // package.
 type Config struct {
+	Server struct {
+		ShutdownTimeout *time.Duration `yaml:"shutdownTimeout"`
+	} `yaml:"server"`
+
 	About struct {
 		Gist struct {
 			ID   string `yaml:"id"   valid:"nonzero"`
@@ -57,9 +61,6 @@ type Config struct {
 			View   string `yaml:"view"`
 		} `yaml:"airtable"`
 	} `yaml:"location"`
-
-	// Miscellaneous:
-	ShutdownTimeout *time.Duration `yaml:"shutdownTimeout"`
 }
 
 func defaultConfig() *Config {
