@@ -4,6 +4,11 @@ FROM alpine:3.9
 RUN apk add --update ca-certificates tzdata
 
 # Copy built binary.
-COPY ./dist/apisrv /bin/apisrv
+ENV PROGRAM=server
+COPY ./dist/${PROGRAM} /bin/${PROGRAM}
 
-ENTRYPOINT ["apisrv"]
+# Configure env and exposed ports.
+ENV GOENV=production
+EXPOSE 3000
+
+ENTRYPOINT $PROGRAM

@@ -36,9 +36,9 @@ func main() {
 	cmdutil.PrepareEnv()
 
 	app := cli.NewApp()
-	app.Name = "apisrv"
+	app.Name = "server"
 	app.Usage = "A personal API server."
-	app.UsageText = "apisrv [global options]"
+	app.UsageText = "server [global options]"
 	app.Version = info.Version
 	app.Action = run
 
@@ -64,13 +64,13 @@ func main() {
 	}
 }
 
-func run(c *cli.Context) error {
+func run(c *cli.Context) (err error) {
 	// Init logger, load config.
 	var (
-		raven    = buildRaven()
-		log      = buildLogger(raven)
-		cfg, err = config.Load()
+		raven = buildRaven()
+		log   = buildLogger(raven)
 	)
+	cfg, err := config.Load()
 	if err != nil {
 		return errors.Wrap(err, "loading config")
 	}
@@ -78,8 +78,24 @@ func run(c *cli.Context) error {
 	// Initialize services:
 	log.Info("Initializing services...")
 
-	// Finalizers should be stopped before the program terminates.
-	var finalizers []interface{ Stop() }
+	// Finalizers should be run before the program terminates.
+	var finalizers [](func() error)
+	defer func() {
+		if len(finalizers) == 0 {
+			return
+		}
+
+		// Run finalizers in reverse order.
+		log.Info("Running finalizers...")
+		for i := len(finalizers) - 1; i >= 0; i-- {
+			if ferr := finalizers[i](); ferr != nil {
+				log.WithError(ferr).Error("A finalizer failed.")
+				if err == nil {
+					err = errors.New("one or more finalizers failed")
+				}
+			}
+		}
+	}()
 
 	// Create availability service.
 	var availability api.AvailabilityService
@@ -119,7 +135,10 @@ func run(c *cli.Context) error {
 				},
 			)
 			source = preloader
-			finalizers = append(finalizers, preloader)
+			finalizers = append(finalizers, func() error {
+				preloader.Stop()
+				return nil
+			})
 		}
 
 		// Decode geocode level from config string.
@@ -193,7 +212,10 @@ func run(c *cli.Context) error {
 				},
 			)
 			commits = preloader
-			finalizers = append(finalizers, preloader)
+			finalizers = append(finalizers, func() error {
+				preloader.Stop()
+				return nil
+			})
 		}
 	}
 
@@ -214,7 +236,10 @@ func run(c *cli.Context) error {
 				},
 			)
 			music = streamer
-			finalizers = append(finalizers, streamer)
+			finalizers = append(finalizers, func() error {
+				streamer.Stop()
+				return nil
+			})
 		}
 	}
 
@@ -251,16 +276,10 @@ func run(c *cli.Context) error {
 	go shutdownUponInterrupt(srv, log, cfg.Server.ShutdownTimeout)
 
 	err = srv.ListenAndServe(fmt.Sprintf(":%d", c.Int("port")))
-	if (err != nil) && (err != http.ErrServerClosed) {
-		return errors.Wrap(err, "starting server")
+	if err == http.ErrServerClosed {
+		err = nil
 	}
-
-	// Run all finalizers.
-	log.Info("Stopping finalizers...")
-	for _, finalizer := range finalizers {
-		finalizer.Stop()
-	}
-	return nil
+	return errors.Wrap(err, "starting server")
 }
 
 func shutdownUponInterrupt(

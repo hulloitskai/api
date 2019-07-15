@@ -20,7 +20,7 @@ LDFLAGS = -X $(GOMODULE)/internal/info.Version=$(VERSION)
 
 # Project variables:
 GOENV        ?= development
-GODEFAULTCMD =  apisrv
+GODEFAULTCMD =  server
 
 
 ##
