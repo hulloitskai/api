@@ -131,7 +131,10 @@ func run(c *cli.Context) (err error) {
 			preloader := stream.NewSegmentsPreloader(
 				source, polling.Interval,
 				func(cfg *stream.SPConfig) {
-					cfg.Logger = log.WithField("service", "segments_preloader").Logger
+					cfg.Logger = log.WithField(
+						"component",
+						"stream.SegmentsPreloader",
+					).Logger
 				},
 			)
 			source = preloader
@@ -176,7 +179,10 @@ func run(c *cli.Context) (err error) {
 
 			func(cfg *airtable.LASConfig) {
 				cfg.Timezone = timezone
-				cfg.Logger = log.WithField("service", "location_access").Logger
+				cfg.Logger = log.WithField(
+					"component",
+					"airtable.LocationAccessService",
+				).Logger
 			},
 		)
 	}
@@ -208,7 +214,10 @@ func run(c *cli.Context) (err error) {
 
 				func(cfg *stream.CPConfig) {
 					cfg.Limit = polling.Limit
-					cfg.Logger = log.WithField("service", "commits_preloader").Logger
+					cfg.Logger = log.WithField(
+						"component",
+						"stream.CommitsPreloader",
+					).Logger
 				},
 			)
 			commits = preloader
@@ -232,7 +241,10 @@ func run(c *cli.Context) (err error) {
 				spotify,
 				cfg.Music.Polling.Interval,
 				func(cfg *stream.MSConfig) {
-					cfg.Logger = log.WithField("service", "music_streamer").Logger
+					cfg.Logger = log.WithField(
+						"component",
+						"stream.MusicStreamer",
+					).Logger
 				},
 			)
 			music = streamer
@@ -287,7 +299,7 @@ func shutdownUponInterrupt(
 	log *logrus.Logger,
 	timeout *time.Duration,
 ) {
-	sig := make(chan os.Signal, 1)
+	sig := make(chan os.Signal)
 	signal.Notify(sig, os.Interrupt)
 
 	// Wait for interrupt signal.
