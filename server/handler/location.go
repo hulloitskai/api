@@ -36,7 +36,7 @@ func (p LocationProvider) CurrentRegionHandler(
 		var (
 			pos  = &place.Position
 			data = struct {
-				Place    *location.Place
+				*location.Place
 				Position []float64   `json:"position"`
 				Shape    [][]float64 `json:"shape"`
 			}{
@@ -68,7 +68,7 @@ func (p LocationProvider) HistoryHandler(
 		}
 
 		type segment struct {
-			Segment     *location.HistorySegment
+			*location.HistorySegment
 			Coordinates [][]float64 `json:"coordinates"`
 		}
 		results := make([]segment, len(segments))
@@ -78,8 +78,8 @@ func (p LocationProvider) HistoryHandler(
 				coordinates[j] = []float64{coord.X, coord.Y}
 			}
 			results[i] = segment{
-				Segment:     seg,
-				Coordinates: coordinates,
+				HistorySegment: seg,
+				Coordinates:    coordinates,
 			}
 		}
 

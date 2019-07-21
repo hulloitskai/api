@@ -29,14 +29,19 @@ type (
 // It reads RESCUETIME_KEY (an API key) from the environment; if no such
 // variable is found, an error will be returned.
 func NewClient(opts ...func(*ClientConfig)) (*Client, error) {
-	cfg := ClientConfig{HTTPClient: new(http.Client)}
+	cfg := ClientConfig{
+		HTTPClient: new(http.Client),
+	}
 	for _, opt := range opts {
 		opt(&cfg)
 	}
 
 	key := os.Getenv(strings.ToUpper(Namespace) + "_KEY")
 	if key == "" {
-		return nil, ErrNoKey
+		return nil, errors.Newf(
+			"rescuetime: no such environment variable '%s_KEY'",
+			strings.ToUpper(Namespace),
+		)
 	}
 
 	return &Client{
@@ -56,9 +61,3 @@ func (c *Client) Do(req *http.Request) (*http.Response, error) {
 	// Perform request.
 	return c.httpc.Do(req)
 }
-
-// ErrNoKey means that no 'RESCUETIME_KEY' environment variable was found.
-var ErrNoKey = errors.Newf(
-	"rescuetime: no such environment variable '%s_KEY'",
-	strings.ToUpper(Namespace),
-)

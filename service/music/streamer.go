@@ -74,7 +74,7 @@ func (nps *NowPlayingStreamer) run() {
 			nowPlaying = v
 		default:
 			nps.log.WithField("value", v).Error("Unexpected value from upstream.")
-			err = errors.Newf("commits: unexpected upstream value '%v'", v)
+			err = errors.Newf("music: unexpected upstream value '%v'", v)
 		}
 
 		// Cache values.

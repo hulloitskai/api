@@ -31,7 +31,7 @@ func (h *Historian) LocationHistory(date time.Time) (location.HistorySegments,
 		return nil, nil
 	}
 	if res.StatusCode != http.StatusOK {
-		return nil, errors.Newf("maps: bad response status '%d'", res.StatusCode)
+		return nil, errors.Newf("gmaps: bad response status '%d'", res.StatusCode)
 	}
 	defer res.Body.Close()
 
@@ -54,10 +54,10 @@ func (h *Historian) LocationHistory(date time.Time) (location.HistorySegments,
 		} `xml:"Document>Placemark"`
 	}
 	if err = xml.NewDecoder(res.Body).Decode(&data); err != nil {
-		return nil, errors.Wrap(err, "maps: decoding response as XML")
+		return nil, errors.Wrap(err, "gmaps: decoding response as XML")
 	}
 	if err = res.Body.Close(); err != nil {
-		return nil, errors.Wrap(err, "maps: closing response body")
+		return nil, errors.Wrap(err, "gmaps: closing response body")
 	}
 
 	results := make(location.HistorySegments, len(data.Placemarks))
@@ -82,7 +82,7 @@ func (h *Historian) LocationHistory(date time.Time) (location.HistorySegments,
 				segment.Category = data.Value
 			case "Distance":
 				if segment.Distance, err = strconv.Atoi(data.Value); err != nil {
-					return nil, errors.Wrap(err, "maps: parsing distance as int")
+					return nil, errors.Wrap(err, "gmaps: parsing distance as int")
 				}
 			}
 		}
@@ -106,7 +106,7 @@ func (h *Historian) LocationHistory(date time.Time) (location.HistorySegments,
 				)
 				for k, us := range unitStrings {
 					if units[k], err = strconv.ParseFloat(us, 64); err != nil {
-						return nil, errors.Wrap(err, "maps: parsing coordinate unit as int")
+						return nil, errors.Wrap(err, "gmaps: parsing coordinate unit as int")
 					}
 				}
 				coords[j] = location.Coordinates{

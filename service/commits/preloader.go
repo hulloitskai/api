@@ -56,11 +56,11 @@ func NewPreloader(
 			interval,
 		),
 	}
-	go cp.populateCache()
+	go cp.run()
 	return cp
 }
 
-func (cp *Preloader) populateCache() {
+func (cp *Preloader) run() {
 	for result := range cp.streamer.Stream() {
 		var (
 			commits Commits

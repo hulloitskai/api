@@ -20,7 +20,10 @@ const Namespace = "spotify"
 func New() (*spotify.Client, error) {
 	refresh := os.Getenv(strings.ToUpper(Namespace) + "_TOKEN")
 	if refresh == "" {
-		return nil, ErrNoToken
+		return nil, errors.Newf(
+			"spotify: no such environment variable '%s_TOKEN'",
+			strings.ToUpper(Namespace),
+		)
 	}
 
 	var (
@@ -29,9 +32,3 @@ func New() (*spotify.Client, error) {
 	)
 	return &client, nil
 }
-
-// ErrNoToken means that no 'SPOTIFY_TOKEN' environment variable was found.
-var ErrNoToken = errors.Newf(
-	"spotify: no such environment variable '%s_TOKEN'",
-	strings.ToUpper(Namespace),
-)

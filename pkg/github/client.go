@@ -29,7 +29,10 @@ type Client struct {
 func New() (*Client, error) {
 	token := os.Getenv(strings.ToUpper(Namespace) + "_TOKEN")
 	if token == "" {
-		return nil, ErrNoToken
+		return nil, errors.Newf(
+			"github: no such environment variable '%s_TOKEN'",
+			strings.ToUpper(Namespace),
+		)
 	}
 
 	// Create authenticated http.Client.
@@ -42,12 +45,6 @@ func New() (*Client, error) {
 		httpc: client,
 	}, nil
 }
-
-// ErrNoToken means that no 'GITHUB_TOKEN' environment variable was found.
-var ErrNoToken = errors.Newf(
-	"github: no such environment variable '%s_TOKEN'",
-	strings.ToUpper(Namespace),
-)
 
 // BaseURL returns GitHub's API base URL.
 func (c *Client) BaseURL() string {

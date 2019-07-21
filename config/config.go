@@ -71,6 +71,7 @@ func defaultConfig() *Config {
 
 	cfg.Music.Polling.Interval = 5 * time.Second
 	cfg.Location.Polling.Interval = time.Minute
+
 	return cfg
 }
 

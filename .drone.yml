@@ -44,10 +44,7 @@ steps:
     settings:
       repo: stevenxie/api
       tags:
-        - |
-          $(printf "%s-%s" \
-            $(cat /i/branch | sed -e 's/\//-/g') \
-            $(cat /i/commit))
+        - $(printf '%s-%s' $(cat /i/branch | tr / -) $(cat /i/commit))
         - |
           $([ $(cat /i/branch) == master ] && \
              [ $DRONE_BUILD_EVENT == push ] && \

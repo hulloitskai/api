@@ -57,14 +57,14 @@ func NewHistorian(opts ...func(*HistorianConfig)) (*Historian, error) {
 				val, ok = os.LookupEnv(name)
 			)
 			if !ok {
-				return nil, errors.Newf("maps: no such envvar '%s'", name)
+				return nil, errors.Newf("gmaps: no such envvar '%s'", name)
 			}
 			varmap[v] = val
 		}
 
 		jar, err := cookiesFromMap(varmap)
 		if err != nil {
-			return nil, errors.Wrap(err, "maps: constructing cookies")
+			return nil, errors.Wrap(err, "gmaps: constructing cookies")
 		}
 		cfg.Client = &http.Client{Jar: jar}
 	}

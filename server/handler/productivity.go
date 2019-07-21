@@ -12,13 +12,13 @@ func ProductivityHandler(
 	log *logrus.Logger,
 ) echo.HandlerFunc {
 	return func(c echo.Context) error {
-		prod, err := svc.CurrentProductivity()
+		productivity, err := svc.CurrentProductivity()
 		if err != nil {
 			log.WithError(err).Error("Failed to load current productivity data.")
 			return err
 		}
 
 		// Write productivity as JSON.
-		return jsonPretty(c, prod)
+		return jsonPretty(c, productivity)
 	}
 }

@@ -16,16 +16,12 @@ func SentryRecoverMiddleware(
 		return func(c echo.Context) error {
 			var err error
 			if v, id := rc.CapturePanic(func() {
-				defer func() {
-					if v := recover(); v != nil {
-						log.Panic(v)
-					}
-				}()
 				err = next(c)
 			}, nil); v != nil {
 				log.
 					WithField("id", id).
 					Warn("A handler panic was captured by Sentry.")
+				log.Panic(v)
 			}
 			return err
 		}

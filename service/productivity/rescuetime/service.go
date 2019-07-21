@@ -55,7 +55,7 @@ func (svc *ProductivityService) CurrentProductivity() (productivity.Periods,
 	now := svc.currentDate()
 
 	// Build query params.
-	var params url.Values
+	params := make(url.Values)
 	params.Set("version", "0")
 	params.Set("format", "json")
 	params.Set("restrict_begin", now)

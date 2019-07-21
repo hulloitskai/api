@@ -31,7 +31,9 @@ type (
 
 // NewClient creates a new Client.
 func NewClient(opts ...func(*ClientConfig)) (*Client, error) {
-	cfg := ClientConfig{HTTPClient: new(http.Client)}
+	cfg := ClientConfig{
+		HTTPClient: new(http.Client),
+	}
 	for _, opt := range opts {
 		opt(&cfg)
 	}
