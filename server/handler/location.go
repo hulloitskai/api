@@ -8,16 +8,17 @@ import (
 	echo "github.com/labstack/echo/v4"
 	"github.com/sirupsen/logrus"
 
-	"github.com/stevenxie/api/pkg/api"
-	"github.com/stevenxie/api/pkg/geo"
 	"github.com/stevenxie/api/pkg/httputil"
+	"github.com/stevenxie/api/service/location"
 )
 
 // A LocationProvider can create handlers that use location data.
-type LocationProvider struct{ svc api.LocationService }
+type LocationProvider struct {
+	svc location.Service
+}
 
 // NewLocationProvider creates a new LocationProvider.
-func NewLocationProvider(svc api.LocationService) LocationProvider {
+func NewLocationProvider(svc location.Service) LocationProvider {
 	return LocationProvider{svc}
 }
 
@@ -26,26 +27,26 @@ func (p LocationProvider) CurrentRegionHandler(
 	log *logrus.Logger,
 ) echo.HandlerFunc {
 	return func(c echo.Context) error {
-		location, err := p.svc.CurrentRegion()
+		place, err := p.svc.CurrentRegion()
 		if err != nil {
 			log.WithError(err).Error("Failed to get current region.")
 			return err
 		}
 
 		var (
-			pos  = &location.Position
+			pos  = &place.Position
 			data = struct {
-				*geo.Location
+				Place    *location.Place
 				Position []float64   `json:"position"`
 				Shape    [][]float64 `json:"shape"`
 			}{
-				Location: location,
+				Place:    place,
 				Position: []float64{pos.X, pos.Y},
-				Shape:    make([][]float64, len(location.Shape)),
+				Shape:    make([][]float64, len(place.Shape)),
 			}
 		)
-		for i, shape := range data.Location.Shape {
-			data.Shape[i] = []float64{shape.X, shape.Y}
+		for i, coords := range data.Place.Shape {
+			data.Shape[i] = []float64{coords.X, coords.Y}
 		}
 		return jsonPretty(c, &data)
 	}
@@ -55,19 +56,19 @@ const bearerTokenPrefix = "Bearer "
 
 // HistoryHandler handles requests for my recent location history.
 func (p LocationProvider) HistoryHandler(
-	access api.LocationAccessService,
+	access location.AccessService,
 	log *logrus.Logger,
 ) echo.HandlerFunc {
 	handler := func(c echo.Context) error {
 		// Retrieve recent location history segments.
-		segments, err := p.svc.RecentSegments()
+		segments, err := p.svc.RecentHistory()
 		if err != nil {
 			log.WithError(err).Error("Failed to get recent location history.")
 			return errors.Wrap(err, "failed to get recent location history")
 		}
 
 		type segment struct {
-			*geo.Segment
+			Segment     *location.HistorySegment
 			Coordinates [][]float64 `json:"coordinates"`
 		}
 		results := make([]segment, len(segments))
@@ -89,7 +90,7 @@ func (p LocationProvider) HistoryHandler(
 }
 
 func locationAccessValidationMiddlware(
-	svc api.LocationAccessService,
+	svc location.AccessService,
 	log *logrus.Logger,
 ) echo.MiddlewareFunc {
 	return func(next echo.HandlerFunc) echo.HandlerFunc {

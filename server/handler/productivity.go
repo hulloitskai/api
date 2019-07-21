@@ -3,12 +3,12 @@ package handler
 import (
 	echo "github.com/labstack/echo/v4"
 	"github.com/sirupsen/logrus"
-	"github.com/stevenxie/api/pkg/api"
+	"github.com/stevenxie/api/service/productivity"
 )
 
 // ProductivityHandler handles requests for productivity metrics.
 func ProductivityHandler(
-	svc api.ProductivityService,
+	svc productivity.Service,
 	log *logrus.Logger,
 ) echo.HandlerFunc {
 	return func(c echo.Context) error {

@@ -3,17 +3,16 @@ package main
 import (
 	"time"
 
-	ess "github.com/unixpickle/essentials"
-
 	"github.com/alecthomas/repr"
-	"github.com/stevenxie/api/provider/google/maps"
+	"github.com/stevenxie/api/service/location/gmaps"
+	ess "github.com/unixpickle/essentials"
 
 	// Automatically load environment variables from '.env' file.
 	_ "github.com/joho/godotenv/autoload"
 )
 
 func main() {
-	h, err := maps.NewHistorian()
+	h, err := gmaps.NewHistorian()
 	if err != nil {
 		ess.Die("Creating historian:", err)
 	}

@@ -8,13 +8,13 @@ import (
 	echo "github.com/labstack/echo/v4"
 	"github.com/sirupsen/logrus"
 
-	"github.com/stevenxie/api/pkg/api"
 	"github.com/stevenxie/api/pkg/httputil"
+	"github.com/stevenxie/api/service/availability"
 )
 
 // AvailabilityHandler handles requests for availability information.
 func AvailabilityHandler(
-	svc api.AvailabilityService,
+	svc availability.Service,
 	log *logrus.Logger,
 ) echo.HandlerFunc {
 	return func(c echo.Context) error {
@@ -55,8 +55,8 @@ func AvailabilityHandler(
 		}
 
 		return jsonPretty(c, struct {
-			Busy     []*api.TimePeriod `json:"busy"`
-			Timezone string            `json:"timezone"`
+			Busy     availability.Periods `json:"busy"`
+			Timezone string               `json:"timezone"`
 		}{
 			Busy:     busyPeriods,
 			Timezone: timezone.String(),

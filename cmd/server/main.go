@@ -13,22 +13,29 @@ import (
 	ess "github.com/unixpickle/essentials"
 	"github.com/urfave/cli"
 
-	// Providers (service implementations):
-	"github.com/stevenxie/api/provider/airtable"
-	gh "github.com/stevenxie/api/provider/github"
-	gcal "github.com/stevenxie/api/provider/google/calendar"
-	gmaps "github.com/stevenxie/api/provider/google/maps"
-	"github.com/stevenxie/api/provider/here"
-	"github.com/stevenxie/api/provider/rescuetime"
-	"github.com/stevenxie/api/provider/spotify"
-
 	"github.com/stevenxie/api/config"
 	"github.com/stevenxie/api/internal/info"
-	"github.com/stevenxie/api/pkg/api"
 	"github.com/stevenxie/api/pkg/cmdutil"
-	"github.com/stevenxie/api/pkg/geo"
+	gh "github.com/stevenxie/api/pkg/github"
+	"github.com/stevenxie/api/pkg/google"
 	"github.com/stevenxie/api/server"
-	"github.com/stevenxie/api/stream"
+
+	"github.com/stevenxie/api/service/about"
+	aboutgh "github.com/stevenxie/api/service/about/github"
+	"github.com/stevenxie/api/service/availability"
+	"github.com/stevenxie/api/service/availability/gcal"
+	cm "github.com/stevenxie/api/service/commits"
+	commitsgh "github.com/stevenxie/api/service/commits/github"
+	"github.com/stevenxie/api/service/music"
+	"github.com/stevenxie/api/service/music/spotify"
+	"github.com/stevenxie/api/service/productivity"
+	"github.com/stevenxie/api/service/productivity/rescuetime"
+
+	loc "github.com/stevenxie/api/service/location"
+	"github.com/stevenxie/api/service/location/airtable"
+	"github.com/stevenxie/api/service/location/geocode"
+	"github.com/stevenxie/api/service/location/geocode/here"
+	"github.com/stevenxie/api/service/location/gmaps"
 )
 
 func main() {
@@ -98,14 +105,18 @@ func run(c *cli.Context) (err error) {
 	}()
 
 	// Create availability service.
-	var availability api.AvailabilityService
+	var availability availability.Service
 	{
-		client, err := gcal.NewClient()
+		clientset, err := google.NewClientSet()
 		if err != nil {
-			return errors.Wrap(err, "creating GCal client")
+			return errors.Wrap(err, "creating Google clientset")
+		}
+		svc, err := clientset.CalendarService(context.Background())
+		if err != nil {
+			return errors.Wrap(err, "creating calendar service")
 		}
 		availability = gcal.NewAvailabilityService(
-			client,
+			svc,
 			cfg.Availability.GCal.CalendarIDs,
 		)
 	}
@@ -115,29 +126,31 @@ func run(c *cli.Context) (err error) {
 	}
 
 	// Build location service.
-	var location api.LocationService
+	var location loc.Service
 	{
-		geocoder, err := here.New(cfg.Location.Here.AppID)
+		hc, err := here.NewClient(cfg.Location.Here.AppID)
 		if err != nil {
-			return errors.Wrap(err, "creating MapBox client")
+			return errors.Wrap(err, "creating MapBox hc")
 		}
-		var source geo.SegmentSource
-		if source, err = gmaps.NewHistorian(func(cfg *gmaps.HistorianConfig) {
+		geocoder := here.NewGeocoder(hc)
+
+		var history loc.HistoryService
+		if history, err = gmaps.NewHistorian(func(cfg *gmaps.HistorianConfig) {
 			cfg.Timezone = timezone
 		}); err != nil {
 			return errors.Wrap(err, "creating historian")
 		}
 		if polling := &cfg.Location.Polling; polling.Enabled {
-			preloader := stream.NewSegmentsPreloader(
-				source, polling.Interval,
-				func(cfg *stream.SPConfig) {
+			preloader := loc.NewHistoryPreloader(
+				history, polling.Interval,
+				func(cfg *loc.HistoryPreloaderConfig) {
 					cfg.Logger = log.WithField(
 						"component",
-						"stream.SegmentsPreloader",
+						"location.HistoryPreloader",
 					).Logger
 				},
 			)
-			source = preloader
+			history = preloader
 			finalizers = append(finalizers, func() error {
 				preloader.Stop()
 				return nil
@@ -145,17 +158,18 @@ func run(c *cli.Context) (err error) {
 		}
 
 		// Decode geocode level from config string.
-		var regionGeocodeLevel geo.GeocodeLevel
+		var regionGeocodeLevel geocode.Level
 		if level := cfg.Location.Region.GeocodeLevel; level != "" {
-			if regionGeocodeLevel, err = geo.ParseGeocodeLevel(level); err != nil {
+			if regionGeocodeLevel, err = geocode.ParseLevel(level); err != nil {
 				return errors.Wrapf(err, "parsing region geocode level '%s'", level)
 			}
 		}
 
 		// Create location service.
-		location = geo.NewLocationService(
-			source, geocoder,
-			func(lsc *geo.LSConfig) {
+		location = geocode.NewLocationService(
+			history,
+			geocoder,
+			func(lsc *geocode.LocationServiceConfig) {
 				if regionGeocodeLevel != 0 {
 					lsc.RegionGeocodeLevel = regionGeocodeLevel
 				}
@@ -164,22 +178,23 @@ func run(c *cli.Context) (err error) {
 	}
 
 	// Build location access service.
-	var locationAccess api.LocationAccessService
+	var locationAccess loc.AccessService
 	{
-		client, err := airtable.NewClient()
+		airc, err := airtable.NewClient()
 		if err != nil {
-			return errors.Wrap(err, "creating Airtable client")
+			return errors.Wrap(err, "creating Airtable hc")
 		}
+
 		config := &cfg.Location.Airtable
 		locationAccess = airtable.NewLocationAccessService(
-			client,
+			airc,
 			config.BaseID,
 			config.Table,
 			config.View,
 
-			func(cfg *airtable.LASConfig) {
-				cfg.Timezone = timezone
-				cfg.Logger = log.WithField(
+			func(lasc *airtable.LocationAccessServiceConfig) {
+				lasc.Timezone = timezone
+				lasc.Logger = log.WithField(
 					"component",
 					"airtable.LocationAccessService",
 				).Logger
@@ -190,33 +205,34 @@ func run(c *cli.Context) (err error) {
 	// Build GitHub client, a shared dependenncy.
 	github, err := gh.New()
 	if err != nil {
-		return errors.Wrap(err, "creating GitHub client")
+		return errors.Wrap(err, "creating GitHub hc")
 	}
 
 	// Build about service.
-	var about api.AboutService
+	var about about.Service
 	{
 		gist := &cfg.About.Gist
-		about = gh.NewAboutService(
-			github, gist.ID, gist.File,
+		about = aboutgh.NewAboutService(
+			github.GHClient().Gists,
+			gist.ID, gist.File,
 			location,
 		)
 	}
 
 	// Build commits service.
-	var commits api.GitCommitsService
+	var commits cm.Service
 	{
-		commits = github
+		commits = commitsgh.NewCommitsService(github)
 		if polling := &cfg.Commits.Polling; polling.Enabled {
-			preloader := stream.NewCommitsPreloader(
-				github,
+			preloader := cm.NewPreloader(
+				commits,
 				polling.Interval,
 
-				func(cfg *stream.CPConfig) {
-					cfg.Limit = polling.Limit
-					cfg.Logger = log.WithField(
+				func(pc *cm.PreloaderConfig) {
+					pc.Limit = polling.Limit
+					pc.Logger = log.WithField(
 						"component",
-						"stream.CommitsPreloader",
+						"commits.Preloader",
 					).Logger
 				},
 			)
@@ -228,26 +244,27 @@ func run(c *cli.Context) (err error) {
 		}
 	}
 
-	// Create music service.
-	var music api.MusicService
+	// Create nowplaying service.
+	var nowplaying music.NowPlayingService
 	{
-		spotify, err := spotify.New()
+		client, err := spotify.New()
 		if err != nil {
-			return errors.Wrap(err, "creating Spotify client")
+			return errors.Wrap(err, "creating Spotify hc")
 		}
-		music = spotify
+		nowplaying = spotify.NewNowPlayingService(client)
+
 		if polling := &cfg.Music.Polling; polling.Enabled {
-			streamer := stream.NewMusicStreamer(
-				spotify,
+			streamer := music.NewNowPlayingStreamer(
+				nowplaying,
 				cfg.Music.Polling.Interval,
-				func(cfg *stream.MSConfig) {
-					cfg.Logger = log.WithField(
+				func(npsc *music.NowPlayingStreamerConfig) {
+					npsc.Logger = log.WithField(
 						"component",
-						"stream.MusicStreamer",
+						"music.NowPlayingStreamer",
 					).Logger
 				},
 			)
-			music = streamer
+			nowplaying = streamer
 			finalizers = append(finalizers, func() error {
 				streamer.Stop()
 				return nil
@@ -256,24 +273,28 @@ func run(c *cli.Context) (err error) {
 	}
 
 	// Create productivity service.
-	var productivity api.ProductivityService
+	var productivity productivity.Service
 	{
-		productivity, err = rescuetime.New(func(cfg *rescuetime.ClientConfig) {
-			cfg.Timezone = timezone
-		})
+		client, err := rescuetime.NewClient()
 		if err != nil {
 			return errors.Wrap(err, "creating RescueTime client")
 		}
+		productivity = rescuetime.NewProductivityService(
+			client,
+			func(psc *rescuetime.ProductivityServiceConfig) {
+				psc.Timezone = timezone
+			},
+		)
 	}
 
 	// Create and configure server.
 	log.Info("Initializing server...")
 	srv := server.New(
 		about,
+		productivity,
 		availability,
 		commits,
-		music,
-		productivity,
+		nowplaying,
 
 		location,
 		locationAccess,

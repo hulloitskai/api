@@ -12,8 +12,13 @@ import (
 	"github.com/labstack/echo/v4/middleware"
 	"github.com/sirupsen/logrus"
 
-	"github.com/stevenxie/api/pkg/api"
 	"github.com/stevenxie/api/pkg/zero"
+	"github.com/stevenxie/api/service/about"
+	"github.com/stevenxie/api/service/availability"
+	"github.com/stevenxie/api/service/commits"
+	"github.com/stevenxie/api/service/location"
+	"github.com/stevenxie/api/service/music"
+	"github.com/stevenxie/api/service/productivity"
 )
 
 type (
@@ -22,14 +27,14 @@ type (
 		echo *echo.Echo
 		log  *logrus.Logger
 
-		about        api.AboutService
-		productivity api.ProductivityService
-		availability api.AvailabilityService
-		commits      api.GitCommitsService
-		music        api.MusicService
+		about        about.Service
+		productivity productivity.Service
+		availability availability.Service
+		commits      commits.Service
+		nowplaying   music.NowPlayingService
 
-		location       api.LocationService
-		locationAccess api.LocationAccessService
+		location       location.Service
+		locationAccess location.AccessService
 	}
 
 	// An Config configures a Server.
@@ -41,14 +46,14 @@ type (
 
 // New creates a new Server.
 func New(
-	about api.AboutService,
-	availability api.AvailabilityService,
-	commits api.GitCommitsService,
-	music api.MusicService,
-	productivity api.ProductivityService,
+	about about.Service,
+	productivity productivity.Service,
+	availability availability.Service,
+	commits commits.Service,
+	nowplaying music.NowPlayingService,
 
-	location api.LocationService,
-	locationAccess api.LocationAccessService,
+	location location.Service,
+	locationAccess location.AccessService,
 
 	opts ...func(*Config),
 ) *Server {
@@ -82,10 +87,10 @@ func New(
 		log:  cfg.Logger,
 
 		about:        about,
+		productivity: productivity,
 		availability: availability,
 		commits:      commits,
-		music:        music,
-		productivity: productivity,
+		nowplaying:   nowplaying,
 
 		location:       location,
 		locationAccess: locationAccess,

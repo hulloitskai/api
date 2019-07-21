@@ -4,19 +4,19 @@ import (
 	"github.com/cockroachdb/errors"
 	echo "github.com/labstack/echo/v4"
 	"github.com/sirupsen/logrus"
-	"github.com/stevenxie/api/pkg/api"
+	"github.com/stevenxie/api/service/about"
 )
 
 // AboutHandler responds with personal data.
-func AboutHandler(svc api.AboutService, log *logrus.Logger) echo.HandlerFunc {
+func AboutHandler(svc about.Service, log *logrus.Logger) echo.HandlerFunc {
 	return func(c echo.Context) error {
-		about, err := svc.About()
+		info, err := svc.Info()
 		if err != nil {
-			log.WithError(err).Error("Failed to load about info.")
-			return errors.Wrap(err, "fetching about info")
+			log.WithError(err).Error("Failed to load info.")
+			return errors.Wrap(err, "fetching info")
 		}
 
 		// Send info as JSON.
-		return jsonPretty(c, about)
+		return jsonPretty(c, info)
 	}
 }

@@ -2,8 +2,8 @@ package server
 
 import (
 	"github.com/sirupsen/logrus"
-	"github.com/stevenxie/api/pkg/api"
 	"github.com/stevenxie/api/server/handler"
+	"github.com/stevenxie/api/service/music"
 )
 
 func (srv *Server) registerRoutes() error {
@@ -43,12 +43,15 @@ func (srv *Server) registerRoutes() error {
 	// Handle music routes.
 	e.GET(
 		"/nowplaying",
-		handler.NowPlayingHandler(srv.music, srv.hlog("nowplaying")),
+		handler.NowPlayingHandler(srv.nowplaying, srv.hlog("nowplaying")),
 	)
-	if streamer, ok := srv.music.(api.MusicStreamingService); ok {
+	if streamer, ok := srv.nowplaying.(music.NowPlayingStreamingService); ok {
 		e.GET(
 			"/nowplaying/ws",
-			handler.NowPlayingStreamingHandler(streamer, srv.hlog("nowplaying_streaming")),
+			handler.NowPlayingStreamingHandler(
+				streamer,
+				srv.hlog("nowplaying_streaming"),
+			),
 		)
 	} else {
 		srv.log.Warn("No music streaming service available; nowplaying streams " +

@@ -9,13 +9,16 @@ import (
 	echo "github.com/labstack/echo/v4"
 	"github.com/sirupsen/logrus"
 
-	"github.com/stevenxie/api/pkg/api"
 	"github.com/stevenxie/api/pkg/zero"
+	"github.com/stevenxie/api/service/music"
 )
 
 // NowPlayingHandler handles requests for the currently playing track on my
 // Spotify account.
-func NowPlayingHandler(svc api.MusicService, log *logrus.Logger) echo.HandlerFunc {
+func NowPlayingHandler(
+	svc music.NowPlayingService,
+	log *logrus.Logger,
+) echo.HandlerFunc {
 	return func(c echo.Context) error {
 		cplaying, err := svc.NowPlaying()
 		if err != nil {
@@ -31,7 +34,7 @@ func NowPlayingHandler(svc api.MusicService, log *logrus.Logger) echo.HandlerFun
 // NowPlayingStreamingHandler handles requests for current playing track
 // streams.
 func NowPlayingStreamingHandler(
-	svc api.MusicStreamingService,
+	svc music.NowPlayingStreamingService,
 	log *logrus.Logger,
 ) echo.HandlerFunc {
 	// Configure Melody.
@@ -70,7 +73,7 @@ func NowPlayingStreamingHandler(
 
 	broadEntry := log.WithField("stage", "broadcast")
 	go func(stream <-chan struct {
-		NowPlaying *api.NowPlaying
+		NowPlaying *music.NowPlaying
 		Err        error
 	}) {
 		for value := range stream {
@@ -105,12 +108,12 @@ func NowPlayingStreamingHandler(
 }
 
 type nowPlayingStreamSerializer struct {
-	prevNP  *api.NowPlaying
+	prevNP  *music.NowPlaying
 	prevErr error
 }
 
 func (serializer *nowPlayingStreamSerializer) Serialize(
-	currNP *api.NowPlaying,
+	currNP *music.NowPlaying,
 	currErr error,
 ) (message []byte, err error) {
 	var data nowPlayingStreamMessage
