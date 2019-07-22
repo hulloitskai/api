@@ -62,7 +62,7 @@ func New(
 		opt(&cfg)
 	}
 
-	// Configure echo.
+	// Configure Echo.
 	echo := echo.New()
 	echo.Logger.SetOutput(ioutil.Discard) // disable logger
 

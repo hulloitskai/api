@@ -23,13 +23,13 @@ type (
 		view   string
 
 		timezone *time.Location
-		log      *logrus.Logger
+		log      logrus.FieldLogger
 	}
 
 	// A LocationAccessServiceConfig configures a LocationAccessService.
 	LocationAccessServiceConfig struct {
 		Timezone *time.Location
-		Logger   *logrus.Logger
+		Logger   logrus.FieldLogger
 	}
 )
 

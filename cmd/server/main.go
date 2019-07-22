@@ -143,11 +143,11 @@ func run(c *cli.Context) (err error) {
 		if polling := &cfg.Location.Polling; polling.Enabled {
 			preloader := loc.NewHistoryPreloader(
 				history, polling.Interval,
-				func(cfg *loc.HistoryPreloaderConfig) {
-					cfg.Logger = log.WithField(
+				func(hpc *loc.HistoryPreloaderConfig) {
+					hpc.Logger = log.WithField(
 						"component",
 						"location.HistoryPreloader",
-					).Logger
+					)
 				},
 			)
 			history = preloader
@@ -185,19 +185,19 @@ func run(c *cli.Context) (err error) {
 			return errors.Wrap(err, "creating Airtable hc")
 		}
 
-		config := &cfg.Location.Airtable
+		cfg := &cfg.Location.Airtable
 		locationAccess = airtable.NewLocationAccessService(
 			airc,
-			config.BaseID,
-			config.Table,
-			config.View,
+			cfg.BaseID,
+			cfg.Table,
+			cfg.View,
 
 			func(lasc *airtable.LocationAccessServiceConfig) {
 				lasc.Timezone = timezone
 				lasc.Logger = log.WithField(
 					"component",
 					"airtable.LocationAccessService",
-				).Logger
+				)
 			},
 		)
 	}
@@ -233,7 +233,7 @@ func run(c *cli.Context) (err error) {
 					pc.Logger = log.WithField(
 						"component",
 						"commits.Preloader",
-					).Logger
+					)
 				},
 			)
 			commits = preloader
@@ -261,7 +261,7 @@ func run(c *cli.Context) (err error) {
 					npsc.Logger = log.WithField(
 						"component",
 						"music.NowPlayingStreamer",
-					).Logger
+					)
 				},
 			)
 			nowplaying = streamer

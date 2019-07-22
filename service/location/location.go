@@ -15,7 +15,7 @@ type (
 	// location history data.
 	HistoryPreloader struct {
 		streamer stream.Streamer
-		log      *logrus.Logger
+		log      logrus.FieldLogger
 
 		mux      sync.Mutex
 		segments HistorySegments
@@ -23,7 +23,9 @@ type (
 	}
 
 	// An HistoryPreloaderConfig configures a HistoryPreloader.
-	HistoryPreloaderConfig struct{ Logger *logrus.Logger }
+	HistoryPreloaderConfig struct {
+		Logger logrus.FieldLogger
+	}
 )
 
 var _ HistoryService = (*HistoryPreloader)(nil)

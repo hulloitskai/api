@@ -15,7 +15,7 @@ type (
 	Preloader struct {
 		streamer stream.Streamer
 		cfg      *PreloaderConfig
-		log      *logrus.Logger
+		log      logrus.FieldLogger
 
 		mux     sync.Mutex
 		commits Commits
@@ -24,7 +24,7 @@ type (
 
 	// A PreloaderConfig configures a Preloader.
 	PreloaderConfig struct {
-		Logger *logrus.Logger
+		Logger logrus.FieldLogger
 		Limit  int
 	}
 )

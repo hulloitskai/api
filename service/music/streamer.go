@@ -15,7 +15,7 @@ type (
 	// NowPlayingService.
 	NowPlayingStreamer struct {
 		streamer stream.Streamer
-		log      *logrus.Logger
+		log      logrus.FieldLogger
 
 		stream chan struct {
 			NowPlaying *NowPlaying
@@ -28,7 +28,9 @@ type (
 	}
 
 	// An NowPlayingStreamerConfig configures a NowPlayingStreamer.
-	NowPlayingStreamerConfig struct{ Logger *logrus.Logger }
+	NowPlayingStreamerConfig struct {
+		Logger logrus.FieldLogger
+	}
 )
 
 var _ NowPlayingStreamingService = (*NowPlayingStreamer)(nil)
