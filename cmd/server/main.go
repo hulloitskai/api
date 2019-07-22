@@ -86,7 +86,7 @@ func run(c *cli.Context) (err error) {
 	log.Info("Initializing services...")
 
 	// Finalizers should be run before the program terminates.
-	var finalizers [](func() error)
+	var finalizers cmdutil.Finalizers
 	defer func() {
 		if len(finalizers) == 0 {
 			return
