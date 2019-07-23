@@ -3,7 +3,7 @@ package stream
 import (
 	"time"
 
-	"github.com/stevenxie/api/pkg/zero"
+	"go.stevenxie.me/api/pkg/zero"
 )
 
 type (

@@ -3,7 +3,7 @@ package handler
 import (
 	echo "github.com/labstack/echo/v4"
 	"github.com/sirupsen/logrus"
-	"github.com/stevenxie/api/service/productivity"
+	"go.stevenxie.me/api/service/productivity"
 )
 
 // ProductivityHandler handles requests for productivity metrics.

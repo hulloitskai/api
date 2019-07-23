@@ -52,9 +52,9 @@ track changes, in which case a new `nowplaying` event will be sent.
 [tag-img]: https://img.shields.io/github/tag/stevenxie/api.svg
 [drone]: https://ci.stevenxie.me/stevenxie/api
 [drone-img]: https://ci.stevenxie.me/api/badges/stevenxie/api/status.svg
-[grp]: https://goreportcard.com/report/github.com/stevenxie/api
-[grp-img]: https://goreportcard.com/badge/github.com/stevenxie/api
-[godoc]: https://godoc.org/github.com/stevenxie/api
-[godoc-img]: https://godoc.org/github.com/stevenxie/api?status.svg
+[grp]: https://goreportcard.com/report/go.stevenxie.me/api
+[grp-img]: https://goreportcard.com/badge/go.stevenxie.me/api
+[godoc]: https://godoc.org/go.stevenxie.me/api
+[godoc-img]: https://godoc.org/go.stevenxie.me/api?status.svg
 [microbadger]: https://microbadger.com/images/stevenxie/api
 [microbadger-img]: https://images.microbadger.com/badges/image/stevenxie/api.svg

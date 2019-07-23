@@ -4,7 +4,8 @@ import (
 	"github.com/cockroachdb/errors"
 	echo "github.com/labstack/echo/v4"
 	"github.com/sirupsen/logrus"
-	"github.com/stevenxie/api/service/about"
+
+	"go.stevenxie.me/api/service/about"
 )
 
 // AboutHandler responds with personal data.

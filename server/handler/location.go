@@ -8,8 +8,8 @@ import (
 	echo "github.com/labstack/echo/v4"
 	"github.com/sirupsen/logrus"
 
-	"github.com/stevenxie/api/pkg/httputil"
-	"github.com/stevenxie/api/service/location"
+	"go.stevenxie.me/api/pkg/httputil"
+	"go.stevenxie.me/api/service/location"
 )
 
 // A LocationProvider can create handlers that use location data.

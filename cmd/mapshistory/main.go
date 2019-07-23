@@ -4,8 +4,8 @@ import (
 	"time"
 
 	"github.com/alecthomas/repr"
-	"github.com/stevenxie/api/service/location/gmaps"
 	ess "github.com/unixpickle/essentials"
+	"go.stevenxie.me/api/service/location/gmaps"
 
 	// Automatically load environment variables from '.env' file.
 	_ "github.com/joho/godotenv/autoload"

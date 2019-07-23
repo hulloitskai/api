@@ -5,7 +5,7 @@ import (
 	"time"
 
 	"github.com/cockroachdb/errors"
-	"github.com/stevenxie/api/service/availability"
+	"go.stevenxie.me/api/service/availability"
 	calendar "google.golang.org/api/calendar/v3"
 )
 

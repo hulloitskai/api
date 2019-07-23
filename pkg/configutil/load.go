@@ -5,7 +5,7 @@ import (
 	"os"
 
 	"github.com/cockroachdb/errors"
-	"github.com/stevenxie/api/pkg/zero"
+	"go.stevenxie.me/api/pkg/zero"
 )
 
 // LoadFile loads a Config from a file.

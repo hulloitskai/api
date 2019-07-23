@@ -5,8 +5,8 @@ import (
 	"time"
 
 	"github.com/cockroachdb/errors"
-	"github.com/stevenxie/api/service/music"
 	"github.com/zmb3/spotify"
+	"go.stevenxie.me/api/service/music"
 )
 
 const extURLKeySpotify = "spotify"

@@ -7,9 +7,9 @@ import (
 	"github.com/cockroachdb/errors"
 	"github.com/google/go-github/v25/github"
 
-	gh "github.com/stevenxie/api/pkg/github"
-	"github.com/stevenxie/api/pkg/zero"
-	cm "github.com/stevenxie/api/service/commits"
+	gh "go.stevenxie.me/api/pkg/github"
+	"go.stevenxie.me/api/pkg/zero"
+	cm "go.stevenxie.me/api/service/commits"
 )
 
 const (

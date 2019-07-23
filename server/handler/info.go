@@ -4,8 +4,8 @@ import (
 	"os"
 
 	echo "github.com/labstack/echo/v4"
-	"github.com/stevenxie/api/internal/info"
-	serverinfo "github.com/stevenxie/api/server/internal/info"
+	"go.stevenxie.me/api/internal/info"
+	serverinfo "go.stevenxie.me/api/server/internal/info"
 )
 
 // InfoHandler handles requests for information about the API server.

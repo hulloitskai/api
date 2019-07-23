@@ -4,7 +4,7 @@ import (
 	"fmt"
 
 	"github.com/cockroachdb/errors"
-	"github.com/stevenxie/api/service/location"
+	"go.stevenxie.me/api/service/location"
 )
 
 type (

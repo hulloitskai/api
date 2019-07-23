@@ -17,7 +17,7 @@ type Info struct {
 	Whereabouts string        `json:"whereabouts"`
 }
 
-//revive:disable
+// MarshalJSON implements a json.Marshaller for Info.
 func (i *Info) MarshalJSON() ([]byte, error) {
 	return json.Marshal(&struct {
 		Name        string   `json:"name"`

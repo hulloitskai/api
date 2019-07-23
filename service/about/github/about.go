@@ -7,8 +7,8 @@ import (
 
 	"github.com/cockroachdb/errors"
 	"github.com/google/go-github/v25/github"
-	"github.com/stevenxie/api/service/about"
-	"github.com/stevenxie/api/service/location"
+	"go.stevenxie.me/api/service/about"
+	"go.stevenxie.me/api/service/location"
 )
 
 // AboutService reads an about.Info from a file stored in Github Gists.

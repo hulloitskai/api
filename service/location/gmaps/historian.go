@@ -8,8 +8,8 @@ import (
 	"time"
 
 	"github.com/cockroachdb/errors"
-	"github.com/stevenxie/api/pkg/google"
-	"github.com/stevenxie/api/service/location"
+	"go.stevenxie.me/api/pkg/google"
+	"go.stevenxie.me/api/service/location"
 )
 
 type (

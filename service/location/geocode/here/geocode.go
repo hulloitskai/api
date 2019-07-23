@@ -9,8 +9,8 @@ import (
 	"strings"
 
 	"github.com/cockroachdb/errors"
-	"github.com/stevenxie/api/service/location"
-	"github.com/stevenxie/api/service/location/geocode"
+	"go.stevenxie.me/api/service/location"
+	"go.stevenxie.me/api/service/location/geocode"
 )
 
 const reverseGeocodeURL = "https://reverse.geocoder.api.here.com/6.2/" +

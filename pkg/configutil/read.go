@@ -3,7 +3,7 @@ package configutil
 import (
 	"io"
 
-	"github.com/stevenxie/api/pkg/zero"
+	"go.stevenxie.me/api/pkg/zero"
 	yaml "gopkg.in/yaml.v2"
 )
 

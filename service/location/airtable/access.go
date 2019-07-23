@@ -10,8 +10,8 @@ import (
 
 	"github.com/cockroachdb/errors"
 	"github.com/sirupsen/logrus"
-	"github.com/stevenxie/api/pkg/zero"
-	"github.com/stevenxie/api/service/location"
+	"go.stevenxie.me/api/pkg/zero"
+	"go.stevenxie.me/api/service/location"
 )
 
 type (

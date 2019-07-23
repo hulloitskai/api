@@ -1,4 +1,4 @@
-module github.com/stevenxie/api
+module go.stevenxie.me/api
 
 go 1.12
 

@@ -2,8 +2,8 @@ package server
 
 import (
 	"github.com/sirupsen/logrus"
-	"github.com/stevenxie/api/server/handler"
-	"github.com/stevenxie/api/service/music"
+	"go.stevenxie.me/api/server/handler"
+	"go.stevenxie.me/api/service/music"
 )
 
 func (srv *Server) registerRoutes() error {

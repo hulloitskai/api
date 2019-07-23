@@ -10,7 +10,7 @@ import (
 	echo "github.com/labstack/echo/v4"
 	"github.com/sirupsen/logrus"
 
-	"github.com/stevenxie/api/pkg/httputil"
+	"go.stevenxie.me/api/pkg/httputil"
 )
 
 // ErrorHandler handles errors by writing them to c.Response() as JSON.

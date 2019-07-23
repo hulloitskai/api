@@ -4,10 +4,9 @@ import (
 	"os"
 	"strings"
 
-	"golang.org/x/oauth2"
-
 	"github.com/cockroachdb/errors"
 	"github.com/zmb3/spotify"
+	"golang.org/x/oauth2"
 )
 
 // Namespace is the package namespace, used for things like envvars.

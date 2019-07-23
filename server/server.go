@@ -12,13 +12,13 @@ import (
 	"github.com/labstack/echo/v4/middleware"
 	"github.com/sirupsen/logrus"
 
-	"github.com/stevenxie/api/pkg/zero"
-	"github.com/stevenxie/api/service/about"
-	"github.com/stevenxie/api/service/availability"
-	"github.com/stevenxie/api/service/commits"
-	"github.com/stevenxie/api/service/location"
-	"github.com/stevenxie/api/service/music"
-	"github.com/stevenxie/api/service/productivity"
+	"go.stevenxie.me/api/pkg/zero"
+	"go.stevenxie.me/api/service/about"
+	"go.stevenxie.me/api/service/availability"
+	"go.stevenxie.me/api/service/commits"
+	"go.stevenxie.me/api/service/location"
+	"go.stevenxie.me/api/service/music"
+	"go.stevenxie.me/api/service/productivity"
 )
 
 type (

@@ -1,6 +1,6 @@
 package stream
 
-import "github.com/stevenxie/api/pkg/zero"
+import "go.stevenxie.me/api/pkg/zero"
 
 // A Streamer can stream arbitrary objects.
 type Streamer interface {

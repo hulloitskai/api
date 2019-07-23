@@ -9,8 +9,8 @@ import (
 	echo "github.com/labstack/echo/v4"
 	"github.com/sirupsen/logrus"
 
-	"github.com/stevenxie/api/pkg/zero"
-	"github.com/stevenxie/api/service/music"
+	"go.stevenxie.me/api/pkg/zero"
+	"go.stevenxie.me/api/service/music"
 )
 
 // NowPlayingHandler handles requests for the currently playing track on my

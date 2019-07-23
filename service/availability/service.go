@@ -20,7 +20,7 @@ type (
 	Periods []*Period
 )
 
-//revive:disable
+// MarshalJSON implements a json.Marshaller for a Period.
 func (tp *Period) MarshalJSON() ([]byte, error) {
 	var formatted = struct {
 		Start string `json:"start"`
