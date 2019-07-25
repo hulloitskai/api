@@ -12,6 +12,8 @@ import (
 	cm "go.stevenxie.me/api/service/commits"
 )
 
+const homeURL = "https://github.com"
+
 const (
 	eventTypePush = "PushEvent"
 	maxEventsPage = 10
@@ -81,22 +83,21 @@ func (svc CommitsService) recentCommits(
 		paycomm := pushPayload.Commits[0]
 
 		var (
-			repo    = e.GetRepo()
-			baseURL = svc.client.BaseURL()
-			commit  = &cm.Commit{
+			repo   = e.GetRepo()
+			commit = &cm.Commit{
 				SHA:       paycomm.GetSHA(),
 				Author:    paycomm.GetAuthor(),
 				Committer: paycomm.GetCommitter(),
 				Message:   paycomm.GetMessage(),
 				URL: fmt.Sprintf(
 					"%s/%s/commit/%s",
-					baseURL,
+					homeURL,
 					repo.GetName(),
 					paycomm.GetSHA(),
 				),
 				Repo: &cm.Repo{
 					Name: repo.GetName(),
-					URL:  fmt.Sprintf("%s/%s", baseURL, repo.GetName()),
+					URL:  fmt.Sprintf("%s/%s", homeURL, repo.GetName()),
 				},
 				Timestamp: e.GetCreatedAt(),
 			}
