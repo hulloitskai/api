@@ -24,7 +24,7 @@ func NewLocationProvider(svc location.Service) LocationProvider {
 
 // CurrentRegionHandler handles requests for my current geographical region.
 func (p LocationProvider) CurrentRegionHandler(
-	log *logrus.Logger,
+	log logrus.FieldLogger,
 ) echo.HandlerFunc {
 	return func(c echo.Context) error {
 		place, err := p.svc.CurrentRegion()
@@ -57,7 +57,7 @@ const bearerTokenPrefix = "Bearer "
 // HistoryHandler handles requests for my recent location history.
 func (p LocationProvider) HistoryHandler(
 	access location.AccessService,
-	log *logrus.Logger,
+	log logrus.FieldLogger,
 ) echo.HandlerFunc {
 	handler := func(c echo.Context) error {
 		// Retrieve recent location history segments.
@@ -91,7 +91,7 @@ func (p LocationProvider) HistoryHandler(
 
 func locationAccessValidationMiddlware(
 	svc location.AccessService,
-	log *logrus.Logger,
+	log logrus.FieldLogger,
 ) echo.MiddlewareFunc {
 	return func(next echo.HandlerFunc) echo.HandlerFunc {
 		return func(c echo.Context) error {

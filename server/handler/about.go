@@ -9,7 +9,7 @@ import (
 )
 
 // AboutHandler responds with personal data.
-func AboutHandler(svc about.Service, log *logrus.Logger) echo.HandlerFunc {
+func AboutHandler(svc about.Service, log logrus.FieldLogger) echo.HandlerFunc {
 	return func(c echo.Context) error {
 		info, err := svc.Info()
 		if err != nil {

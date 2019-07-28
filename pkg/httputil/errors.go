@@ -1,4 +1,4 @@
-package handler
+package httputil
 
 import (
 	"fmt"
@@ -9,14 +9,13 @@ import (
 	"github.com/cockroachdb/errors"
 	echo "github.com/labstack/echo/v4"
 	"github.com/sirupsen/logrus"
-
-	"go.stevenxie.me/api/pkg/httputil"
 )
 
-// ErrorHandler handles errors by writing them to c.Response() as JSON.
+// ErrorHandler creates an echo.HTTPErrorHandler that handles errors by
+// sending JSON responses containing error details.
 //
-// It will attempt to extract the status code c.
-func ErrorHandler(log *logrus.Logger) echo.HTTPErrorHandler {
+// It will attempt to extract additional error context using cockroachdb/errors.
+func ErrorHandler(log logrus.FieldLogger) echo.HTTPErrorHandler {
 	return func(err error, c echo.Context) {
 		var (
 			data struct {
@@ -35,7 +34,7 @@ func ErrorHandler(log *logrus.Logger) echo.HTTPErrorHandler {
 		}
 
 		// Retrieve status code from request context.
-		if code, ok := httputil.GetEchoStatusCode(c); ok {
+		if code, ok := GetEchoStatusCode(c); ok {
 			statusCode = code
 		}
 

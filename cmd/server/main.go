@@ -47,6 +47,7 @@ func main() {
 	app.Usage = "A personal API server."
 	app.UsageText = "server [global options]"
 	app.Version = info.Version
+	app.HideHelp = true
 	app.Action = run
 
 	// Hide help command.
@@ -59,10 +60,6 @@ func main() {
 			Usage:  "port that the server listens on",
 			EnvVar: "PORT",
 			Value:  3000,
-		},
-		cli.BoolFlag{
-			Name:  "help,h",
-			Usage: "show help",
 		},
 	}
 
@@ -317,7 +314,7 @@ func run(c *cli.Context) (err error) {
 
 func shutdownUponInterrupt(
 	srv *server.Server,
-	log *logrus.Logger,
+	log logrus.FieldLogger,
 	timeout *time.Duration,
 ) {
 	sig := make(chan os.Signal)

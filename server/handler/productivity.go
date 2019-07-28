@@ -9,7 +9,7 @@ import (
 // ProductivityHandler handles requests for productivity metrics.
 func ProductivityHandler(
 	svc productivity.Service,
-	log *logrus.Logger,
+	log logrus.FieldLogger,
 ) echo.HandlerFunc {
 	return func(c echo.Context) error {
 		productivity, err := svc.CurrentProductivity()

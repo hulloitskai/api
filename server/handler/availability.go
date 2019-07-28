@@ -15,7 +15,7 @@ import (
 // AvailabilityHandler handles requests for availability information.
 func AvailabilityHandler(
 	svc availability.Service,
-	log *logrus.Logger,
+	log logrus.FieldLogger,
 ) echo.HandlerFunc {
 	return func(c echo.Context) error {
 		// Derive timezone.

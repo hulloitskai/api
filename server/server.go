@@ -25,7 +25,7 @@ type (
 	// Server serves the accounts REST API.
 	Server struct {
 		echo *echo.Echo
-		log  *logrus.Logger
+		log  logrus.FieldLogger
 
 		about        about.Service
 		productivity productivity.Service
@@ -39,7 +39,7 @@ type (
 
 	// An Config configures a Server.
 	Config struct {
-		Logger *logrus.Logger
+		Logger logrus.FieldLogger
 		Raven  *raven.Client
 	}
 )
@@ -57,7 +57,9 @@ func New(
 
 	opts ...func(*Config),
 ) *Server {
-	cfg := Config{Logger: zero.Logger()}
+	cfg := Config{
+		Logger: zero.Logger(),
+	}
 	for _, opt := range opts {
 		opt(&cfg)
 	}
@@ -116,8 +118,5 @@ func (srv *Server) ListenAndServe(addr string) error {
 // Shutdown shuts down the server gracefully without interupting any active
 // connections.
 func (srv *Server) Shutdown(ctx context.Context) error {
-	if err := srv.echo.Shutdown(ctx); err != nil {
-		return errors.Wrap(err, "server: shutting down Echo")
-	}
-	return nil
+	return srv.echo.Shutdown(ctx)
 }

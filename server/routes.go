@@ -2,16 +2,21 @@ package server
 
 import (
 	"github.com/sirupsen/logrus"
+
+	"go.stevenxie.me/api/internal/info"
+	serverinfo "go.stevenxie.me/api/server/internal/info"
+
+	"go.stevenxie.me/api/pkg/httputil"
 	"go.stevenxie.me/api/server/handler"
 	"go.stevenxie.me/api/service/music"
 )
 
 func (srv *Server) registerRoutes() error {
 	e := srv.echo
-	e.HTTPErrorHandler = handler.ErrorHandler(srv.hlog("error"))
+	e.HTTPErrorHandler = httputil.ErrorHandler(srv.hlog("error"))
 
 	// Register routes.
-	e.GET("/", handler.InfoHandler())
+	e.GET("/", httputil.InfoHandler(serverinfo.Name, info.Version))
 	e.GET("/about", handler.AboutHandler(srv.about, srv.hlog("about")))
 	e.GET(
 		"/productivity",
@@ -61,6 +66,6 @@ func (srv *Server) registerRoutes() error {
 	return nil
 }
 
-func (srv *Server) hlog(name string) *logrus.Logger {
-	return srv.log.WithField("handler", name).Logger
+func (srv *Server) hlog(name string) logrus.FieldLogger {
+	return srv.log.WithField("handler", name)
 }

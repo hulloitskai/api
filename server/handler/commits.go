@@ -15,7 +15,7 @@ import (
 // RecentCommitsHandler handles requests for recent commits that I've made.
 func RecentCommitsHandler(
 	svc cm.Service,
-	log *logrus.Logger,
+	log logrus.FieldLogger,
 ) echo.HandlerFunc {
 	return func(c echo.Context) error {
 		limit := 5

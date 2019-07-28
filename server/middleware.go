@@ -10,7 +10,7 @@ import (
 // reports them to sentry.
 func SentryRecoverMiddleware(
 	rc *raven.Client,
-	log *logrus.Logger,
+	log logrus.FieldLogger,
 ) echo.MiddlewareFunc {
 	return func(next echo.HandlerFunc) echo.HandlerFunc {
 		return func(c echo.Context) error {

@@ -48,7 +48,7 @@ func NewPreloader(
 	cp := &Preloader{
 		cfg:     cfg,
 		log:     cfg.Logger,
-		commits: make(Commits, 0),
+		commits: Commits{},
 		streamer: stream.NewPoller(
 			func() (zero.Interface, error) {
 				return svc.RecentCommits(cfg.Limit)

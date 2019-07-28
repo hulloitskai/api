@@ -63,7 +63,7 @@ func (svc *AvailabilityService) BusyPeriods(date time.Time) (
 	}
 
 	// Parse availabilities.
-	busy := make(availability.Periods, 0)
+	busy := availability.Periods{}
 	for _, cal := range res.Calendars {
 		if len(cal.Errors) > 0 {
 			err = errors.New("gcal: error in calendar response")

@@ -17,7 +17,7 @@ import (
 // Spotify account.
 func NowPlayingHandler(
 	svc music.NowPlayingService,
-	log *logrus.Logger,
+	log logrus.FieldLogger,
 ) echo.HandlerFunc {
 	return func(c echo.Context) error {
 		cplaying, err := svc.NowPlaying()
@@ -35,7 +35,7 @@ func NowPlayingHandler(
 // streams.
 func NowPlayingStreamingHandler(
 	svc music.NowPlayingStreamingService,
-	log *logrus.Logger,
+	log logrus.FieldLogger,
 ) echo.HandlerFunc {
 	// Configure Melody.
 	var (
