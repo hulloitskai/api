@@ -34,11 +34,13 @@ default: run
 version: # Show project version (derived from 'git describe').
 	@echo $(VERSION)
 
-setup: go-setup # Set this project up on a new environment.
+setup: go-setup ## Set this project up on a new environment.
 	@echo "Configuring githooks..." && \
 	 git config core.hooksPath .githooks && \
 	 echo done
-install: go-install # Install project dependencies.
+install: ## Install project dependencies.
+	@$(MAKE) go-install -- $(__ARGS) && \
+	 $(MAKE) go-generate
 
 run: # Run project (development).
 	$(eval __ARGS := $(if $(__ARGS),$(__ARGS),$(GODEFAULTCMD)))
@@ -49,7 +51,7 @@ build: # Build project.
 clean: # Clean build artifacts.
 	@$(MAKE) go-clean -- $(__ARGS)
 
-lint: go-lint # Lint and check code.
+lint: go-lint ## Lint and check code.
 test: # Run tests.
 	@$(MAKE) go-test -- $(__ARGS)
 review: # Lint code and run tests.
@@ -70,8 +72,8 @@ secrets-reveal: # Reveals secret files that were hidden using git-secret.
 
 
 # Go:
-.PHONY: go-setup go-install go-deps go-build go-clean go-run go-lint go-test \
-        go-bench go-review
+.PHONY: go-setup go-deps go-install go-generate go-build go-clean go-run \
+        go-lint go-test go-bench go-review
 
 go-setup: go-install go-deps
 go-deps: # Verify and tidy project dependencies.
@@ -84,10 +86,14 @@ go-install:
 	@echo "Downloading module dependencies..." && \
 	 go mod download && \
 	 echo done
+go-generate: # Generate Go source files.
+	@echo "Generating Go files..." && \
+	 go generate $(__ARGS) ./... && \
+	 echo done
 
 GOCMDDIR     ?= ./cmd
 GOBUILDDIR   ?= ./dist
-GOBUILDFLAGS = -ldflags "$(LDFLAGS)"
+GOBUILDFLAGS  = -ldflags "$(LDFLAGS)"
 
 __GOCMDNAME   = $(firstword $(__ARGS))
 __GOCMD       = $(GOCMDDIR)/$(__GOCMDNAME)
@@ -113,7 +119,9 @@ go-clean:
 go-lint:
 	@if command -v goimports > /dev/null; then \
 	   echo "Formatting code with 'goimports'..." && \
-	   goimports -w -l . | tee /dev/stderr | xargs -0 test -z; EXIT=$$?; \
+	   goimports -w -l $$(find . -name '*.go' | grep -v '.pb.go') \
+	     | tee /dev/fd/2 \
+	     | xargs -0 test -z; EXIT=$$?; \
 	 else \
 	   echo "'goimports' not installed, skipping format step."; \
 	 fi && \

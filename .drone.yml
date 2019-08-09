@@ -2,9 +2,26 @@ kind: pipeline
 name: default
 
 steps:
+  - name: generate
+    image: grpc/go
+    commands:
+      - go generate ./...
+      - |
+        if git diff-index --quiet HEAD; then
+          echo "Generated files differ from commit." >&2 && \
+          exit 1
+        fi
+
   - name: lint
-    image: stevenxie/revive
-    commands: ["revive -config .revive.toml ./..."]
+    image: stevenxie/golinter
+    settings:
+      revive_config: .revive.toml
+    environment:
+      CGO_ENABLED: '0'
+      GOPROXY: &goproxy https://goproxy.io
+    volumes:
+      - name: gopath
+        path: /go
 
   - name: info
     image: alpine/git
@@ -33,9 +50,10 @@ steps:
       - export CGO_ENABLED=0
       - go build -ldflags "$LDFLAGS" -o ./dist/server ./cmd/server
     environment:
-      GO111MODULE: 'on'
-      GOPROXY: https://goproxy.io
+      GOPROXY: *goproxy
     volumes:
+      - name: gopath
+        path: /go
       - name: info
         path: /info
 
@@ -62,6 +80,8 @@ steps:
 
 
 volumes:
+  - name: gopath
+    temp: {}
   - name: info
     temp: {}
 

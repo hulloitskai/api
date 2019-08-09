@@ -1,5 +1,7 @@
 #!/usr/bin/env bash
 
+set -euo pipefail
+
 ##
 ## BEFORE
 ##
@@ -8,12 +10,11 @@ STAT_CMD="git diff --name-status"
 STAT_BEFORE="$($STAT_CMD | wc -l)"
 
 
+# Generate Go source files.
+make go-generate
+
 # Check if the code is formatted and linted correctly.
-lint() {
-  echo "Performing code check:"
-  make lint || return $?
-}
-lint || exit $?
+make lint
 
 # Hide secrets using git-secret.
 git-secret() {
@@ -27,6 +28,7 @@ git-secret() {
   git secret hide -m || return 2
 }
 git-secret || exit $?
+
 
 ##
 ## AFTER

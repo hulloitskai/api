@@ -1,4 +1,6 @@
-#!/bin/sh
+#!/usr/bin/env bash
+
+set -euo pipefail
 
 # Install dependencies.
 install() {
@@ -11,4 +13,4 @@ install() {
 
   make install || return $?
 }
-install || exit $?
+install
