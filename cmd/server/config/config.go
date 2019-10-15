@@ -12,9 +12,7 @@ import (
 // Config maps to a configuration YAML that can configure programs in this
 // package.
 type Config struct {
-	Server struct {
-		ShutdownTimeout *time.Duration `yaml:"shutdownTimeout"`
-	} `yaml:"server"`
+	ShutdownTimeout *time.Duration `yaml:"shutdownTimeout"`
 
 	About struct {
 		Gist struct {
@@ -76,14 +74,14 @@ func defaultConfig() *Config {
 	{
 		cfg := &cfg.Location.Precacher
 		cfg.Enabled = true
-		cfg.Interval = time.Minute
+		cfg.Interval = 2 * time.Minute
 	}
 
 	// Default Git precacher settings.
 	{
 		cfg := &cfg.Git.Precacher
 		cfg.Enabled = true
-		cfg.Interval = time.Minute
+		cfg.Interval = 10 * time.Minute
 	}
 
 	// Default music streamer settings.

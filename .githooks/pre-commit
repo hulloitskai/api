@@ -8,8 +8,8 @@ STAT_CMD="git diff --name-status"
 STAT_BEFORE="$($STAT_CMD | wc -l)"
 
 
-# Generate Go source files.
-make go-generate
+# # Generate Go source files.
+# make go-generate
 
 # Check if the code is formatted and linted correctly.
 make lint

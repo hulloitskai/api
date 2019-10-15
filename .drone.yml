@@ -64,6 +64,7 @@ steps:
       - echo "LDFLAGS=$${LDFLAGS}" 1>&2
       - go test -ldflags "$LDFLAGS" -race ./...
       - export CGO_ENABLED=0
+      - mkdir dist
       - go build -trimpath -ldflags "$LDFLAGS" -o ./dist/ ./cmd/...
     environment:
       GOPROXY: *goproxy

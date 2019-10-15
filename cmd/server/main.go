@@ -353,7 +353,7 @@ func run(*cli.Context) (err error) {
 			log = log
 			ctx = context.Background()
 		)
-		if timeout := cfg.Server.ShutdownTimeout; timeout != nil {
+		if timeout := cfg.ShutdownTimeout; timeout != nil {
 			log = log.WithField("timeout", *timeout)
 			var cancel context.CancelFunc
 			ctx, cancel = context.WithTimeout(ctx, *timeout)
