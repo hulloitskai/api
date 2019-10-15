@@ -1,0 +1,69 @@
+type LocationQuery {
+  region: Place!
+
+  """
+  Get my recent location history, or the location history for a specified date.
+  """
+  history(code: String!, date: Time): [LocationHistorySegment!]!
+}
+
+"""
+A `LocationHistorySegment` is a segment of my location history.
+"""
+type LocationHistorySegment {
+  place: String!
+  address: String
+  description: String!
+  category: String!
+  distance: Int
+  coordinates: [Coordinates!]!
+}
+
+"""
+A `Place` represents a geographical location.
+"""
+type Place {
+  id: ID!
+  level: String!
+  type: String!
+  position: Coordinates!
+  timeZone: TimeZone
+  address: Address!
+  shape: [Coordinates!]
+}
+
+"""
+`Coordinates` are a point in 3D space.
+"""
+type Coordinates {
+  x: Float!
+  y: Float!
+  z: Float!
+}
+
+"""
+An `Address` describes the position of a `Place`.
+"""
+type Address {
+  label: String!
+  country: String!
+  state: String!
+  county: String!
+  city: String!
+  district: String
+  postcode: String!
+  street: String
+  number: String
+}
+
+"""
+A `TimeZone` describes a time zone in terms of its name and offset.
+"""
+type TimeZone {
+  name: String!
+
+  """
+  The offset in seconds east of UTC.
+  """
+  offset: Int!
+}

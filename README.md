@@ -10,43 +10,23 @@ _A personal API._
 
 > **Why?** Well, why... not?
 
-## REST Endpoints
+## GraphQL Endpoint
 
-| Path                                                                   | Description                                  |
-| ---------------------------------------------------------------------- | -------------------------------------------- |
-| [`/v1/`](https://api.stevenxie.me/v1/)                                 | API server metadata.                         |
-| [`/v1/about`](https://api.stevenxie.me/v1/about)                       | General personal information.                |
-| [`/v1/commits`](https://api.stevenxie.me/v1/commits)                   | Recent commits from GitHub.                  |
-| [`/v1/nowplaying`](https://api.stevenxie.me/v1/nowplaying)             | Currently playing track from Spotify.        |
-| [`/v1/productivity`](https://api.stevenxie.me/v1/productivity)         | Productivity metrics from RescueTime.        |
-| [`/v1/availability`](https://api.stevenxie.me/v1/availability)         | Personal availability information from GCal. |
-| [`/v1/location`](https://api.stevenxie.me/v1/location)                 | Current location data from Google Maps.      |
-| [`/v1/location/history`](https://api.stevenxie.me/v1/location/history) | Recent location history from Google Maps.    |
+Since `v2.0.0`, my API is primarily accessed over
+[GraphQL](https://graphql.org/).
 
-## Websocket Endpoints
+For example, you can get the name of the song track I'm listening to right now
+with the following `curl` query:
 
-### Now Playing
-
-**Endpoint:** `/v1/nowplaying/ws`
-
-All messages from this endpoint are in the format:
-
-```js
-{
-  "event": String,
-  "payload": (String | Object | Number)
-}
+```bash
+curl \
+  -X POST \
+  -H "Content-Type: application/json" \
+  -d '{ "query": "{ music { current { track { name } } } }" }' \
+  https://api.stevenxie.me/v2/graphql
 ```
 
-| Event        | Payload Type | Payload Description                                                           |
-| ------------ | ------------ | ----------------------------------------------------------------------------- |
-| `error`      | `String`     | A description of an error from the server.                                    |
-| `nowplaying` | `Object`     | A full `NowPlaying` object, which describes a track that's currently playing. |
-| `progress`   | `Number`     | The progress of the currently playing track, in milliseconds.                 |
-
-Upon socket connection, a `nowplaying` event will be sent; afterwards,
-`progress` events will be broadcasted until either the playback stops, or the
-track changes, in which case a new `nowplaying` event will be sent.
+_Check out [the interactive API explorer](https://api.stevenxie.me/v2/graphiql)!_
 
 [tag]: https://github.com/stevenxie/api/releases
 [tag-img]: https://img.shields.io/github/tag/stevenxie/api.svg

@@ -1,19 +1,26 @@
-##
-## REPOSITORY
-##
+# == Repository ==
 .env
 .env.local
 
+# Configs:
+api.yaml
+.env.local
 
-##
-## GO
-##
+
+# == Go ==
 coverage.out
 
+# Test binary, build with `go test -c`.
+*.test
 
-##
-## GIT
-##
+# Output of the go coverage tool, specifically when used with LiteIDE.
+*.out
+
+# Vendored packages.
+vendor/
+
+
+# == Git ==
 .githooks/
 .gitignore
 
@@ -22,22 +29,28 @@ coverage.out
 *.secret
 
 
-##
-## DOCKER
-##
+# == Docker ==
 .dockerignore
 
 
-##
-## MISC
-##
+# == Miscellaneous ==
 .editorconfig
 README.md
 
 
-##
-## SYS
-##
+# == IDE ==
+# VSCode (keeping workspace configurations):
+.vscode/*
+!.vscode/tasks.json
+!.vscode/extensions.json
+#!.vscode/settings.json
+#!.vscode/launch.json
+
+# IntelliJ:
+.idea/
+
+
+# == System ==
 # macOS:
 .DS_Store
 .DS_Store?
@@ -45,9 +58,3 @@ README.md
 
 # Windows:
 Thumbs.db
-
-# VSCode:
-.vscode/*
-
-# IntelliJ:
-.idea/

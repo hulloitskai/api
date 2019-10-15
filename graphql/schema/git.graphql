@@ -1,0 +1,34 @@
+type GitQuery {
+  recentCommits(limit: Int): [GitCommit!]!
+}
+
+"""
+A `GitCommit` represents a Git commit.
+"""
+type GitCommit {
+  sha: String!
+  author: GitCommitAuthor!
+  committer: GitCommitAuthor
+  message: String!
+  url: String!
+  repo: GitRepo!
+  timestamp: Time!
+}
+
+"""
+A `GitCommitAuthor` authors or commits a `GitCommit`.
+"""
+type GitCommitAuthor {
+  date: Time
+  name: String
+  email: String
+  login: String
+}
+
+"""
+A `GitRepo` contains `GitCommit`s.
+"""
+type GitRepo {
+  name: String!
+  url: String!
+}

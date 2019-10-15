@@ -1,0 +1,29 @@
+type Query {
+  """
+  Get my basic personal information.
+  """
+  about(code: String): PartialAbout!
+
+  """
+  Get my current productivity information.
+  """
+  productivity: Productivity!
+
+  """
+  Get the permissions associated with a particular access code.
+  """
+  permissions(code: String!): [String!]!
+
+  git: GitQuery!
+  music: MusicQuery!
+  location: LocationQuery!
+  scheduling: SchedulingQuery!
+}
+
+type Mutation {
+  music(code: String!): MusicMutation!
+}
+
+type Subscription {
+  music: CurrentlyPlayingMusic!
+}

@@ -1,0 +1,36 @@
+"""
+A `PartialAbout` provides partial basic personal information.
+"""
+interface PartialAbout {
+  name: String!
+  email: String!
+  type: String!
+  iq: Boolean!
+  skills: [String!]!
+}
+
+"""
+An `FullAbout` provides full basic personal information.
+"""
+type FullAbout implements PartialAbout {
+  name: String!
+  email: String!
+  type: String!
+  iq: Boolean!
+  skills: [String!]!
+  age: String!
+  location: Coordinates!
+}
+
+"""
+A `MaskedAbout` provides obfuscated basic personal information.
+"""
+type MaskedAbout implements PartialAbout {
+  name: String!
+  email: String!
+  type: String!
+  approxAge: String!
+  iq: Boolean!
+  skills: [String!]!
+  whereabouts: String!
+}

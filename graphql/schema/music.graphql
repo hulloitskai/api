@@ -1,0 +1,82 @@
+type MusicQuery {
+  current: CurrentlyPlayingMusic!
+}
+
+type MusicMutation {
+  """
+  Play a resource, as defined by its URI.
+
+  If no URI is specified, this method resumes playback for the current track.
+  """
+  play(uri: String): Boolean!
+
+  """
+  Pause playback for the current track.
+  """
+  pause: Boolean!
+}
+
+"""
+`CurrentlyPlayingMusic` contains information about the music that I'm listening
+to right now.
+"""
+type CurrentlyPlayingMusic {
+  timestamp: Time!
+  track: MusicTrack!
+  playing: Boolean!
+
+  """
+  The progress of the track, in milliseconds.
+  """
+  progress: Int!
+}
+
+"""
+A `MusicTrack` contains information about a music track.
+"""
+type MusicTrack {
+  id: ID!
+  uri: String!
+  name: String!
+  externalURL: String!
+  artists: [MusicArtist!]!
+  album: MusicAlbum!
+
+  """
+  The duration of the track, in milliseconds.
+  """
+  duration: Int!
+}
+
+"""
+A `MusicArtist` is the composer of a `MusicTrack`.
+"""
+type MusicArtist {
+  id: ID!
+  uri: String!
+  name: String!
+  externalURL: String!
+  albums(limit: Int, offset: Int): [MusicAlbum!]!
+}
+
+"""
+A `MusicAlbum` is an organization of `MusicTrack`s.
+"""
+type MusicAlbum {
+  id: ID!
+  uri: String!
+  name: String!
+  externalURL: String!
+  images: [MusicImage!]!
+  artists: [MusicArtist!]!
+  tracks(limit: Int, offset: Int): [MusicTrack!]
+}
+
+"""
+A `MusicImage` describes the cover images for `MusicArtist`s and `MusicAlbum`s.
+"""
+type MusicImage {
+  height: Int!
+  width: Int!
+  url: String!
+}

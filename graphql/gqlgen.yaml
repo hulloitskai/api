@@ -1,0 +1,85 @@
+schema: "./schema/*.graphql"
+
+struct_tag: json
+omit_slice_element_pointers: true
+
+exec:
+  filename: exec_gen.go
+model:
+  filename: model_gen.go
+
+autobind:
+  - go.stevenxie.me/api/music
+  - go.stevenxie.me/api/music/musicgql
+  - go.stevenxie.me/api/location
+  - go.stevenxie.me/api/location/locgql
+  - go.stevenxie.me/api/about
+  - go.stevenxie.me/api/scheduling
+  - go.stevenxie.me/api/scheduling/schedgql
+  - go.stevenxie.me/api/git
+  - go.stevenxie.me/api/git/gitgql
+  - go.stevenxie.me/api/productivity
+  - go.stevenxie.me/api/productivity/prodgql
+
+models:
+  MusicQuery:
+    model: musicgql.Query
+  MusicMutation:
+    model: musicgql.Mutation
+  CurrentlyPlayingMusic:
+    model: music.CurrentlyPlaying
+  MusicTrack:
+    model: music.Track
+    fields:
+      album:
+        resolver: true
+  MusicAlbum:
+    model: music.Album
+    fields:
+      tracks:
+        resolver: true
+  MusicArtist:
+    model: music.Artist
+  MusicImage:
+    model: music.Image
+
+  LocationQuery:
+    model: locgql.Query
+  LocationHistorySegment:
+    model: location.HistorySegment
+  Place:
+    model: locgql.Place
+  Coordinates:
+    model: location.Coordinates
+  Address:
+    model: location.Address
+  TimeZone:
+    model: locgql.TimeZone
+
+  MaskedAbout:
+    model: about.Masked
+  FullAbout:
+    model: about.About
+  PartialAbout:
+    model: about.ContactInfo
+
+  TimePeriod:
+    model: scheduling.TimePeriod
+  SchedulingQuery:
+    model: schedgql.Query
+
+  GitQuery:
+    model: gitgql.Query
+  GitCommit:
+    model: git.Commit
+  GitCommitAuthor:
+    model: git.CommitAuthor
+  GitRepo:
+    model: git.Repo
+
+  Productivity:
+    model: productivity.Productivity
+  ProductivityRecord:
+    model: productivity.Record
+  ProductivityCategory:
+    model: prodgql.Category

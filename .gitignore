@@ -1,21 +1,18 @@
-##
-## REPO
-##
+# == Repository ==
 debug
-.env.local
-api.yaml
+
+# Configs:
+server.yaml
 
 # Secrets:
 .gitsecret/keys/random_seed
-.env
+.env.local
 
 # Compiled binaries:
 /dist/
 
 
-##
-## GO
-##
+# == Go ==
 # Binaries for programs and plugins:
 *.exe
 *.exe~
@@ -33,9 +30,7 @@ api.yaml
 vendor/
 
 
-##
-## IDE
-##
+# == IDE ==
 # VSCode (keeping workspace configurations):
 .vscode/*
 !.vscode/tasks.json
@@ -47,9 +42,7 @@ vendor/
 .idea/
 
 
-##
-## SYS
-##
+# == System ==
 # macOS:
 .DS_Store
 .DS_Store?

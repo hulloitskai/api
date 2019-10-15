@@ -1,8 +1,6 @@
-##
-## VARIABLES
-##
+# == Variables ==
 # Program version.
-__TAG = $(shell git describe --tags 2> /dev/null)
+__TAG = $(shell git describe --tags --always 2> /dev/null)
 ifneq ($(__TAG),)
 	VERSION ?= $(shell echo "$(__TAG)" | cut -c 2-)
 else
@@ -16,29 +14,29 @@ ifeq ($(shell ls -1 go.mod 2> /dev/null),go.mod)
 endif
 
 # Custom Go linker flag.
-LDFLAGS = -X $(GOMODULE)/internal/info.Version=$(VERSION)
+LDFLAGS = -X $(GOMODULE)/internal.Version=$(VERSION)
 
 # Project variables:
 GOENV        ?= development
 GODEFAULTCMD =  server
 
 
-##
-## TARGETS
-##
+# == Targets ==
 # Generic:
-.PHONY: default version setup install build clean run lint test review help
+.PHONY: __default __unknown setup install build clean run lint test review \
+        help version
 __ARGS = $(filter-out $@,$(MAKECMDGOALS))
 
-default: run
-version: # Show project version (derived from 'git describe').
-	@echo $(VERSION)
+__default:
+	@$(MAKE) lint -- $(__ARGS)
+__unknown:
+	@echo "Target '$(__ARGS)' not configured."
 
-setup: go-setup ## Set this project up on a new environment.
+setup: go-setup # Set this project up on a new environment.
 	@echo "Configuring githooks..." && \
 	 git config core.hooksPath .githooks && \
 	 echo done
-install: ## Install project dependencies.
+install: # Install project dependencies.
 	@$(MAKE) go-install -- $(__ARGS) && \
 	 $(MAKE) go-generate
 
@@ -51,7 +49,9 @@ build: # Build project.
 clean: # Clean build artifacts.
 	@$(MAKE) go-clean -- $(__ARGS)
 
-lint: go-lint ## Lint and check code.
+lint: # Lint and check code.
+	@$(MAKE) go-lint -- $(__ARGS) && \
+	 $(MAKE) proto-lint -- $(__ARGS)
 test: # Run tests.
 	@$(MAKE) go-test -- $(__ARGS)
 review: # Lint code and run tests.
@@ -61,6 +61,8 @@ review: # Lint code and run tests.
 help:
 	@grep -E '^[a-zA-Z_-]+:.*?# .*$$' $(MAKEFILE_LIST) | \
 	 awk 'BEGIN {FS = ":.*?# "}; {printf "\033[36m%-15s\033[0m %s\n", $$1, $$2}'
+version: # Show project version (derived from 'git describe').
+	@echo $(VERSION)
 
 
 # git-secret:
@@ -75,15 +77,27 @@ secrets-reveal: # Reveals secret files that were hidden using git-secret.
 .PHONY: go-setup go-deps go-install go-generate go-build go-clean go-run \
         go-lint go-test go-bench go-review
 
+# Export environment variables to configure the Go toolchain.
+__GOENV = if [ -n "$(GOPRIVATE)" ]; then export GOPRIVATE="$(GOPRIVATE)"; fi
+
+go-shell: SHELL := /usr/bin/env bash
+go-shell: # Launch a shell with a env preset for the Go toolchain.
+	@$(__GOENV) && \
+	 bash --rcfile \
+	   <(echo '. $$HOME/.bashrc; PS1="\[\e[37m\]go:\[\e[39m\] $$PS1"') && \
+	 exit $$?
+
 go-setup: go-install go-deps
 go-deps: # Verify and tidy project dependencies.
-	@echo "Verifying module dependencies..." && \
+	@$(__GOENV) && \
+	 echo "Verifying Go module dependencies..." && \
 	 go mod verify && \
-	 echo "Tidying module dependencies..." && \
+	 echo "Tidying Go module dependencies..." && \
 	 go mod tidy && \
 	 echo done
 go-install:
-	@echo "Downloading module dependencies..." && \
+	@$(__GOENV) && \
+	 echo "Downloading Go module dependencies..." && \
 	 go mod download && \
 	 echo done
 go-generate: # Generate Go source files.
@@ -93,32 +107,36 @@ go-generate: # Generate Go source files.
 
 GOCMDDIR     ?= ./cmd
 GOBUILDDIR   ?= ./dist
-GOBUILDFLAGS  = -ldflags "$(LDFLAGS)"
+GOBUILDFLAGS  = -trimpath -ldflags "$(LDFLAGS)"
 
 __GOCMDNAME   = $(firstword $(__ARGS))
 __GOCMD       = $(GOCMDDIR)/$(__GOCMDNAME)
 __GOARGS      = $(filter-out $(__GOCMDNAME),$(__ARGS))
 __GOVERIFYCMD = \
-	@if [ -z $(__GOCMD) ]; then \
-	  echo "No build package was specified." && exit 1; \
-	fi
+  if [ -z $(__GOCMD) ]; then \
+    echo "No build package was specified." && exit 1; \
+  fi
 
 go-run:
-	@$(__GOVERIFYCMD) && echo "Running with 'go run'..." && \
+	@$(__GOENV) && $(__GOVERIFYCMD) && \
+	 echo "Running with 'go run'..." && \
 	 go run $(GOBUILDFLAGS) $(GORUNFLAGS) $(__GOCMD) $(__GOARGS)
-go-build: __go-verify-cmd
-	@echo "Building with 'go build'..." && \
+go-build:
+	@$(__GOENV) && \
+	 echo "Building with 'go build'..." && \
 	 go build $(GOBUILDFLAGS) -o $(GOBUILDDIR)/$(__GOCMDNAME) \
 	   $(__GOCMD) $(__GOARGS) && \
 	 echo done
 go-clean:
-	@echo "Cleaning with 'go clean'..." && \
+	@$(__GOENV) && \
+	echo "Cleaning with 'go clean'..." && \
 	 go clean $(__ARGS) && \
 	 echo done
 
 go-lint:
-	@if command -v goimports > /dev/null; then \
-	   echo "Formatting code with 'goimports'..." && \
+	@$(__GOENV) && \
+	 if command -v goimports > /dev/null; then \
+	   echo "Formatting Go code with 'goimports'..." && \
 	   goimports -w -l $$(find . -name '*.go' | grep -v '.pb.go') \
 	     | tee /dev/fd/2 \
 	     | xargs -0 test -z; EXIT=$$?; \
@@ -126,10 +144,10 @@ go-lint:
 	   echo "'goimports' not installed, skipping format step."; \
 	 fi && \
 	 if command -v revive > /dev/null; then \
-	   echo "Linting code with 'revive'..." && \
+	   echo "Linting Go code with 'revive'..." && \
 	   revive -config .revive.toml ./...; EXIT="$$((EXIT | $$?))"; \
 	 elif command -v golint > /dev/null; then \
-	   echo "Linting code with 'golint'..." && \
+	   echo "Linting Go code with 'golint'..." && \
 	   golint -set_exit_status ./...; EXIT="$$((EXIT | $$?))"; \
 	 else \
 	   echo "Neither 'revive' nor 'golint' is installed, skipping linting step."; \
@@ -144,14 +162,30 @@ GOTESTFLAGS   ?= -race
 
 __GOTEST = \
   go test \
-	  -covermode=atomic \
-	  -timeout="$(GOTESTTIMEOUT)" \
-	  $(GOBUILDFLAGS) $(GOTESTFLAGS)
+    -covermode=atomic \
+    -timeout="$(GOTESTTIMEOUT)" \
+    $(GOBUILDFLAGS) $(GOTESTFLAGS)
 go-test:
-	@echo "Running tests with 'go test':" && $(__GOTEST) ./... $(__ARGS)
+	@$(__GOENV) && \
+	 echo "Running tests with 'go test':" && \
+	 $(__GOTEST) ./... $(__ARGS)
 go-bench: # Run benchmarks.
-	@echo "Running benchmarks with 'go test -bench=.'..." && \
+	@$(__GOENV) && \
+	 echo "Running benchmarks with 'go test -bench=.'..." && \
 	 $(__GOTEST) -run=^$$ -bench=. -benchmem ./... $(__ARGS)
+
+
+# Protobuf:
+.PHONY: proto-lint
+__PROTOTOOL = prototool
+
+proto-lint:
+	@echo "Formatting proto3 files with 'prototool'..." && \
+	 $(__PROTOTOOL) format -l -- $(__ARGS); EXIT=$$?; \
+	 $(__PROTOTOOL) format -w -- $(__ARGS) && \
+	 echo "Linting proto3 files with 'prototool'..." && \
+	 $(__PROTOTOOL) lint -- $(__ARGS); EXIT="$$((EXIT | $$?))"; \
+	 echo done && exit $$EXIT
 
 
 # HACKS:

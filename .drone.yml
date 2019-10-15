@@ -2,12 +2,28 @@ kind: pipeline
 name: default
 
 steps:
-  - name: generate
-    image: grpc/go
+  - name: install
+    image: golang:1.13
     commands:
-      - go generate ./...
+      - go mod download
+      - go mod verify
+      - go mod tidy
+    volumes:
+      - name: gopath
+        path: /go
+
+  - name: generate
+    image: golang:1.13
+    commands: ["go generate ./..."]
+    volumes:
+      - name: gopath
+        path: /go
+
+  - name: diff
+    image: alpine/git
+    commands:
       - |
-        if git diff-index --quiet HEAD; then
+        if ! git diff --exit-code HEAD; then
           echo "Generated files differ from commit." >&2 && \
           exit 1
         fi
@@ -37,7 +53,7 @@ steps:
         path: /info
 
   - name: build_binary
-    image: golang:1.12
+    image: golang:1.13
     commands:
       - export MOD="$(cat /info/module)"
       - |
@@ -48,7 +64,7 @@ steps:
       - echo "LDFLAGS=$${LDFLAGS}" 1>&2
       - go test -ldflags "$LDFLAGS" -race ./...
       - export CGO_ENABLED=0
-      - go build -ldflags "$LDFLAGS" -o ./dist/server ./cmd/server
+      - go build -trimpath -ldflags "$LDFLAGS" -o ./dist/ ./cmd/...
     environment:
       GOPROXY: *goproxy
     volumes:
@@ -62,14 +78,17 @@ steps:
     settings:
       repo: stevenxie/api
       tags:
-        - $(printf '%s-%s' $(cat /i/branch | tr / -) $(cat /i/commit))
         - |
-          $([ $(cat /i/branch) == master ] && \
-             [ $DRONE_BUILD_EVENT == push ] && \
-             echo latest || true)
+          $([ $DRONE_BUILD_EVENT != tag ] && \
+            printf '%s-%s' $(cat /i/branch | tr / -) $(cat /i/commit) || true)
         - |
-          $([ $(cat /i/branch) == master ] && \
-             [ $DRONE_BUILD_EVENT == push ] && \
+          $([ $DRONE_BUILD_EVENT != pull_request ] && \
+            [ $(cat /i/branch) == master ] && \
+            echo latest || true)
+        - |
+          $([ $DRONE_BUILD_EVENT != pull_request ] && \
+            ([ $DRONE_BUILD_EVENT == tag ] || \
+             [ $(cat /i/branch) == master ]) && \
              cat /i/version || true)
       username: stevenxie
       password:
@@ -84,7 +103,3 @@ volumes:
     temp: {}
   - name: info
     temp: {}
-
-trigger:
-  event:
-    exclude: ["tag"]

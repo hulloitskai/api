@@ -5,340 +5,370 @@ import (
 	"fmt"
 	"net/http"
 	"os"
-	"os/signal"
-	"time"
+
+	"go.stevenxie.me/api/auth"
+	"go.stevenxie.me/api/auth/airtable"
+
+	"go.stevenxie.me/api/productivity/prodsvc"
+
+	"go.stevenxie.me/api/productivity"
+	"go.stevenxie.me/api/productivity/rescuetime"
+
+	"go.stevenxie.me/api/git/gitgh"
+	"go.stevenxie.me/api/git/gitsvc"
 
 	"github.com/cockroachdb/errors"
-	"github.com/sirupsen/logrus"
-	ess "github.com/unixpickle/essentials"
 	"github.com/urfave/cli"
 
-	"go.stevenxie.me/api/config"
-	"go.stevenxie.me/api/internal/info"
-	"go.stevenxie.me/api/pkg/cmdutil"
-	gh "go.stevenxie.me/api/pkg/github"
+	"go.stevenxie.me/gopkg/cmdutil"
+	"go.stevenxie.me/gopkg/configutil"
+	"go.stevenxie.me/gopkg/logutil"
+	"go.stevenxie.me/guillotine"
+
+	"go.stevenxie.me/api/git"
+	"go.stevenxie.me/api/location"
+	"go.stevenxie.me/api/location/geocode"
+	"go.stevenxie.me/api/location/geocode/here"
+	"go.stevenxie.me/api/location/gmaps"
+	"go.stevenxie.me/api/location/locsvc"
+
+	"go.stevenxie.me/api/about"
+	"go.stevenxie.me/api/about/aboutgh"
+	"go.stevenxie.me/api/about/aboutsvc"
+
+	"go.stevenxie.me/api/music"
+	"go.stevenxie.me/api/music/musicsvc"
+	"go.stevenxie.me/api/music/spotify"
+
+	"go.stevenxie.me/api/scheduling"
+	"go.stevenxie.me/api/scheduling/gcal"
+	"go.stevenxie.me/api/scheduling/schedsvc"
+
+	"go.stevenxie.me/api/pkg/github"
 	"go.stevenxie.me/api/pkg/google"
-	"go.stevenxie.me/api/server"
+	"go.stevenxie.me/api/pkg/poll"
+	"go.stevenxie.me/api/pkg/svcutil"
+	"go.stevenxie.me/api/server/httpsrv"
 
-	"go.stevenxie.me/api/service/about"
-	aboutgh "go.stevenxie.me/api/service/about/github"
-	"go.stevenxie.me/api/service/availability"
-	"go.stevenxie.me/api/service/availability/gcal"
-	cm "go.stevenxie.me/api/service/commits"
-	commitsgh "go.stevenxie.me/api/service/commits/github"
-	"go.stevenxie.me/api/service/music"
-	"go.stevenxie.me/api/service/music/spotify"
-	"go.stevenxie.me/api/service/productivity"
-	"go.stevenxie.me/api/service/productivity/rescuetime"
-
-	loc "go.stevenxie.me/api/service/location"
-	"go.stevenxie.me/api/service/location/airtable"
-	"go.stevenxie.me/api/service/location/geocode"
-	"go.stevenxie.me/api/service/location/geocode/here"
-	"go.stevenxie.me/api/service/location/gmaps"
+	"go.stevenxie.me/api/cmd/server/config"
+	cmdint "go.stevenxie.me/api/cmd/server/internal"
+	"go.stevenxie.me/api/internal"
 )
 
 func main() {
-	// Prepare envvars.
-	cmdutil.PrepareEnv()
+	// Load envvars from dotenv.
+	if err := configutil.LoadEnv(); err != nil {
+		cmdutil.Fatalf("Failed to load dotenv file: %v\n", err)
+	}
 
 	app := cli.NewApp()
-	app.Name = "server"
-	app.Usage = "A personal API server."
-	app.UsageText = "server [global options]"
-	app.Version = info.Version
-	app.HideHelp = true
+	app.Name = cmdint.Name
+	app.Usage = "An server for my personal API."
+	app.UsageText = fmt.Sprintf("%s [global options]", cmdint.Name)
+	app.Version = internal.Version
 	app.Action = run
 
 	// Hide help command.
-	app.Commands = []cli.Command{cli.Command{Name: "help", Hidden: true}}
+	app.Commands = []cli.Command{{Name: "help", Hidden: true}}
 
 	// Configure flags.
 	app.Flags = []cli.Flag{
 		cli.IntFlag{
-			Name:   "port",
-			Usage:  "port that the server listens on",
-			EnvVar: "PORT",
-			Value:  3000,
+			Name:        "port",
+			Usage:       "port that the HTTP server listens on",
+			Value:       3000,
+			Destination: &flags.HTTPPort,
+		},
+		cli.BoolFlag{
+			Name:  "help,h",
+			Usage: "show help",
 		},
 	}
 
 	if err := app.Run(os.Args); err != nil {
-		ess.Die("Error:", err)
+		fmt.Fprintf(os.Stderr, "Error: %+v\n", err)
+		os.Exit(1)
 	}
 }
 
-func run(c *cli.Context) (err error) {
-	// Init logger, load config.
+var flags struct {
+	HTTPPort int
+}
+
+func run(*cli.Context) (err error) {
+	// Init logger, and Raven client.
 	var (
 		raven = buildRaven()
 		log   = buildLogger(raven)
 	)
+
+	// Load and validate config.
 	cfg, err := config.Load()
 	if err != nil {
 		return errors.Wrap(err, "loading config")
 	}
+	if err = cfg.Validate(); err != nil {
+		return errors.Wrap(err, "invalid config")
+	}
 
-	// Initialize services:
-	log.Info("Initializing services...")
-
-	// Finalizers should be run before the program terminates.
-	var finalizers cmdutil.Finalizers
+	// Init guillotine.
+	guillo := guillotine.New(guillotine.WithLogger(
+		logutil.WithComponent(log, "guillotine.Guillotine"),
+	))
+	guillo.TriggerOnTerminate()
 	defer func() {
-		if len(finalizers) == 0 {
-			return
-		}
-
-		// Run finalizers in reverse order.
-		log.Info("Running finalizers...")
-		for i := len(finalizers) - 1; i >= 0; i-- {
-			if ferr := finalizers[i](); ferr != nil {
-				log.WithError(ferr).Error("A finalizer failed.")
-				if err == nil {
-					err = errors.New("one or more finalizers failed")
-				}
-			}
+		if ok, _ := guillo.Execute(); !ok && (err != nil) {
+			err = errors.New("guillotine finished running with errors")
 		}
 	}()
 
-	// Create availability service.
-	var availability availability.Service
+	// Connect to data sources.
+	log.Info("Connecting to data sources...")
+
+	timelineClient, err := gmaps.NewTimelineClient()
+	if err != nil {
+		return errors.Wrap(err, "creating Google Maps timeline client")
+	}
+
+	hereClient, err := here.NewClient(cfg.Location.Here.AppID)
+	if err != nil {
+		return errors.Wrap(err, "creating Here client")
+	}
+
+	githubClient, err := github.New()
+	if err != nil {
+		return errors.Wrap(err, "creating GitHub client")
+	}
+
+	spotifyClient, err := spotify.New()
+	if err != nil {
+		return errors.Wrap(err, "creating Spotify client")
+	}
+
+	googleClients, err := google.NewClientSet()
+	if err != nil {
+		return errors.Wrap(err, "creating Google client set")
+	}
+
+	rtimeClient, err := rescuetime.NewClient()
+	if err != nil {
+		return errors.Wrap(err, "creating RescueTime client")
+	}
+
+	airtableClient, err := airtable.NewClient()
+	if err != nil {
+		return errors.Wrap(err, "creating Airtable client")
+	}
+
+	// Init services.
+	log.Info("Initializing services...")
+
+	var locationService location.Service
 	{
-		clientset, err := google.NewClientSet()
-		if err != nil {
-			return errors.Wrap(err, "creating Google clientset")
+		var (
+			source         = gmaps.NewSegmentSource(timelineClient)
+			geocoder       = here.NewGeocoder(hereClient)
+			historyService = locsvc.NewHistoryService(
+				source, geocoder,
+				svcutil.WithLogger(logutil.WithComponent(log, "location.HistoryService")),
+			)
+		)
+
+		if cfg := cfg.Location.Precacher; cfg.Enabled {
+			historyPrecacher := locsvc.NewHistoryServicePrecacher(
+				historyService,
+				cfg.Interval,
+				poll.WithPrecacherLogger(
+					logutil.WithComponent(log, "locsvc.HistoryServicePrecacher"),
+				),
+			)
+			guillo.AddFunc(
+				historyPrecacher.Stop,
+				guillotine.WithPrefix("stopping location history service precacher"),
+			)
+			historyService = historyPrecacher
 		}
-		svc, err := clientset.CalendarService(context.Background())
+
+		geocodeLevel, err := geocode.ParseLevel(
+			cfg.Location.CurrentRegion.GeocodeLevel,
+		)
 		if err != nil {
-			return errors.Wrap(err, "creating calendar service")
+			return errors.Wrap(err, "parsing geocode level")
 		}
-		availability = gcal.NewAvailabilityService(
-			svc,
-			cfg.Availability.GCal.CalendarIDs,
+		locationService = locsvc.NewService(
+			historyService, geocoder,
+			locsvc.WithLogger(logutil.WithComponent(log, "location.Service")),
+			locsvc.WithRegionGeocodeLevel(geocodeLevel),
 		)
 	}
-	timezone, err := availability.Timezone()
-	if err != nil {
-		return errors.Wrap(err, "fetching current timezone")
+
+	var aboutService about.Service
+	{
+		var (
+			gist   = cfg.About.Gist
+			source = aboutgh.NewStaticSource(
+				githubClient.GitHub().Gists,
+				gist.ID, gist.File,
+			)
+		)
+		aboutService = aboutsvc.NewService(
+			source, locationService,
+			svcutil.WithLogger(logutil.WithComponent(log, "about.Service")),
+		)
 	}
 
-	// Build location service.
-	var location loc.Service
+	var musicService music.Service
 	{
-		hc, err := here.NewClient(cfg.Location.Here.AppID)
-		if err != nil {
-			return errors.Wrap(err, "creating MapBox hc")
-		}
-		geocoder := here.NewGeocoder(hc)
+		var (
+			source        = spotify.NewSource(spotifyClient)
+			sourceService = musicsvc.NewSourceService(
+				source,
+				svcutil.WithLogger(logutil.WithComponent(log, "music.SourceService")),
+			)
+		)
+		var (
+			currentSource  = spotify.NewCurrentSource(spotifyClient)
+			currentService = musicsvc.NewCurrentService(
+				currentSource,
+				svcutil.WithLogger(logutil.WithComponent(log, "music.CurrentService")),
+			)
+		)
+		var (
+			controller     = spotify.NewController(spotifyClient)
+			controlService = musicsvc.NewControlService(
+				controller,
+				svcutil.WithLogger(logutil.WithComponent(log, "music.ControlService")),
+			)
+		)
+		musicService = musicsvc.NewService(
+			sourceService,
+			currentService,
+			controlService,
+		)
+	}
 
-		var history loc.HistoryService
-		if history, err = gmaps.NewHistorian(func(cfg *gmaps.HistorianConfig) {
-			cfg.Timezone = timezone
-		}); err != nil {
-			return errors.Wrap(err, "creating historian")
+	var musicStreamer music.Streamer
+	{
+		currentStreamer := musicsvc.NewCurrentStreamer(
+			musicService,
+			musicsvc.WithCurrentStreamerPollInterval(cfg.Music.Streamer.PollInterval),
+			musicsvc.WithCurrentStreamerLogger(
+				logutil.WithComponent(log, "music.CurrentStreamer"),
+			),
+		)
+		guillo.AddFunc(
+			currentStreamer.Stop,
+			guillotine.WithPrefix("stopping music streamer"),
+		)
+		musicStreamer = currentStreamer
+	}
+
+	var schedulingService scheduling.Service
+	{
+		calsvc, err := googleClients.CalendarService(context.Background())
+		if err != nil {
+			return errors.Wrap(err, "creating Google calendar service")
 		}
-		if polling := &cfg.Location.Polling; polling.Enabled {
-			preloader := loc.NewHistoryPreloader(
-				history, polling.Interval,
-				func(hpc *loc.HistoryPreloaderConfig) {
-					hpc.Logger = log.WithField(
-						"component",
-						"location.HistoryPreloader",
-					)
+		source := gcal.NewBusySource(
+			calsvc,
+			cfg.Scheduling.GCal.CalendarIDs,
+		)
+		schedulingService = schedsvc.NewService(
+			source,
+			svcutil.WithLogger(logutil.WithComponent(log, "scheduling.Service")),
+		)
+	}
+
+	var gitService git.Service
+	{
+		source := gitgh.NewSource(githubClient)
+		gitService = gitsvc.NewService(
+			source,
+			svcutil.WithLogger(logutil.WithComponent(log, "git.Service")),
+		)
+
+		if cfg := cfg.Git.Precacher; cfg.Enabled {
+			precacher := gitsvc.NewServicePrecacher(
+				gitService,
+				cfg.Interval,
+				func(spCfg *gitsvc.ServicePrecacherConfig) {
+					spCfg.Logger = logutil.WithComponent(log, "gitsvc.ServicePrecacher")
+					if l := cfg.Limit; l != nil {
+						spCfg.Limit = l
+					}
 				},
 			)
-			history = preloader
-			finalizers = append(finalizers, func() error {
-				preloader.Stop()
-				return nil
-			})
+			guillo.AddFunc(
+				precacher.Stop,
+				guillotine.WithPrefix("stopping Git service precacher"),
+			)
+			gitService = precacher
 		}
+	}
 
-		// Decode geocode level from config string.
-		var regionGeocodeLevel geocode.Level
-		if level := cfg.Location.Region.GeocodeLevel; level != "" {
-			if regionGeocodeLevel, err = geocode.ParseLevel(level); err != nil {
-				return errors.Wrapf(err, "parsing region geocode level '%s'", level)
-			}
-		}
+	var productivityService productivity.Service
+	{
+		source := rescuetime.NewRecordSource(rtimeClient)
+		productivityService = prodsvc.NewService(
+			source,
+			locationService,
+			svcutil.WithLogger(logutil.WithComponent(log, "productivity.Service")),
+		)
+	}
 
-		// Create location service.
-		location = geocode.NewLocationService(
-			history,
-			geocoder,
-			func(lsc *geocode.LocationServiceConfig) {
-				if regionGeocodeLevel != 0 {
-					lsc.RegionGeocodeLevel = regionGeocodeLevel
+	var authService auth.Service
+	{
+		atCfg := cfg.Auth.Airtable
+		authService = airtable.NewService(
+			airtableClient,
+			atCfg.Selector,
+			func(svcCfg *airtable.ServiceConfig) {
+				if access := atCfg.AccessRecords; access.Enabled {
+					svcCfg.AccessSelector = &access.Selector
+					svcCfg.Logger = logutil.WithComponent(log, "auth.Service")
 				}
 			},
 		)
 	}
 
-	// Build location access service.
-	var locationAccess loc.AccessService
-	{
-		airc, err := airtable.NewClient()
-		if err != nil {
-			return errors.Wrap(err, "creating Airtable hc")
-		}
-
-		cfg := &cfg.Location.Airtable
-		locationAccess = airtable.NewLocationAccessService(
-			airc,
-			cfg.BaseID,
-			cfg.Table,
-			cfg.View,
-
-			func(lasc *airtable.LocationAccessServiceConfig) {
-				lasc.Timezone = timezone
-				lasc.Logger = log.WithField(
-					"component",
-					"airtable.LocationAccessService",
-				)
-			},
-		)
-	}
-
-	// Build GitHub client, a shared dependenncy.
-	github, err := gh.New()
-	if err != nil {
-		return errors.Wrap(err, "creating GitHub hc")
-	}
-
-	// Build about service.
-	var about about.Service
-	{
-		gist := &cfg.About.Gist
-		about = aboutgh.NewAboutService(
-			github.GHClient().Gists,
-			gist.ID, gist.File,
-			location,
-		)
-	}
-
-	// Build commits service.
-	var commits cm.Service
-	{
-		commits = commitsgh.NewCommitsService(github)
-		if polling := &cfg.Commits.Polling; polling.Enabled {
-			preloader := cm.NewPreloader(
-				commits,
-				polling.Interval,
-
-				func(pc *cm.PreloaderConfig) {
-					pc.Limit = polling.Limit
-					pc.Logger = log.WithField(
-						"component",
-						"commits.Preloader",
-					)
-				},
-			)
-			commits = preloader
-			finalizers = append(finalizers, func() error {
-				preloader.Stop()
-				return nil
-			})
-		}
-	}
-
-	// Create nowplaying service.
-	var nowplaying music.NowPlayingService
-	{
-		client, err := spotify.New()
-		if err != nil {
-			return errors.Wrap(err, "creating Spotify hc")
-		}
-		nowplaying = spotify.NewNowPlayingService(client)
-
-		if polling := &cfg.Music.Polling; polling.Enabled {
-			streamer := music.NewNowPlayingStreamer(
-				nowplaying,
-				cfg.Music.Polling.Interval,
-				func(npsc *music.NowPlayingStreamerConfig) {
-					npsc.Logger = log.WithField(
-						"component",
-						"music.NowPlayingStreamer",
-					)
-				},
-			)
-			nowplaying = streamer
-			finalizers = append(finalizers, func() error {
-				streamer.Stop()
-				return nil
-			})
-		}
-	}
-
-	// Create productivity service.
-	var productivity productivity.Service
-	{
-		client, err := rescuetime.NewClient()
-		if err != nil {
-			return errors.Wrap(err, "creating RescueTime client")
-		}
-		productivity = rescuetime.NewProductivityService(
-			client,
-			func(psc *rescuetime.ProductivityServiceConfig) {
-				psc.Timezone = timezone
-			},
-		)
-	}
-
-	// Create and configure server.
-	log.Info("Initializing server...")
-	srv := server.New(
-		about,
-		productivity,
-		availability,
-		commits,
-		nowplaying,
-
-		location,
-		locationAccess,
-
-		func(cfg *server.Config) {
-			cfg.Logger = log
-			cfg.Raven = raven
+	// Start HTTP server.
+	log.Info("Initializing HTTP server...")
+	srv := httpsrv.NewServer(
+		httpsrv.Services{
+			Git:          gitService,
+			About:        aboutService,
+			Music:        musicService,
+			Auth:         authService,
+			Location:     locationService,
+			Scheduling:   schedulingService,
+			Productivity: productivityService,
 		},
+		httpsrv.Streamers{
+			Music: musicStreamer,
+		},
+		httpsrv.WithLogger(logutil.WithComponent(log, "httpsrv.Server")),
 	)
+	guillo.AddFinalizer(func() error {
+		var (
+			log = log
+			ctx = context.Background()
+		)
+		if timeout := cfg.Server.ShutdownTimeout; timeout != nil {
+			log = log.WithField("timeout", *timeout)
+			var cancel context.CancelFunc
+			ctx, cancel = context.WithTimeout(ctx, *timeout)
+			defer cancel()
+		}
+		log.Info("Shutting down HTTP server...")
+		err := srv.Shutdown(ctx)
+		return errors.Wrap(err, "shutting down server")
+	})
 
-	// Shut down server gracefully upon interrupt.
-	go shutdownUponInterrupt(srv, log, cfg.Server.ShutdownTimeout)
-
-	err = srv.ListenAndServe(fmt.Sprintf(":%d", c.Int("port")))
-	if err == http.ErrServerClosed {
-		err = nil
+	// Listen for new connections.
+	err = srv.ListenAndServe(fmt.Sprintf(":%d", flags.HTTPPort))
+	if !errors.Is(err, http.ErrServerClosed) {
+		guillo.Trigger()
+		return errors.Wrap(err, "starting HTTP server")
 	}
-	return errors.Wrap(err, "starting server")
-}
-
-func shutdownUponInterrupt(
-	srv *server.Server,
-	log logrus.FieldLogger,
-	timeout *time.Duration,
-) {
-	sig := make(chan os.Signal)
-	signal.Notify(sig, os.Interrupt)
-
-	// Wait for interrupt signal.
-	<-sig
-
-	const msg = "Received interrupt signal; shutting down."
-	if timeout != nil {
-		log.WithField("timeout", timeout.String()).Info(msg)
-	} else {
-		log.Info(msg)
-	}
-
-	// Prepare shutdown context.
-	ctx := context.Background()
-	if timeout != nil {
-		var cancel context.CancelFunc
-		ctx, cancel = context.WithTimeout(context.Background(), *timeout)
-		defer cancel()
-	}
-
-	if err := srv.Shutdown(ctx); err != nil {
-		log.WithError(err).Error("Server didn't shut down correctly.")
-	}
+	return nil
 }

@@ -1,0 +1,58 @@
+shutdownTimeout: Duration
+
+about:
+  gist:
+    id: String
+    file: String
+
+location:
+  precacher:
+    enabled: Bool      # default: True
+    interval: Duration # default: 1m
+
+  here:
+    appId: String
+
+  currentRegion:
+    # One of:
+    #  - Country
+    #  - State
+    #  - County
+    #  - City
+    #  - District
+    #  - Postcode
+    geocodeLevel: GeocodeLevel
+
+music:
+  streamer:
+    pollInterval: Duration # default: 1s
+
+scheduling:
+  gcal:
+    calendarIDs:
+      - String # Calendar ID
+
+git:
+  precacher:
+    enabled: Bool      # default: "True"
+    interval: Duration # default: 1m
+    limit: Int?
+
+auth:
+  airtable:
+    selector:
+      viewSelector: &viewSelector
+        baseID: String
+        tableName: String
+        viewName: String
+      fieldSelector:
+        code: String  # default: "code"
+        perms: String # default: "perms"
+    accessRecords:
+      enabled: Boolean
+      selector:
+        viewSelector: *viewSelector
+        fieldSelector:
+          time: String          # default: "time"
+          perm: String          # default: "perm"
+          permsRecordID: String # default: "perms-record-id"

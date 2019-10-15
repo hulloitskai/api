@@ -4,8 +4,8 @@ import (
 	"context"
 	"net/http"
 	"os"
-	"strings"
 
+	"go.stevenxie.me/api/pkg/name"
 	"golang.org/x/oauth2"
 
 	"github.com/cockroachdb/errors"
@@ -27,12 +27,15 @@ type Client struct {
 // It reads GITHUB_TOKEN from the environment; if no such variable is found, an
 // error will be returned.
 func New() (*Client, error) {
-	token := os.Getenv(strings.ToUpper(Namespace) + "_TOKEN")
-	if token == "" {
-		return nil, errors.Newf(
-			"github: no such environment variable '%s_TOKEN'",
-			strings.ToUpper(Namespace),
+	var token string
+	{
+		var (
+			key = name.EnvKey(Namespace, "TOKEN")
+			ok  bool
 		)
+		if token, ok = os.LookupEnv(key); !ok {
+			return nil, errors.Newf("github: no such environment variable '%s'", key)
+		}
 	}
 
 	// Create authenticated http.Client.
@@ -52,9 +55,9 @@ func (c *Client) BaseURL() string {
 	return url[:len(url)-1]
 }
 
-// HTTPClient returns an authenticated http.Client that is authorized to make
+// HTTP returns an authenticated http.Client that is authorized to make
 // requests to the GitHub API.
-func (c *Client) HTTPClient() *http.Client { return c.httpc }
+func (c *Client) HTTP() *http.Client { return c.httpc }
 
-// GHClient returns an authenticated github.Client.
-func (c *Client) GHClient() *github.Client { return c.ghc }
+// GitHub returns an authenticated github.Client.
+func (c *Client) GitHub() *github.Client { return c.ghc }

@@ -1,0 +1,34 @@
+"""
+`Productivity` is a measure of productivity for a given day.
+"""
+type Productivity {
+  records: [ProductivityRecord!]!
+
+  """
+  Score is a number between 0 and 100, computed as follows:
+  https://help.rescuetime.com/article/73-how-is-my-productivity-pulse-calculated
+  """
+  score: Int
+}
+
+"""
+A `ProductivityRecord` is a record of the time spent doing activities of a
+particular `ProductivityCategory`.
+"""
+type ProductivityRecord {
+  category: ProductivityCategory!
+
+  """
+  The duration of the record, in seconds.
+  """
+  duration: Int!
+}
+
+"""
+A `ProductivityCategory` represents a degree of productivity.
+"""
+type ProductivityCategory {
+  id: ID!
+  name: String!
+  weight: Int!
+}

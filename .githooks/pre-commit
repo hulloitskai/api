@@ -2,9 +2,7 @@
 
 set -euo pipefail
 
-##
-## BEFORE
-##
+# == Before ==
 # Check number of staged files before pre-commit actions.
 STAT_CMD="git diff --name-status"
 STAT_BEFORE="$($STAT_CMD | wc -l)"
@@ -30,9 +28,7 @@ git-secret() {
 git-secret || exit $?
 
 
-##
-## AFTER
-##
+# == After ==
 # Check number of staged file after pre-commit actions.
 STAT_AFTER="$($STAT_CMD | wc -l)"
 if ((STAT_AFTER > STAT_BEFORE)); then
