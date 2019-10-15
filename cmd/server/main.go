@@ -6,17 +6,6 @@ import (
 	"net/http"
 	"os"
 
-	"go.stevenxie.me/api/auth"
-	"go.stevenxie.me/api/auth/airtable"
-
-	"go.stevenxie.me/api/productivity/prodsvc"
-
-	"go.stevenxie.me/api/productivity"
-	"go.stevenxie.me/api/productivity/rescuetime"
-
-	"go.stevenxie.me/api/git/gitgh"
-	"go.stevenxie.me/api/git/gitsvc"
-
 	"github.com/cockroachdb/errors"
 	"github.com/urfave/cli"
 
@@ -25,7 +14,6 @@ import (
 	"go.stevenxie.me/gopkg/logutil"
 	"go.stevenxie.me/guillotine"
 
-	"go.stevenxie.me/api/git"
 	"go.stevenxie.me/api/location"
 	"go.stevenxie.me/api/location/geocode"
 	"go.stevenxie.me/api/location/geocode/here"
@@ -43,6 +31,17 @@ import (
 	"go.stevenxie.me/api/scheduling"
 	"go.stevenxie.me/api/scheduling/gcal"
 	"go.stevenxie.me/api/scheduling/schedsvc"
+
+	"go.stevenxie.me/api/productivity"
+	"go.stevenxie.me/api/productivity/prodsvc"
+	"go.stevenxie.me/api/productivity/rescuetime"
+
+	"go.stevenxie.me/api/git"
+	"go.stevenxie.me/api/git/gitgh"
+	"go.stevenxie.me/api/git/gitsvc"
+
+	"go.stevenxie.me/api/auth"
+	"go.stevenxie.me/api/auth/airtable"
 
 	"go.stevenxie.me/api/pkg/github"
 	"go.stevenxie.me/api/pkg/google"

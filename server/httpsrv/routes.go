@@ -2,6 +2,7 @@ package httpsrv
 
 import (
 	"net/http"
+	"os"
 
 	"github.com/99designs/gqlgen/handler"
 	echo "github.com/labstack/echo/v4"
@@ -48,13 +49,17 @@ func (srv *Server) registerRoutes() error {
 			// handler.ComplexityLimit(srv.complexityLimit),
 		)))
 		e.GET(
-			"/playground",
-			echo.WrapHandler(handler.Playground("Playground", "/graphql")),
-		)
-		e.GET(
 			"/graphiql",
-			echo.WrapHandler(http.HandlerFunc(gqlutil.ServeGraphiQL("/graphql"))),
+			echo.WrapHandler(http.HandlerFunc(gqlutil.ServeGraphiQL("./graphql"))),
 		)
+
+		// Only enable playground in development.
+		if os.Getenv("GOENV") == "development" {
+			e.GET(
+				"/playground",
+				echo.WrapHandler(handler.Playground("Playground", "/graphql")),
+			)
+		}
 	}
 
 	return nil
