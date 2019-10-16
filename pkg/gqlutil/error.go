@@ -30,7 +30,7 @@ func PresentError(ctx context.Context, err error) *gqlerror.Error {
 	if trace := errors.GetReportableStackTrace(err); trace != nil {
 		exts["culprit"] = trace.Culprit()
 	}
-	if file, line, fn, ok := getOneLineSource(err); ok {
+	if file, line, fn, ok := errors.GetOneLineSource(err); ok {
 		exts["source"] = struct {
 			File string `json:"file"`
 			Line int    `json:"line"`

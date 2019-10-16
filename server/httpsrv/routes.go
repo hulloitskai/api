@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"github.com/99designs/gqlgen/handler"
+	"github.com/gorilla/websocket"
 	echo "github.com/labstack/echo/v4"
 
 	"go.stevenxie.me/api/graphql"
@@ -48,6 +49,12 @@ func (srv *Server) registerRoutes() error {
 			exec,
 			handler.ErrorPresenter(gqlutil.PresentError),
 			handler.WebsocketKeepAliveDuration(10*time.Second),
+			handler.WebsocketUpgrader(websocket.Upgrader{
+				// Allow access from all origins.
+				CheckOrigin:     func(*http.Request) bool { return true },
+				ReadBufferSize:  1024,
+				WriteBufferSize: 1024,
+			}),
 			// handler.ComplexityLimit(srv.complexityLimit),
 		)))
 		e.GET(

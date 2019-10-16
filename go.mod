@@ -12,7 +12,7 @@ require (
 	github.com/go-ozzo/ozzo-validation v3.6.0+incompatible
 	github.com/google/go-cmp v0.3.1 // indirect
 	github.com/google/go-github/v25 v25.1.3
-	github.com/gorilla/websocket v1.4.0 // indirect
+	github.com/gorilla/websocket v1.4.0
 	github.com/hashicorp/golang-lru v0.5.3 // indirect
 	github.com/kelseyhightower/envconfig v1.4.0
 	github.com/labstack/echo/v4 v4.1.10
