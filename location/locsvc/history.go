@@ -7,6 +7,7 @@ import (
 
 	"github.com/sirupsen/logrus"
 	"go.stevenxie.me/gopkg/logutil"
+	"go.stevenxie.me/gopkg/name"
 
 	"go.stevenxie.me/api/location"
 	"go.stevenxie.me/api/location/geocode"
@@ -30,7 +31,7 @@ func NewHistoryService(
 	return &historyService{
 		SegmentSource: src,
 		geo:           geo,
-		log:           cfg.Logger,
+		log:           logutil.AddComponent(cfg.Logger, (*historyService)(nil)),
 	}
 }
 
@@ -47,8 +48,8 @@ var _ location.HistoryService = (*historyService)(nil)
 
 func (svc *historyService) RecentHistory(ctx context.Context) (
 	[]location.HistorySegment, error) {
-	log := svc.log.
-		WithField("method", "RecentHistory").
+	log := logutil.
+		WithMethod(svc.log, (*historyService).RecentHistory).
 		WithContext(ctx)
 
 	// Get current time, in my current time-zone (if applicable).
@@ -98,8 +99,8 @@ func (svc *historyService) deriveTimeLocation(
 	seg *location.HistorySegment,
 ) {
 	log := svc.log.WithFields(logrus.Fields{
-		"method":  "deriveTimeLocation",
-		"segment": seg,
+		logutil.MethodKey: name.OfMethod((*historyService).deriveTimeLocation),
+		"segment":         seg,
 	}).WithContext(ctx)
 
 	coords := latestCoordinates(seg)

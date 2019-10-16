@@ -23,15 +23,12 @@ func NewCurrentStreamer(
 	for _, opt := range opts {
 		opt(&cfg)
 	}
+	log := logutil.AddComponent(cfg.Logger, (*CurrentStreamer)(nil))
 	var (
-		log   = cfg.Logger
-		actor = newCurrentStreamActor(
-			curr,
-			logutil.WithComponent(log, "musicsvc.currentStreamActor"),
-		)
+		actor  = newCurrentStreamActor(curr, log)
 		poller = poll.NewPoller(
 			actor, cfg.PollInterval,
-			poll.WithPollerLogger(logutil.WithComponent(log, "poll.Poller")),
+			poll.WithPollerLogger(log),
 		)
 	)
 	return CurrentStreamer{

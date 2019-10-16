@@ -4,6 +4,8 @@ import (
 	"context"
 	"sync"
 
+	"go.stevenxie.me/gopkg/logutil"
+
 	"github.com/cockroachdb/errors"
 	"github.com/sirupsen/logrus"
 
@@ -18,7 +20,7 @@ func newCurrentStreamActor(
 ) *currentStreamActor {
 	return &currentStreamActor{
 		svc:  src,
-		log:  log,
+		log:  logutil.AddComponent(log, (*currentStreamActor)(nil)),
 		subs: make(map[chan<- music.CurrentlyPlayingResult]zero.Struct),
 	}
 }
@@ -38,7 +40,7 @@ func (act *currentStreamActor) Prod() (zero.Interface, error) {
 }
 
 func (act *currentStreamActor) Recv(v zero.Interface, err error) {
-	log := act.log.WithField("method", "Recv")
+	log := logutil.WithMethod(act.log, (*currentStreamActor).Recv)
 
 	// Parse received value.
 	cp, ok := v.(*music.CurrentlyPlaying)

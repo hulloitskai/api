@@ -34,7 +34,6 @@ steps:
       revive_config: .revive.toml
     environment:
       CGO_ENABLED: '0'
-      GOPROXY: &goproxy https://goproxy.io
     volumes:
       - name: gopath
         path: /go
@@ -60,14 +59,12 @@ steps:
         [ -s /info/version ] && \
           export VER="$(cat /info/version)" || \
           export VER="$(cat /info/commit)"
-      - export LDFLAGS="-X $${MOD}/internal/info.Version=$${VER}"
+      - export LDFLAGS="-X $${MOD}/internal.Version=$${VER}"
       - echo "LDFLAGS=$${LDFLAGS}" 1>&2
       - go test -ldflags "$LDFLAGS" -race ./...
       - export CGO_ENABLED=0
       - mkdir dist
       - go build -trimpath -ldflags "$LDFLAGS" -o ./dist/ ./cmd/...
-    environment:
-      GOPROXY: *goproxy
     volumes:
       - name: gopath
         path: /go

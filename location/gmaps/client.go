@@ -8,7 +8,7 @@ import (
 
 	"go.stevenxie.me/api/pkg/google"
 	"go.stevenxie.me/api/pkg/httputil"
-	"go.stevenxie.me/api/pkg/name"
+	"go.stevenxie.me/gopkg/name"
 )
 
 // NewTimelineClient creates a new TimelineClient.

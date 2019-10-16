@@ -12,6 +12,7 @@ import (
 	"go.stevenxie.me/api/location"
 	"go.stevenxie.me/api/location/geocode"
 	"go.stevenxie.me/gopkg/logutil"
+	"go.stevenxie.me/gopkg/name"
 )
 
 // NewService creates a new location.Service using a HistoryService and
@@ -31,8 +32,8 @@ func NewService(
 	return service{
 		HistoryService: hist,
 		geo:            geo,
-		log:            cfg.Logger,
 		regionLevel:    cfg.RegionGeocodeLevel,
+		log:            logutil.AddComponent(cfg.Logger, (*service)(nil)),
 	}
 }
 
@@ -70,8 +71,8 @@ type (
 var _ location.Service = (*service)(nil)
 
 func (svc service) CurrentPosition(ctx context.Context) (*location.Coordinates, error) {
-	log := svc.log.
-		WithField("method", "CurrentPosition").
+	log := logutil.
+		WithMethod(svc.log, service.CurrentPosition).
 		WithContext(ctx)
 
 	segs, err := svc.HistoryService.RecentHistory(ctx)
@@ -97,8 +98,8 @@ func (svc service) CurrentPosition(ctx context.Context) (*location.Coordinates, 
 }
 
 func (svc service) CurrentCity(ctx context.Context) (string, error) {
-	log := svc.log.
-		WithField("method", "CurrentCity").
+	log := logutil.
+		WithMethod(svc.log, service.CurrentCity).
 		WithContext(ctx)
 
 	coords, err := svc.CurrentPosition(ctx)
@@ -140,7 +141,7 @@ func (svc service) CurrentRegion(
 	}
 
 	log := svc.log.WithFields(logrus.Fields{
-		"method":           "CurrentRegion",
+		logutil.MethodKey:  name.OfMethod(service.CurrentRegion),
 		"include_timezone": cfg.IncludeTimeZone,
 	}).WithContext(ctx)
 

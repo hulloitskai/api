@@ -10,6 +10,7 @@ import (
 	"go.stevenxie.me/api/pkg/svcutil"
 	"go.stevenxie.me/api/scheduling"
 	"go.stevenxie.me/gopkg/logutil"
+	"go.stevenxie.me/gopkg/name"
 )
 
 // NewService creates a new Service.
@@ -25,7 +26,7 @@ func NewService(
 	}
 	return service{
 		src: src,
-		log: cfg.Logger,
+		log: logutil.AddComponent(cfg.Logger, (*service)(nil)),
 	}
 }
 
@@ -41,8 +42,8 @@ func (svc service) BusyPeriods(
 	date time.Time,
 ) ([]scheduling.TimePeriod, error) {
 	log := svc.log.WithFields(logrus.Fields{
-		"method": "BusyPeriods",
-		"date":   date,
+		logutil.MethodKey: name.OfMethod(service.BusyPeriods),
+		"date":            date,
 	}).WithContext(ctx)
 
 	periods, err := svc.src.BusyPeriods(ctx, date)

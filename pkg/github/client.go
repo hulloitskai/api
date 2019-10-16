@@ -5,7 +5,7 @@ import (
 	"net/http"
 	"os"
 
-	"go.stevenxie.me/api/pkg/name"
+	"go.stevenxie.me/gopkg/name"
 	"golang.org/x/oauth2"
 
 	"github.com/cockroachdb/errors"

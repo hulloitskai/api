@@ -9,6 +9,7 @@ import (
 	"github.com/cockroachdb/errors"
 	"github.com/sirupsen/logrus"
 	"go.stevenxie.me/gopkg/logutil"
+	"go.stevenxie.me/gopkg/name"
 
 	"go.stevenxie.me/api/location"
 	"go.stevenxie.me/api/pkg/svcutil"
@@ -30,7 +31,7 @@ func NewService(
 	return service{
 		records: records,
 		zones:   zones,
-		log:     cfg.Logger,
+		log:     logutil.AddComponent(cfg.Logger, (*service)(nil)),
 	}
 }
 
@@ -47,8 +48,8 @@ func (svc service) GetProductivity(
 	date time.Time,
 ) (*productivity.Productivity, error) {
 	log := svc.log.WithFields(logrus.Fields{
-		"method": "GetProductivity",
-		"date":   date,
+		logutil.MethodKey: name.OfMethod(service.GetProductivity),
+		"date":            date,
 	}).WithContext(ctx)
 
 	// Get records.

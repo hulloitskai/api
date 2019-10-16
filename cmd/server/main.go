@@ -14,6 +14,10 @@ import (
 	"go.stevenxie.me/gopkg/logutil"
 	"go.stevenxie.me/guillotine"
 
+	"go.stevenxie.me/api/pkg/github"
+	"go.stevenxie.me/api/pkg/google"
+	"go.stevenxie.me/api/pkg/svcutil"
+
 	"go.stevenxie.me/api/location"
 	"go.stevenxie.me/api/location/geocode"
 	"go.stevenxie.me/api/location/geocode/here"
@@ -43,15 +47,10 @@ import (
 	"go.stevenxie.me/api/auth"
 	"go.stevenxie.me/api/auth/airtable"
 
-	"go.stevenxie.me/api/pkg/github"
-	"go.stevenxie.me/api/pkg/google"
-	"go.stevenxie.me/api/pkg/poll"
-	"go.stevenxie.me/api/pkg/svcutil"
-	"go.stevenxie.me/api/server/httpsrv"
-
 	"go.stevenxie.me/api/cmd/server/config"
 	cmdint "go.stevenxie.me/api/cmd/server/internal"
 	"go.stevenxie.me/api/internal"
+	"go.stevenxie.me/api/server/httpsrv"
 )
 
 func main() {
@@ -62,7 +61,7 @@ func main() {
 
 	app := cli.NewApp()
 	app.Name = cmdint.Name
-	app.Usage = "An server for my personal API."
+	app.Usage = "A server for my personal API."
 	app.UsageText = fmt.Sprintf("%s [global options]", cmdint.Name)
 	app.Version = internal.Version
 	app.Action = run
@@ -112,7 +111,7 @@ func run(*cli.Context) (err error) {
 
 	// Init guillotine.
 	guillo := guillotine.New(guillotine.WithLogger(
-		logutil.WithComponent(log, "guillotine.Guillotine"),
+		logutil.AddComponent(log, (*guillotine.Guillotine)(nil)),
 	))
 	guillo.TriggerOnTerminate()
 	defer func() {
@@ -169,7 +168,7 @@ func run(*cli.Context) (err error) {
 			geocoder       = here.NewGeocoder(hereClient)
 			historyService = locsvc.NewHistoryService(
 				source, geocoder,
-				svcutil.WithLogger(logutil.WithComponent(log, "location.HistoryService")),
+				svcutil.WithLogger(log),
 			)
 		)
 
@@ -177,9 +176,7 @@ func run(*cli.Context) (err error) {
 			historyPrecacher := locsvc.NewHistoryServicePrecacher(
 				historyService,
 				cfg.Interval,
-				poll.WithPrecacherLogger(
-					logutil.WithComponent(log, "locsvc.HistoryServicePrecacher"),
-				),
+				svcutil.WithLogger(log),
 			)
 			guillo.AddFunc(
 				historyPrecacher.Stop,
@@ -196,7 +193,7 @@ func run(*cli.Context) (err error) {
 		}
 		locationService = locsvc.NewService(
 			historyService, geocoder,
-			locsvc.WithLogger(logutil.WithComponent(log, "location.Service")),
+			locsvc.WithLogger(log),
 			locsvc.WithRegionGeocodeLevel(geocodeLevel),
 		)
 	}
@@ -212,7 +209,7 @@ func run(*cli.Context) (err error) {
 		)
 		aboutService = aboutsvc.NewService(
 			source, locationService,
-			svcutil.WithLogger(logutil.WithComponent(log, "about.Service")),
+			svcutil.WithLogger(log),
 		)
 	}
 
@@ -222,21 +219,21 @@ func run(*cli.Context) (err error) {
 			source        = spotify.NewSource(spotifyClient)
 			sourceService = musicsvc.NewSourceService(
 				source,
-				svcutil.WithLogger(logutil.WithComponent(log, "music.SourceService")),
+				svcutil.WithLogger(log),
 			)
 		)
 		var (
 			currentSource  = spotify.NewCurrentSource(spotifyClient)
 			currentService = musicsvc.NewCurrentService(
 				currentSource,
-				svcutil.WithLogger(logutil.WithComponent(log, "music.CurrentService")),
+				svcutil.WithLogger(log),
 			)
 		)
 		var (
 			controller     = spotify.NewController(spotifyClient)
 			controlService = musicsvc.NewControlService(
 				controller,
-				svcutil.WithLogger(logutil.WithComponent(log, "music.ControlService")),
+				svcutil.WithLogger(log),
 			)
 		)
 		musicService = musicsvc.NewService(
@@ -251,9 +248,7 @@ func run(*cli.Context) (err error) {
 		currentStreamer := musicsvc.NewCurrentStreamer(
 			musicService,
 			musicsvc.WithCurrentStreamerPollInterval(cfg.Music.Streamer.PollInterval),
-			musicsvc.WithCurrentStreamerLogger(
-				logutil.WithComponent(log, "music.CurrentStreamer"),
-			),
+			musicsvc.WithCurrentStreamerLogger(log),
 		)
 		guillo.AddFunc(
 			currentStreamer.Stop,
@@ -274,7 +269,7 @@ func run(*cli.Context) (err error) {
 		)
 		schedulingService = schedsvc.NewService(
 			source,
-			svcutil.WithLogger(logutil.WithComponent(log, "scheduling.Service")),
+			svcutil.WithLogger(log),
 		)
 	}
 
@@ -283,7 +278,7 @@ func run(*cli.Context) (err error) {
 		source := gitgh.NewSource(githubClient)
 		gitService = gitsvc.NewService(
 			source,
-			svcutil.WithLogger(logutil.WithComponent(log, "git.Service")),
+			svcutil.WithLogger(log),
 		)
 
 		if cfg := cfg.Git.Precacher; cfg.Enabled {
@@ -291,7 +286,7 @@ func run(*cli.Context) (err error) {
 				gitService,
 				cfg.Interval,
 				func(spCfg *gitsvc.ServicePrecacherConfig) {
-					spCfg.Logger = logutil.WithComponent(log, "gitsvc.ServicePrecacher")
+					spCfg.Logger = log
 					if l := cfg.Limit; l != nil {
 						spCfg.Limit = l
 					}
@@ -311,7 +306,7 @@ func run(*cli.Context) (err error) {
 		productivityService = prodsvc.NewService(
 			source,
 			locationService,
-			svcutil.WithLogger(logutil.WithComponent(log, "productivity.Service")),
+			svcutil.WithLogger(log),
 		)
 	}
 
@@ -324,7 +319,7 @@ func run(*cli.Context) (err error) {
 			func(svcCfg *airtable.ServiceConfig) {
 				if access := atCfg.AccessRecords; access.Enabled {
 					svcCfg.AccessSelector = &access.Selector
-					svcCfg.Logger = logutil.WithComponent(log, "auth.Service")
+					svcCfg.Logger = log
 				}
 			},
 		)
@@ -345,7 +340,7 @@ func run(*cli.Context) (err error) {
 		httpsrv.Streamers{
 			Music: musicStreamer,
 		},
-		httpsrv.WithLogger(logutil.WithComponent(log, "httpsrv.Server")),
+		httpsrv.WithLogger(log),
 	)
 	guillo.AddFinalizer(func() error {
 		var (

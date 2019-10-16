@@ -6,7 +6,7 @@ import (
 
 	"github.com/cockroachdb/errors"
 	"go.stevenxie.me/api/pkg/httputil"
-	"go.stevenxie.me/api/pkg/name"
+	"go.stevenxie.me/gopkg/name"
 )
 
 // Namespace is the package namespace, used for things like envvars.

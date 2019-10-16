@@ -29,7 +29,7 @@ func NewService(
 	return service{
 		static:    static,
 		locations: locations,
-		log:       cfg.Logger,
+		log:       logutil.AddComponent(cfg.Logger, (*service)(nil)),
 	}
 }
 
@@ -42,8 +42,8 @@ type service struct {
 var _ about.Service = (*service)(nil)
 
 func (svc service) GetAbout(ctx context.Context) (*about.About, error) {
-	log := svc.log.
-		WithField("method", "GetAbout").
+	log := logutil.
+		WithMethod(svc.log, service.GetAbout).
 		WithContext(ctx)
 
 	static, err := svc.static.GetStatic()
@@ -74,8 +74,8 @@ func (svc service) GetAbout(ctx context.Context) (*about.About, error) {
 }
 
 func (svc service) GetMasked(ctx context.Context) (*about.Masked, error) {
-	log := svc.log.
-		WithField("method", "GetMasked").
+	log := logutil.
+		WithMethod(svc.log, service.GetMasked).
 		WithContext(ctx)
 
 	static, err := svc.static.GetStatic()

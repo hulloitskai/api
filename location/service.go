@@ -1,4 +1,4 @@
-package location
+package location // import "go.stevenxie.me/api/location"
 
 import (
 	"context"

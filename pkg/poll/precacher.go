@@ -23,11 +23,15 @@ func NewPrecacher(
 	for _, opt := range opts {
 		opt(&cfg)
 	}
-	ca := newCacheActor(p, cfg.Logger)
+
+	var (
+		log = logutil.AddComponent(cfg.Logger, (*Precacher)(nil))
+		ca  = newCacheActor(p, log)
+	)
 	return &Precacher{
 		pl: NewPoller(
 			ca, n,
-			WithPollerLogger(cfg.Logger),
+			WithPollerLogger(log),
 		),
 		ca: ca,
 	}

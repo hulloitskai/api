@@ -7,6 +7,7 @@ import (
 	"go.stevenxie.me/api/music"
 	"go.stevenxie.me/api/pkg/svcutil"
 	"go.stevenxie.me/gopkg/logutil"
+	"go.stevenxie.me/gopkg/name"
 )
 
 // NewSourceService creates a new SourceService.
@@ -22,7 +23,7 @@ func NewSourceService(
 	}
 	return sourceService{
 		src: src,
-		log: cfg.Logger,
+		log: logutil.AddComponent(cfg.Logger, (*sourceService)(nil)),
 	}
 }
 
@@ -40,8 +41,8 @@ func (svc sourceService) GetTrack(
 	id string,
 ) (*music.Track, error) {
 	log := svc.log.WithFields(logrus.Fields{
-		"method": "GetTrack",
-		"id":     id,
+		logutil.MethodKey: name.OfMethod(sourceService.GetTrack),
+		"id":              id,
 	}).WithContext(ctx)
 
 	t, err := svc.src.GetTrack(ctx, id)
@@ -68,10 +69,10 @@ func (svc sourceService) GetAlbumTracks(
 	}
 
 	log := svc.log.WithFields(logrus.Fields{
-		"method": "GetAlbumTracks",
-		"id":     id,
-		"limit":  cfg.Limit,
-		"offset": cfg.Offset,
+		logutil.MethodKey: name.OfMethod(sourceService.GetAlbumTracks),
+		"id":              id,
+		"limit":           cfg.Limit,
+		"offset":          cfg.Offset,
 	}).WithContext(ctx)
 
 	ts, err := svc.src.GetAlbumTracks(ctx, id, cfg.Limit, cfg.Offset)
@@ -98,10 +99,10 @@ func (svc sourceService) GetArtistAlbums(
 	}
 
 	log := svc.log.WithFields(logrus.Fields{
-		"method": "GetAlbumTracks",
-		"id":     id,
-		"limit":  cfg.Limit,
-		"offset": cfg.Offset,
+		logutil.MethodKey: name.OfMethod(sourceService.GetArtistAlbums),
+		"id":              id,
+		"limit":           cfg.Limit,
+		"offset":          cfg.Offset,
 	}).WithContext(ctx)
 
 	as, err := svc.src.GetArtistAlbums(ctx, id, cfg.Limit, cfg.Offset)

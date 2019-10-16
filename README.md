@@ -1,6 +1,6 @@
 # api
 
-_A personal API._
+_My personal API, now in GraphQL!_
 
 [![Git Tag][tag-img]][tag]
 [![Drone][drone-img]][drone]

@@ -1,4 +1,4 @@
-package server
+package server // import "go.stevenxie.me/api/server"
 
 import "go.stevenxie.me/api/internal"
 

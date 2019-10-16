@@ -1,4 +1,4 @@
-package auth
+package auth // import "go.stevenxie.me/api/auth"
 
 import (
 	"context"

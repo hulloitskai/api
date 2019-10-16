@@ -7,6 +7,7 @@ import (
 	"go.stevenxie.me/api/music"
 	"go.stevenxie.me/api/pkg/svcutil"
 	"go.stevenxie.me/gopkg/logutil"
+	"go.stevenxie.me/gopkg/name"
 )
 
 // NewControlService creates a new music.ControlService.
@@ -22,7 +23,7 @@ func NewControlService(
 	}
 	return controlService{
 		ctrl: ctrl,
-		log:  cfg.Logger,
+		log:  logutil.AddComponent(cfg.Logger, (*controlService)(nil)),
 	}
 }
 
@@ -43,8 +44,8 @@ func (svc controlService) Play(
 	}
 
 	log := svc.log.WithFields(logrus.Fields{
-		"method": "Play",
-		"uri":    cfg.URI,
+		logutil.MethodKey: name.OfMethod(controlService.Play),
+		"uri":             cfg.URI,
 	}).WithContext(ctx)
 	if err := svc.ctrl.Play(ctx, cfg.URI); err != nil {
 		log.WithError(err).Error("Failed to play resource.")
@@ -55,8 +56,8 @@ func (svc controlService) Play(
 }
 
 func (svc controlService) Pause(ctx context.Context) error {
-	log := svc.log.
-		WithField("method", "Pause").
+	log := logutil.
+		WithMethod(svc.log, controlService.Pause).
 		WithContext(ctx)
 	if err := svc.ctrl.Pause(ctx); err != nil {
 		log.WithError(err).Error("Failed to pause music.")

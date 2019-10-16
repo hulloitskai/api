@@ -15,6 +15,7 @@ import (
 
 	"go.stevenxie.me/api/auth"
 	"go.stevenxie.me/gopkg/logutil"
+	"go.stevenxie.me/gopkg/name"
 	"go.stevenxie.me/gopkg/zero"
 )
 
@@ -43,7 +44,7 @@ func NewService(
 			access: cfg.AccessSelector,
 		},
 		// timezone: cfg.Timezone,
-		log: cfg.Logger,
+		log: logutil.AddComponent(cfg.Logger, (*service)(nil)),
 	}
 }
 
@@ -117,8 +118,8 @@ func (svc *service) getPermissions(
 	}
 
 	log := svc.log.WithFields(logrus.Fields{
-		"method": "getPermissions",
-		"code":   code,
+		logutil.MethodKey: name.OfMethod(svc.getPermissions),
+		"code":            code,
 	}).WithContext(ctx)
 
 	var (
@@ -220,8 +221,8 @@ func (svc *service) getPermissions(
 
 func (svc service) recordAccess(id string, p auth.Permission) {
 	log := svc.log.WithFields(logrus.Fields{
-		"method": "recordAccess",
-		"id":     id,
+		logutil.MethodKey: name.OfMethod(service.recordAccess),
+		"id":              id,
 	})
 
 	// If no access selector, skip.

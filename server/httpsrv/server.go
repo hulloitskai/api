@@ -50,7 +50,7 @@ func NewServer(svcs Services, strms Streamers, opts ...ServerOption) *Server {
 	// Create and configure server.
 	return &Server{
 		echo:            echo,
-		log:             cfg.Logger,
+		log:             logutil.AddComponent(cfg.Logger, (*Server)(nil)),
 		svcs:            svcs,
 		strms:           strms,
 		complexityLimit: cfg.ComplexityLimit,

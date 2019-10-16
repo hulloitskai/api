@@ -1465,7 +1465,7 @@ type Mutation {
 }
 
 type Subscription {
-  music: CurrentlyPlayingMusic!
+  music: CurrentlyPlayingMusic
 }
 `},
 	&ast.Source{Name: "schema/scheduling.graphql", Input: `"""
@@ -5508,9 +5508,6 @@ func (ec *executionContext) _Subscription_music(ctx context.Context, field graph
 		return nil
 	}
 	if resTmp == nil {
-		if !ec.HasError(rctx) {
-			ec.Errorf(ctx, "must not be null")
-		}
 		return nil
 	}
 	return func() graphql.Marshaler {
@@ -5522,7 +5519,7 @@ func (ec *executionContext) _Subscription_music(ctx context.Context, field graph
 			w.Write([]byte{'{'})
 			graphql.MarshalString(field.Alias).MarshalGQL(w)
 			w.Write([]byte{':'})
-			ec.marshalNCurrentlyPlayingMusic2ᚖgoᚗstevenxieᚗmeᚋapiᚋmusicᚐCurrentlyPlaying(ctx, field.Selections, res).MarshalGQL(w)
+			ec.marshalOCurrentlyPlayingMusic2ᚖgoᚗstevenxieᚗmeᚋapiᚋmusicᚐCurrentlyPlaying(ctx, field.Selections, res).MarshalGQL(w)
 			w.Write([]byte{'}'})
 		})
 	}
@@ -9296,6 +9293,17 @@ func (ec *executionContext) marshalOCoordinates2ᚕgoᚗstevenxieᚗmeᚋapiᚋl
 	}
 	wg.Wait()
 	return ret
+}
+
+func (ec *executionContext) marshalOCurrentlyPlayingMusic2goᚗstevenxieᚗmeᚋapiᚋmusicᚐCurrentlyPlaying(ctx context.Context, sel ast.SelectionSet, v music.CurrentlyPlaying) graphql.Marshaler {
+	return ec._CurrentlyPlayingMusic(ctx, sel, &v)
+}
+
+func (ec *executionContext) marshalOCurrentlyPlayingMusic2ᚖgoᚗstevenxieᚗmeᚋapiᚋmusicᚐCurrentlyPlaying(ctx context.Context, sel ast.SelectionSet, v *music.CurrentlyPlaying) graphql.Marshaler {
+	if v == nil {
+		return graphql.Null
+	}
+	return ec._CurrentlyPlayingMusic(ctx, sel, v)
 }
 
 func (ec *executionContext) marshalOGitCommitAuthor2goᚗstevenxieᚗmeᚋapiᚋgitᚐCommitAuthor(ctx context.Context, sel ast.SelectionSet, v git.CommitAuthor) graphql.Marshaler {

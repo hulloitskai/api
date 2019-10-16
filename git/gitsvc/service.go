@@ -8,6 +8,7 @@ import (
 	"go.stevenxie.me/api/git"
 	"go.stevenxie.me/api/pkg/svcutil"
 	"go.stevenxie.me/gopkg/logutil"
+	"go.stevenxie.me/gopkg/name"
 )
 
 // NewService creates a new git.Service.
@@ -20,7 +21,7 @@ func NewService(src git.Source, opts ...svcutil.BasicOption) git.Service {
 	}
 	return service{
 		src: src,
-		log: cfg.Logger,
+		log: logutil.AddComponent(cfg.Logger, (*service)(nil)),
 	}
 }
 
@@ -42,8 +43,8 @@ func (svc service) RecentCommits(
 		opt(&cfg)
 	}
 	log := svc.log.WithFields(logrus.Fields{
-		"method": "RecentCommits",
-		"limit":  cfg.Limit,
+		logutil.MethodKey: name.OfMethod(service.RecentCommits),
+		"limit":           cfg.Limit,
 	}).WithContext(ctx)
 
 	cms, err := svc.src.RecentCommits(ctx, cfg.Limit)

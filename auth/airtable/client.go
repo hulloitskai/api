@@ -6,7 +6,7 @@ import (
 	"os"
 
 	"go.stevenxie.me/api/pkg/httputil"
-	"go.stevenxie.me/api/pkg/name"
+	"go.stevenxie.me/gopkg/name"
 
 	"github.com/cockroachdb/errors"
 )

@@ -33,6 +33,9 @@ func (src currentSource) GetCurrent(context.Context) (
 		return nil, err
 	}
 	item := cp.Item
+	if item == nil {
+		return nil, nil
+	}
 
 	// Parse timestamp as time.Time.
 	timestamp := time.Unix(

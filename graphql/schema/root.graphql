@@ -25,5 +25,5 @@ type Mutation {
 }
 
 type Subscription {
-  music: CurrentlyPlayingMusic!
+  music: CurrentlyPlayingMusic
 }

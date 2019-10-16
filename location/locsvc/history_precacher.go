@@ -6,6 +6,8 @@ import (
 
 	"go.stevenxie.me/api/location"
 	"go.stevenxie.me/api/pkg/poll"
+	"go.stevenxie.me/api/pkg/svcutil"
+	"go.stevenxie.me/gopkg/logutil"
 	"go.stevenxie.me/gopkg/zero"
 )
 
@@ -13,8 +15,15 @@ import (
 func NewHistoryServicePrecacher(
 	svc location.HistoryService,
 	interval time.Duration,
-	opts ...poll.PrecacherOption,
+	opts ...svcutil.BasicOption,
 ) HistoryServicePrecacher {
+	cfg := svcutil.BasicConfig{
+		Logger: logutil.NoopEntry(),
+	}
+	for _, opt := range opts {
+		opt(&cfg)
+	}
+	log := logutil.AddComponent(cfg.Logger, (*HistoryServicePrecacher)(nil))
 	return HistoryServicePrecacher{
 		HistoryService: svc,
 		pc: poll.NewPrecacher(
@@ -22,7 +31,7 @@ func NewHistoryServicePrecacher(
 				return svc.RecentHistory(context.Background())
 			}),
 			interval,
-			opts...,
+			poll.WithPrecacherLogger(log),
 		),
 	}
 }

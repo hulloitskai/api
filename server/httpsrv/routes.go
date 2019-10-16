@@ -3,6 +3,7 @@ package httpsrv
 import (
 	"net/http"
 	"os"
+	"time"
 
 	"github.com/99designs/gqlgen/handler"
 	echo "github.com/labstack/echo/v4"
@@ -46,6 +47,7 @@ func (srv *Server) registerRoutes() error {
 		e.Any("/graphql", echo.WrapHandler(handler.GraphQL(
 			exec,
 			handler.ErrorPresenter(gqlutil.PresentError),
+			handler.WebsocketKeepAliveDuration(10*time.Second),
 			// handler.ComplexityLimit(srv.complexityLimit),
 		)))
 		e.GET(

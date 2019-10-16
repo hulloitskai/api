@@ -23,7 +23,7 @@ func NewCurrentService(
 	}
 	return currentService{
 		curr: src,
-		log:  cfg.Logger,
+		log:  logutil.AddComponent(cfg.Logger, (*currentService)(nil)),
 	}
 }
 
@@ -38,8 +38,8 @@ func (svc currentService) GetCurrent(ctx context.Context) (
 	*music.CurrentlyPlaying,
 	error,
 ) {
-	log := svc.log.
-		WithField("method", "GetCurrent").
+	log := logutil.
+		WithMethod(svc.log, currentService.GetCurrent).
 		WithContext(ctx)
 
 	cp, err := svc.curr.GetCurrent(ctx)

@@ -1,4 +1,4 @@
-package scheduling
+package scheduling // import "go.stevenxie.me/api/scheduling"
 
 import (
 	"context"

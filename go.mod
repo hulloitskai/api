@@ -12,6 +12,7 @@ require (
 	github.com/go-ozzo/ozzo-validation v3.6.0+incompatible
 	github.com/google/go-cmp v0.3.1 // indirect
 	github.com/google/go-github/v25 v25.1.3
+	github.com/gorilla/websocket v1.4.0 // indirect
 	github.com/hashicorp/golang-lru v0.5.3 // indirect
 	github.com/kelseyhightower/envconfig v1.4.0
 	github.com/labstack/echo/v4 v4.1.10
@@ -22,12 +23,13 @@ require (
 	github.com/urfave/cli v1.21.0
 	github.com/vektah/gqlparser v1.1.2
 	github.com/zmb3/spotify v0.0.0-20191010212056-e12fb981aacb
-	go.stevenxie.me/gopkg v0.2.3
-	go.stevenxie.me/guillotine v0.1.3
+	go.stevenxie.me/gopkg v0.3.0
+	go.stevenxie.me/guillotine v0.1.5
 	golang.org/x/net v0.0.0-20190813141303-74dc4d7220e7 // indirect
 	golang.org/x/oauth2 v0.0.0-20190604053449-0f29369cfe45
 	google.golang.org/api v0.8.0
 	google.golang.org/genproto v0.0.0-20190817000702-55e96fffbd48 // indirect
 	google.golang.org/grpc v1.23.0 // indirect
 	gopkg.in/go-validator/validator.v2 v2.0.0-20180514200540-135c24b11c19
+	gopkg.in/validator.v2 v2.0.0-20180514200540-135c24b11c19 // indirect
 )

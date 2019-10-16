@@ -7,7 +7,7 @@ import (
 	"github.com/zmb3/spotify"
 	"golang.org/x/oauth2"
 
-	"go.stevenxie.me/api/pkg/name"
+	"go.stevenxie.me/gopkg/name"
 )
 
 // Namespace is the package namespace, used for things like envvars.
