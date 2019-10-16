@@ -58,7 +58,9 @@ type Config struct {
 
 	Auth struct {
 		Airtable struct {
-			Selector      airtable.PermsSelector `yaml:"selector"`
+			Codes struct {
+				Selector airtable.CodesSelector `yaml:"selector"`
+			} `json:"codes"`
 			AccessRecords struct {
 				Enabled  bool                    `yaml:"enabled"`
 				Selector airtable.AccessSelector `yaml:"selector"`
@@ -93,7 +95,7 @@ func defaultConfig() *Config {
 	// Default Airtable settings.
 	{
 		cfg := &cfg.Auth.Airtable
-		cfg.Selector = airtable.DefaultPermsSelector()
+		cfg.Codes.Selector = airtable.DefaultCodesSelector()
 		cfg.AccessRecords.Selector = airtable.DefaultAccessSelector()
 	}
 
@@ -149,7 +151,7 @@ func (cfg *Config) Validate() error {
 
 	{
 		at := &cfg.Auth.Airtable
-		if err := validation.Validate(&at.Selector); err != nil {
+		if err := validation.Validate(&at.Codes.Selector); err != nil {
 			return errors.Wrap(err, "validating Auth.Airtable.Selector")
 		}
 		if err := validation.Validate(&at.AccessRecords.Selector); err != nil {

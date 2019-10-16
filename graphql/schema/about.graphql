@@ -16,9 +16,10 @@ type FullAbout implements PartialAbout {
   name: String!
   email: String!
   type: String!
+  birthday: String!
+  age: String!
   iq: Boolean!
   skills: [String!]!
-  age: String!
   location: Coordinates!
 }
 

@@ -311,7 +311,7 @@ func run(*cli.Context) (err error) {
 		atCfg := cfg.Auth.Airtable
 		authService = airtable.NewService(
 			airtableClient,
-			atCfg.Selector,
+			atCfg.Codes.Selector,
 			func(svcCfg *airtable.ServiceConfig) {
 				if access := atCfg.AccessRecords; access.Enabled {
 					svcCfg.AccessSelector = &access.Selector

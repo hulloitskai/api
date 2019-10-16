@@ -10,9 +10,9 @@ import (
 
 const _baseURL = "https://api.airtable.com/v0"
 
-// DefaultPermsSelector creates a PermsSelector with default values.
-func DefaultPermsSelector() PermsSelector {
-	var sel PermsSelector
+// DefaultCodesSelector creates a CodesSelector with default values.
+func DefaultCodesSelector() CodesSelector {
+	var sel CodesSelector
 	sel.FieldSelector.Code = "code"
 	sel.FieldSelector.Perms = "perms"
 	return sel
@@ -23,14 +23,14 @@ func DefaultAccessSelector() AccessSelector {
 	var sel AccessSelector
 	sel.FieldSelector.Time = "time"
 	sel.FieldSelector.Perm = "perm"
-	sel.FieldSelector.PermsRecordID = "perms-record-id"
+	sel.FieldSelector.CodeRecordID = "code-record-id"
 	return sel
 }
 
 type (
-	// A PermsSelector locates the fields within an AirTable base that are used
-	// to store permissions data.
-	PermsSelector struct {
+	// A CodesSelector locates the fields within an AirTable base that are used
+	// to store auth codes.
+	CodesSelector struct {
 		ViewSelector  `yaml:"viewSelector"`
 		FieldSelector struct {
 			Code  string `yaml:"code"`
@@ -43,20 +43,20 @@ type (
 	AccessSelector struct {
 		ViewSelector  `yaml:"viewSelector"`
 		FieldSelector struct {
-			Time          string `yaml:"time"`
-			Perm          string `yaml:"perm"`
-			PermsRecordID string `yaml:"permsRecordID"`
+			Time         string `yaml:"time"`
+			Perm         string `yaml:"perm"`
+			CodeRecordID string `yaml:"codeRecordID"`
 		} `yaml:"fieldSelector"`
 	}
 )
 
 var (
-	_ validation.Validatable = (*PermsSelector)(nil)
+	_ validation.Validatable = (*CodesSelector)(nil)
 	_ validation.Validatable = (*AccessSelector)(nil)
 )
 
 // Validate returns an error if the PermsSelector is not valid.
-func (sel *PermsSelector) Validate() error {
+func (sel *CodesSelector) Validate() error {
 	if err := validation.Validate(&sel.ViewSelector); err != nil {
 		return errors.Wrap(err, "validating ViewSelector")
 	}
@@ -83,7 +83,7 @@ func (sel *AccessSelector) Validate() error {
 		if err := validation.ValidateStruct(
 			fields,
 			validation.Field(&fields.Time, validation.Required),
-			validation.Field(&fields.PermsRecordID, validation.Required),
+			validation.Field(&fields.CodeRecordID, validation.Required),
 		); err != nil {
 			return errors.Wrap(err, "validating FieldSelector")
 		}

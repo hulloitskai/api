@@ -96,6 +96,7 @@ type ComplexityRoot struct {
 
 	FullAbout struct {
 		Age      func(childComplexity int) int
+		Birthday func(childComplexity int) int
 		Email    func(childComplexity int) int
 		IQ       func(childComplexity int) int
 		Location func(childComplexity int) int
@@ -260,6 +261,7 @@ type CurrentlyPlayingMusicResolver interface {
 	Progress(ctx context.Context, obj *music.CurrentlyPlaying) (int, error)
 }
 type FullAboutResolver interface {
+	Birthday(ctx context.Context, obj *about.About) (string, error)
 	Age(ctx context.Context, obj *about.About) (string, error)
 }
 type MusicAlbumResolver interface {
@@ -440,6 +442,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.FullAbout.Age(childComplexity), true
+
+	case "FullAbout.birthday":
+		if e.complexity.FullAbout.Birthday == nil {
+			break
+		}
+
+		return e.complexity.FullAbout.Birthday(childComplexity), true
 
 	case "FullAbout.email":
 		if e.complexity.FullAbout.Email == nil {
@@ -1206,9 +1215,10 @@ type FullAbout implements PartialAbout {
   name: String!
   email: String!
   type: String!
+  birthday: String!
+  age: String!
   iq: Boolean!
   skills: [String!]!
-  age: String!
   location: Coordinates!
 }
 
@@ -2439,6 +2449,80 @@ func (ec *executionContext) _FullAbout_type(ctx context.Context, field graphql.C
 	return ec.marshalNString2string(ctx, field.Selections, res)
 }
 
+func (ec *executionContext) _FullAbout_birthday(ctx context.Context, field graphql.CollectedField, obj *about.About) (ret graphql.Marshaler) {
+	ctx = ec.Tracer.StartFieldExecution(ctx, field)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+		ec.Tracer.EndFieldExecution(ctx)
+	}()
+	rctx := &graphql.ResolverContext{
+		Object:   "FullAbout",
+		Field:    field,
+		Args:     nil,
+		IsMethod: true,
+	}
+	ctx = graphql.WithResolverContext(ctx, rctx)
+	ctx = ec.Tracer.StartFieldResolverExecution(ctx, rctx)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.FullAbout().Birthday(rctx, obj)
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !ec.HasError(rctx) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	rctx.Result = res
+	ctx = ec.Tracer.StartFieldChildExecution(ctx)
+	return ec.marshalNString2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _FullAbout_age(ctx context.Context, field graphql.CollectedField, obj *about.About) (ret graphql.Marshaler) {
+	ctx = ec.Tracer.StartFieldExecution(ctx, field)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+		ec.Tracer.EndFieldExecution(ctx)
+	}()
+	rctx := &graphql.ResolverContext{
+		Object:   "FullAbout",
+		Field:    field,
+		Args:     nil,
+		IsMethod: true,
+	}
+	ctx = graphql.WithResolverContext(ctx, rctx)
+	ctx = ec.Tracer.StartFieldResolverExecution(ctx, rctx)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.FullAbout().Age(rctx, obj)
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !ec.HasError(rctx) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	rctx.Result = res
+	ctx = ec.Tracer.StartFieldChildExecution(ctx)
+	return ec.marshalNString2string(ctx, field.Selections, res)
+}
+
 func (ec *executionContext) _FullAbout_iq(ctx context.Context, field graphql.CollectedField, obj *about.About) (ret graphql.Marshaler) {
 	ctx = ec.Tracer.StartFieldExecution(ctx, field)
 	defer func() {
@@ -2511,43 +2595,6 @@ func (ec *executionContext) _FullAbout_skills(ctx context.Context, field graphql
 	rctx.Result = res
 	ctx = ec.Tracer.StartFieldChildExecution(ctx)
 	return ec.marshalNString2ᚕstring(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) _FullAbout_age(ctx context.Context, field graphql.CollectedField, obj *about.About) (ret graphql.Marshaler) {
-	ctx = ec.Tracer.StartFieldExecution(ctx, field)
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-		ec.Tracer.EndFieldExecution(ctx)
-	}()
-	rctx := &graphql.ResolverContext{
-		Object:   "FullAbout",
-		Field:    field,
-		Args:     nil,
-		IsMethod: true,
-	}
-	ctx = graphql.WithResolverContext(ctx, rctx)
-	ctx = ec.Tracer.StartFieldResolverExecution(ctx, rctx)
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.FullAbout().Age(rctx, obj)
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		if !ec.HasError(rctx) {
-			ec.Errorf(ctx, "must not be null")
-		}
-		return graphql.Null
-	}
-	res := resTmp.(string)
-	rctx.Result = res
-	ctx = ec.Tracer.StartFieldChildExecution(ctx)
-	return ec.marshalNString2string(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _FullAbout_location(ctx context.Context, field graphql.CollectedField, obj *about.About) (ret graphql.Marshaler) {
@@ -7105,16 +7152,20 @@ func (ec *executionContext) _FullAbout(ctx context.Context, sel ast.SelectionSet
 			if out.Values[i] == graphql.Null {
 				atomic.AddUint32(&invalids, 1)
 			}
-		case "iq":
-			out.Values[i] = ec._FullAbout_iq(ctx, field, obj)
-			if out.Values[i] == graphql.Null {
-				atomic.AddUint32(&invalids, 1)
-			}
-		case "skills":
-			out.Values[i] = ec._FullAbout_skills(ctx, field, obj)
-			if out.Values[i] == graphql.Null {
-				atomic.AddUint32(&invalids, 1)
-			}
+		case "birthday":
+			field := field
+			out.Concurrently(i, func() (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._FullAbout_birthday(ctx, field, obj)
+				if res == graphql.Null {
+					atomic.AddUint32(&invalids, 1)
+				}
+				return res
+			})
 		case "age":
 			field := field
 			out.Concurrently(i, func() (res graphql.Marshaler) {
@@ -7129,6 +7180,16 @@ func (ec *executionContext) _FullAbout(ctx context.Context, sel ast.SelectionSet
 				}
 				return res
 			})
+		case "iq":
+			out.Values[i] = ec._FullAbout_iq(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				atomic.AddUint32(&invalids, 1)
+			}
+		case "skills":
+			out.Values[i] = ec._FullAbout_skills(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				atomic.AddUint32(&invalids, 1)
+			}
 		case "location":
 			out.Values[i] = ec._FullAbout_location(ctx, field, obj)
 			if out.Values[i] == graphql.Null {

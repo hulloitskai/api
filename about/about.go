@@ -12,6 +12,7 @@ type (
 		Name     string               `json:"name"`
 		Email    string               `json:"email"`
 		Type     string               `json:"type"`
+		Birthday time.Time            `json:"birthday"`
 		Age      time.Duration        `json:"age"`
 		IQ       bool                 `json:"iq"`
 		Skills   []string             `json:"skills"`

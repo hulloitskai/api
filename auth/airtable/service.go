@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
+	"io/ioutil"
 	"net/http"
 	"strings"
 	"time"
@@ -22,7 +23,7 @@ import (
 // NewService creates a new auth.Service that is backed by Airtable.
 func NewService(
 	c Client,
-	sel PermsSelector,
+	sel CodesSelector,
 	opts ...ServiceOption,
 ) auth.Service {
 	// Validate arguments.
@@ -40,7 +41,7 @@ func NewService(
 	return &service{
 		client: c,
 		selectors: serviceSelectors{
-			auth:   &sel,
+			codes:  &sel,
 			access: cfg.AccessSelector,
 		},
 		// timezone: cfg.Timezone,
@@ -58,7 +59,7 @@ type (
 	}
 
 	serviceSelectors struct {
-		auth   *PermsSelector
+		codes  *CodesSelector
 		access *AccessSelector
 	}
 
@@ -126,7 +127,7 @@ func (svc *service) getPermissions(
 	}).WithContext(ctx)
 
 	var (
-		selector = svc.selectors.auth
+		selector = svc.selectors.codes
 		offset   *string // used for pagination.
 	)
 	{
@@ -238,9 +239,9 @@ func (svc service) recordAccess(id string, p auth.Permission) {
 
 	// Map access record to table fields.
 	fields := map[string]zero.Interface{
-		selector.FieldSelector.Time:          time.Now().Format(time.RFC3339),
-		selector.FieldSelector.Perm:          string(p),
-		selector.FieldSelector.PermsRecordID: []string{id},
+		selector.FieldSelector.Time:         time.Now().Format(time.RFC3339),
+		selector.FieldSelector.Perm:         string(p),
+		selector.FieldSelector.CodeRecordID: []string{id},
 	}
 
 	type recordData struct {
@@ -277,9 +278,11 @@ func (svc service) recordAccess(id string, p auth.Permission) {
 		return
 	}
 	if res.StatusCode != http.StatusOK {
-		log.
-			WithField("status", res.StatusCode).
-			Error("Bad status in access update response.")
+		entry := log.WithField("status", res.StatusCode)
+		if body, err := ioutil.ReadAll(res.Body); err == nil {
+			entry = log.WithField("body", string(body))
+		}
+		entry.Error("Bad status in access update response.")
 		return
 	}
 }

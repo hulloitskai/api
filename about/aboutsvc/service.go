@@ -66,6 +66,7 @@ func (svc service) GetAbout(ctx context.Context) (*about.About, error) {
 		Name:     static.Name,
 		Email:    static.Email,
 		Type:     static.Type,
+		Birthday: static.Birthday,
 		Age:      time.Since(static.Birthday),
 		IQ:       static.IQ,
 		Skills:   static.Skills,

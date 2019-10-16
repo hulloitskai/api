@@ -40,14 +40,15 @@ git:
 
 auth:
   airtable:
-    selector:
-      viewSelector: &viewSelector
-        baseID: String
-        tableName: String
-        viewName: String
-      fieldSelector:
-        code: String  # default: "code"
-        perms: String # default: "perms"
+    codes:
+      selector:
+        viewSelector: &viewSelector
+          baseID: String
+          tableName: String
+          viewName: String
+        fieldSelector:
+          code: String  # default: "code"
+          perms: String # default: "perms"
     accessRecords:
       enabled: Boolean
       selector:
@@ -55,4 +56,4 @@ auth:
         fieldSelector:
           time: String          # default: "time"
           perm: String          # default: "perm"
-          permsRecordID: String # default: "perms-record-id"
+          codeRecordID: String # default: "perms-record-id"
