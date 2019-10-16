@@ -11,7 +11,6 @@ import (
 
 	"go.stevenxie.me/gopkg/cmdutil"
 	"go.stevenxie.me/gopkg/configutil"
-	"go.stevenxie.me/gopkg/logutil"
 	"go.stevenxie.me/guillotine"
 
 	"go.stevenxie.me/api/pkg/github"
@@ -58,7 +57,6 @@ func main() {
 	if err := configutil.LoadEnv(); err != nil {
 		cmdutil.Fatalf("Failed to load dotenv file: %v\n", err)
 	}
-
 	app := cli.NewApp()
 	app.Name = cmdint.Name
 	app.Usage = "A server for my personal API."
@@ -110,9 +108,7 @@ func run(*cli.Context) (err error) {
 	}
 
 	// Init guillotine.
-	guillo := guillotine.New(guillotine.WithLogger(
-		logutil.AddComponent(log, (*guillotine.Guillotine)(nil)),
-	))
+	guillo := guillotine.New(guillotine.WithLogger(log))
 	guillo.TriggerOnTerminate()
 	defer func() {
 		if ok, _ := guillo.Execute(); !ok && (err != nil) {

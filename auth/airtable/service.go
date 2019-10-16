@@ -97,7 +97,10 @@ func (svc *service) HasPermission(
 
 	perms, id, err := svc.getPermissions(ctx, code)
 	if err != nil {
-		return false, errors.Wrap(err, "airtable: getting permissions")
+		if !errors.Is(err, auth.ErrInvalidCode) {
+			err = errors.Wrap(err, "airtable: getting permissions")
+		}
+		return false, err
 	}
 	for _, perm := range perms {
 		if p == perm {

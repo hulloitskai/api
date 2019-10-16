@@ -3,6 +3,8 @@ package auth // import "go.stevenxie.me/api/auth"
 import (
 	"context"
 	stderrs "errors"
+
+	"github.com/cockroachdb/errors"
 )
 
 // Service is responsible for checking user permissions.
@@ -18,4 +20,7 @@ type Service interface {
 }
 
 // ErrInvalidCode is returned by a Service when a provided code is invalid.
-var ErrInvalidCode = stderrs.New("auth: invalid code")
+var ErrInvalidCode = errors.WithHint(
+	stderrs.New("auth: invalid code"),
+	"Code is invalid or expired.",
+)
