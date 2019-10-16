@@ -1,0 +1,6 @@
+type AuthQuery {
+  """
+  Get the permissions associated with a particular access code.
+  """
+  permissions(code: String!): [String!]!
+}

@@ -8,6 +8,7 @@ import (
 
 	"go.stevenxie.me/api/about"
 	"go.stevenxie.me/api/auth"
+	"go.stevenxie.me/api/auth/authgql"
 	"go.stevenxie.me/api/auth/authutil"
 	"go.stevenxie.me/api/git/gitgql"
 	"go.stevenxie.me/api/graphql"
@@ -23,22 +24,24 @@ func newQueryResolver(svcs Services) graphql.QueryResolver {
 		prod:  svcs.Productivity,
 		auth:  svcs.Auth,
 
-		git:        gitgql.NewQuery(svcs.Git),
-		music:      musicgql.NewQuery(svcs.Music),
-		location:   locgql.NewQuery(svcs.Location, svcs.Auth),
-		scheduling: schedgql.NewQuery(svcs.Scheduling),
+		gitq:   gitgql.NewQuery(svcs.Git),
+		locq:   locgql.NewQuery(svcs.Location, svcs.Auth),
+		authq:  authgql.NewQuery(svcs.Auth),
+		musicq: musicgql.NewQuery(svcs.Music),
+		schedq: schedgql.NewQuery(svcs.Scheduling),
 	}
 }
 
 type queryResolver struct {
+	about about.Service
 	prod  productivity.Service
 	auth  auth.Service
-	about about.Service
 
-	git        gitgql.Query
-	music      musicgql.Query
-	location   locgql.Query
-	scheduling schedgql.Query
+	gitq   gitgql.Query
+	locq   locgql.Query
+	authq  authgql.Query
+	musicq musicgql.Query
+	schedq schedgql.Query
 }
 
 var _ graphql.QueryResolver = (*queryResolver)(nil)
@@ -68,31 +71,22 @@ func (qr queryResolver) Productivity(ctx context.Context) (
 	return qr.prod.CurrentProductivity(ctx)
 }
 
-func (qr queryResolver) Permissions(ctx context.Context, code string) (
-	perms []string, err error) {
-	ps, err := qr.auth.GetPermissions(ctx, strings.TrimSpace(code))
-	if err != nil {
-		return nil, err
-	}
-	perms = make([]string, len(ps))
-	for i, p := range ps {
-		perms[i] = string(p)
-	}
-	return perms, nil
+func (qr queryResolver) Auth(context.Context) (*authgql.Query, error) {
+	return &qr.authq, nil
 }
 
 func (qr queryResolver) Git(context.Context) (*gitgql.Query, error) {
-	return &qr.git, nil
+	return &qr.gitq, nil
 }
 
 func (qr queryResolver) Music(context.Context) (*musicgql.Query, error) {
-	return &qr.music, nil
+	return &qr.musicq, nil
 }
 
 func (qr queryResolver) Location(context.Context) (*locgql.Query, error) {
-	return &qr.location, nil
+	return &qr.locq, nil
 }
 
 func (qr queryResolver) Scheduling(context.Context) (*schedgql.Query, error) {
-	return &qr.scheduling, nil
+	return &qr.schedq, nil
 }

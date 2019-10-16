@@ -9,12 +9,8 @@ type Query {
   """
   productivity: Productivity!
 
-  """
-  Get the permissions associated with a particular access code.
-  """
-  permissions(code: String!): [String!]!
-
   git: GitQuery!
+  auth: AuthQuery!
   music: MusicQuery!
   location: LocationQuery!
   scheduling: SchedulingQuery!

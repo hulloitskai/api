@@ -20,8 +20,12 @@ autobind:
   - go.stevenxie.me/api/git/gitgql
   - go.stevenxie.me/api/productivity
   - go.stevenxie.me/api/productivity/prodgql
+  - go.stevenxie.me/api/auth/authgql
 
 models:
+  AuthQuery:
+    model: authgql.Query
+
   MusicQuery:
     model: musicgql.Query
   MusicMutation:

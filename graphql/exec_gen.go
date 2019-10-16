@@ -18,6 +18,7 @@ import (
 	"github.com/vektah/gqlparser"
 	"github.com/vektah/gqlparser/ast"
 	"go.stevenxie.me/api/about"
+	"go.stevenxie.me/api/auth/authgql"
 	"go.stevenxie.me/api/git"
 	"go.stevenxie.me/api/git/gitgql"
 	"go.stevenxie.me/api/location"
@@ -74,6 +75,10 @@ type ComplexityRoot struct {
 		Postcode func(childComplexity int) int
 		State    func(childComplexity int) int
 		Street   func(childComplexity int) int
+	}
+
+	AuthQuery struct {
+		Permissions func(childComplexity int, code string) int
 	}
 
 	Coordinates struct {
@@ -224,10 +229,10 @@ type ComplexityRoot struct {
 
 	Query struct {
 		About        func(childComplexity int, code *string) int
+		Auth         func(childComplexity int) int
 		Git          func(childComplexity int) int
 		Location     func(childComplexity int) int
 		Music        func(childComplexity int) int
-		Permissions  func(childComplexity int, code string) int
 		Productivity func(childComplexity int) int
 		Scheduling   func(childComplexity int) int
 	}
@@ -280,8 +285,8 @@ type ProductivityRecordResolver interface {
 type QueryResolver interface {
 	About(ctx context.Context, code *string) (about.ContactInfo, error)
 	Productivity(ctx context.Context) (*productivity.Productivity, error)
-	Permissions(ctx context.Context, code string) ([]string, error)
 	Git(ctx context.Context) (*gitgql.Query, error)
+	Auth(ctx context.Context) (*authgql.Query, error)
 	Music(ctx context.Context) (*musicgql.Query, error)
 	Location(ctx context.Context) (*locgql.Query, error)
 	Scheduling(ctx context.Context) (*schedgql.Query, error)
@@ -367,6 +372,18 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.Address.Street(childComplexity), true
+
+	case "AuthQuery.permissions":
+		if e.complexity.AuthQuery.Permissions == nil {
+			break
+		}
+
+		args, err := ec.field_AuthQuery_permissions_args(context.TODO(), rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.AuthQuery.Permissions(childComplexity, args["code"].(string)), true
 
 	case "Coordinates.x":
 		if e.complexity.Coordinates.X == nil {
@@ -991,6 +1008,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.Query.About(childComplexity, args["code"].(*string)), true
 
+	case "Query.auth":
+		if e.complexity.Query.Auth == nil {
+			break
+		}
+
+		return e.complexity.Query.Auth(childComplexity), true
+
 	case "Query.git":
 		if e.complexity.Query.Git == nil {
 			break
@@ -1011,18 +1035,6 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.Query.Music(childComplexity), true
-
-	case "Query.permissions":
-		if e.complexity.Query.Permissions == nil {
-			break
-		}
-
-		args, err := ec.field_Query_permissions_args(context.TODO(), rawArgs)
-		if err != nil {
-			return 0, false
-		}
-
-		return e.complexity.Query.Permissions(childComplexity, args["code"].(string)), true
 
 	case "Query.productivity":
 		if e.complexity.Query.Productivity == nil {
@@ -1211,6 +1223,13 @@ type MaskedAbout implements PartialAbout {
   iq: Boolean!
   skills: [String!]!
   whereabouts: String!
+}
+`},
+	&ast.Source{Name: "schema/auth.graphql", Input: `type AuthQuery {
+  """
+  Get the permissions associated with a particular access code.
+  """
+  permissions(code: String!): [String!]!
 }
 `},
 	&ast.Source{Name: "schema/common.graphql", Input: `scalar Time
@@ -1449,12 +1468,8 @@ type ProductivityCategory {
   """
   productivity: Productivity!
 
-  """
-  Get the permissions associated with a particular access code.
-  """
-  permissions(code: String!): [String!]!
-
   git: GitQuery!
+  auth: AuthQuery!
   music: MusicQuery!
   location: LocationQuery!
   scheduling: SchedulingQuery!
@@ -1485,6 +1500,20 @@ type SchedulingQuery {
 // endregion ************************** generated!.gotpl **************************
 
 // region    ***************************** args.gotpl *****************************
+
+func (ec *executionContext) field_AuthQuery_permissions_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+	var err error
+	args := map[string]interface{}{}
+	var arg0 string
+	if tmp, ok := rawArgs["code"]; ok {
+		arg0, err = ec.unmarshalNString2string(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["code"] = arg0
+	return args, nil
+}
 
 func (ec *executionContext) field_GitQuery_recentCommits_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
 	var err error
@@ -1614,20 +1643,6 @@ func (ec *executionContext) field_Query_about_args(ctx context.Context, rawArgs 
 	var arg0 *string
 	if tmp, ok := rawArgs["code"]; ok {
 		arg0, err = ec.unmarshalOString2ᚖstring(ctx, tmp)
-		if err != nil {
-			return nil, err
-		}
-	}
-	args["code"] = arg0
-	return args, nil
-}
-
-func (ec *executionContext) field_Query_permissions_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
-	var err error
-	args := map[string]interface{}{}
-	var arg0 string
-	if tmp, ok := rawArgs["code"]; ok {
-		arg0, err = ec.unmarshalNString2string(ctx, tmp)
 		if err != nil {
 			return nil, err
 		}
@@ -2008,6 +2023,50 @@ func (ec *executionContext) _Address_number(ctx context.Context, field graphql.C
 	rctx.Result = res
 	ctx = ec.Tracer.StartFieldChildExecution(ctx)
 	return ec.marshalOString2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _AuthQuery_permissions(ctx context.Context, field graphql.CollectedField, obj *authgql.Query) (ret graphql.Marshaler) {
+	ctx = ec.Tracer.StartFieldExecution(ctx, field)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+		ec.Tracer.EndFieldExecution(ctx)
+	}()
+	rctx := &graphql.ResolverContext{
+		Object:   "AuthQuery",
+		Field:    field,
+		Args:     nil,
+		IsMethod: true,
+	}
+	ctx = graphql.WithResolverContext(ctx, rctx)
+	rawArgs := field.ArgumentMap(ec.Variables)
+	args, err := ec.field_AuthQuery_permissions_args(ctx, rawArgs)
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	rctx.Args = args
+	ctx = ec.Tracer.StartFieldResolverExecution(ctx, rctx)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Permissions(ctx, args["code"].(string))
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !ec.HasError(rctx) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.([]string)
+	rctx.Result = res
+	ctx = ec.Tracer.StartFieldChildExecution(ctx)
+	return ec.marshalNString2ᚕstring(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _Coordinates_x(ctx context.Context, field graphql.CollectedField, obj *location.Coordinates) (ret graphql.Marshaler) {
@@ -5171,50 +5230,6 @@ func (ec *executionContext) _Query_productivity(ctx context.Context, field graph
 	return ec.marshalNProductivity2ᚖgoᚗstevenxieᚗmeᚋapiᚋproductivityᚐProductivity(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) _Query_permissions(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
-	ctx = ec.Tracer.StartFieldExecution(ctx, field)
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-		ec.Tracer.EndFieldExecution(ctx)
-	}()
-	rctx := &graphql.ResolverContext{
-		Object:   "Query",
-		Field:    field,
-		Args:     nil,
-		IsMethod: true,
-	}
-	ctx = graphql.WithResolverContext(ctx, rctx)
-	rawArgs := field.ArgumentMap(ec.Variables)
-	args, err := ec.field_Query_permissions_args(ctx, rawArgs)
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	rctx.Args = args
-	ctx = ec.Tracer.StartFieldResolverExecution(ctx, rctx)
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Query().Permissions(rctx, args["code"].(string))
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		if !ec.HasError(rctx) {
-			ec.Errorf(ctx, "must not be null")
-		}
-		return graphql.Null
-	}
-	res := resTmp.([]string)
-	rctx.Result = res
-	ctx = ec.Tracer.StartFieldChildExecution(ctx)
-	return ec.marshalNString2ᚕstring(ctx, field.Selections, res)
-}
-
 func (ec *executionContext) _Query_git(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
 	ctx = ec.Tracer.StartFieldExecution(ctx, field)
 	defer func() {
@@ -5250,6 +5265,43 @@ func (ec *executionContext) _Query_git(ctx context.Context, field graphql.Collec
 	rctx.Result = res
 	ctx = ec.Tracer.StartFieldChildExecution(ctx)
 	return ec.marshalNGitQuery2ᚖgoᚗstevenxieᚗmeᚋapiᚋgitᚋgitgqlᚐQuery(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _Query_auth(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	ctx = ec.Tracer.StartFieldExecution(ctx, field)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+		ec.Tracer.EndFieldExecution(ctx)
+	}()
+	rctx := &graphql.ResolverContext{
+		Object:   "Query",
+		Field:    field,
+		Args:     nil,
+		IsMethod: true,
+	}
+	ctx = graphql.WithResolverContext(ctx, rctx)
+	ctx = ec.Tracer.StartFieldResolverExecution(ctx, rctx)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Query().Auth(rctx)
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !ec.HasError(rctx) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(*authgql.Query)
+	rctx.Result = res
+	ctx = ec.Tracer.StartFieldChildExecution(ctx)
+	return ec.marshalNAuthQuery2ᚖgoᚗstevenxieᚗmeᚋapiᚋauthᚋauthgqlᚐQuery(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _Query_music(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
@@ -6903,6 +6955,42 @@ func (ec *executionContext) _Address(ctx context.Context, sel ast.SelectionSet, 
 	return out
 }
 
+var authQueryImplementors = []string{"AuthQuery"}
+
+func (ec *executionContext) _AuthQuery(ctx context.Context, sel ast.SelectionSet, obj *authgql.Query) graphql.Marshaler {
+	fields := graphql.CollectFields(ec.RequestContext, sel, authQueryImplementors)
+
+	out := graphql.NewFieldSet(fields)
+	var invalids uint32
+	for i, field := range fields {
+		switch field.Name {
+		case "__typename":
+			out.Values[i] = graphql.MarshalString("AuthQuery")
+		case "permissions":
+			field := field
+			out.Concurrently(i, func() (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._AuthQuery_permissions(ctx, field, obj)
+				if res == graphql.Null {
+					atomic.AddUint32(&invalids, 1)
+				}
+				return res
+			})
+		default:
+			panic("unknown field " + strconv.Quote(field.Name))
+		}
+	}
+	out.Dispatch()
+	if invalids > 0 {
+		return graphql.Null
+	}
+	return out
+}
+
 var coordinatesImplementors = []string{"Coordinates"}
 
 func (ec *executionContext) _Coordinates(ctx context.Context, sel ast.SelectionSet, obj *location.Coordinates) graphql.Marshaler {
@@ -7929,20 +8017,6 @@ func (ec *executionContext) _Query(ctx context.Context, sel ast.SelectionSet) gr
 				}
 				return res
 			})
-		case "permissions":
-			field := field
-			out.Concurrently(i, func() (res graphql.Marshaler) {
-				defer func() {
-					if r := recover(); r != nil {
-						ec.Error(ctx, ec.Recover(ctx, r))
-					}
-				}()
-				res = ec._Query_permissions(ctx, field)
-				if res == graphql.Null {
-					atomic.AddUint32(&invalids, 1)
-				}
-				return res
-			})
 		case "git":
 			field := field
 			out.Concurrently(i, func() (res graphql.Marshaler) {
@@ -7952,6 +8026,20 @@ func (ec *executionContext) _Query(ctx context.Context, sel ast.SelectionSet) gr
 					}
 				}()
 				res = ec._Query_git(ctx, field)
+				if res == graphql.Null {
+					atomic.AddUint32(&invalids, 1)
+				}
+				return res
+			})
+		case "auth":
+			field := field
+			out.Concurrently(i, func() (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Query_auth(ctx, field)
 				if res == graphql.Null {
 					atomic.AddUint32(&invalids, 1)
 				}
@@ -8381,6 +8469,20 @@ func (ec *executionContext) ___Type(ctx context.Context, sel ast.SelectionSet, o
 
 func (ec *executionContext) marshalNAddress2goᚗstevenxieᚗmeᚋapiᚋlocationᚐAddress(ctx context.Context, sel ast.SelectionSet, v location.Address) graphql.Marshaler {
 	return ec._Address(ctx, sel, &v)
+}
+
+func (ec *executionContext) marshalNAuthQuery2goᚗstevenxieᚗmeᚋapiᚋauthᚋauthgqlᚐQuery(ctx context.Context, sel ast.SelectionSet, v authgql.Query) graphql.Marshaler {
+	return ec._AuthQuery(ctx, sel, &v)
+}
+
+func (ec *executionContext) marshalNAuthQuery2ᚖgoᚗstevenxieᚗmeᚋapiᚋauthᚋauthgqlᚐQuery(ctx context.Context, sel ast.SelectionSet, v *authgql.Query) graphql.Marshaler {
+	if v == nil {
+		if !ec.HasError(graphql.GetResolverContext(ctx)) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	return ec._AuthQuery(ctx, sel, v)
 }
 
 func (ec *executionContext) unmarshalNBoolean2bool(ctx context.Context, v interface{}) (bool, error) {
