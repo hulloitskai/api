@@ -21,6 +21,9 @@ autobind:
   - go.stevenxie.me/api/productivity
   - go.stevenxie.me/api/productivity/prodgql
   - go.stevenxie.me/api/auth/authgql
+  - go.stevenxie.me/api/assist/assistgql
+  - go.stevenxie.me/api/assist/transit
+  - go.stevenxie.me/api/assist/transit/transgql
 
 models:
   AuthQuery:
@@ -87,3 +90,22 @@ models:
     model: productivity.Record
   ProductivityCategory:
     model: prodgql.Category
+
+  AssistQuery:
+    model: assistgql.Query
+
+  TransitQuery:
+    model: transgql.Query
+  Transport:
+    model: transit.Transport
+  TransitDeparture:
+    model: transit.Departure
+  NearbyTransitDeparture:
+    model: transit.NearbyDeparture
+  TransitOperator:
+    model: transit.Operator
+  TransitStation:
+    model: transit.Station
+
+  CoordinatesInput:
+    model: locgql.CoordinatesInput

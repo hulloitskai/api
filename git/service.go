@@ -8,7 +8,7 @@ type (
 		RecentCommits(
 			ctx context.Context,
 			opts ...RecentCommitsOption,
-		) ([]*Commit, error)
+		) ([]Commit, error)
 	}
 
 	// A RecentCommitsConfig configures a Service.RecentCommits method.

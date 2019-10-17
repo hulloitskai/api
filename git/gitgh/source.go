@@ -12,7 +12,7 @@ import (
 	"go.stevenxie.me/api/pkg/github"
 )
 
-const homeURL = "https://github.com"
+const _homeURL = "https://github.com"
 
 // NewSource creates a new CommitsService.
 func NewSource(c *github.Client) git.Source {
@@ -35,7 +35,7 @@ var _ git.Source = (*source)(nil)
 func (svc source) RecentCommits(
 	ctx context.Context,
 	limit int,
-) ([]*git.Commit, error) {
+) ([]git.Commit, error) {
 	// Get current user login.
 	login, err := svc.client.CurrentUserLogin()
 	if err != nil {
@@ -43,7 +43,7 @@ func (svc source) RecentCommits(
 	}
 
 	var (
-		cms       = make([]*git.Commit, 0, limit)
+		cms       = make([]git.Commit, 0, limit)
 		seenRepos = make(map[string]zero.Struct)
 	)
 
@@ -97,20 +97,20 @@ PageLoop:
 			// Construct git.Commit.
 			var (
 				repo   = e.GetRepo().GetName()
-				commit = &git.Commit{
+				commit = git.Commit{
 					SHA:       pushCommit.GetSHA(),
 					Author:    author,
 					Committer: committer,
 					Message:   pushCommit.GetMessage(),
 					URL: fmt.Sprintf(
 						"%s/%s/commit/%s",
-						homeURL,
+						_homeURL,
 						repo,
 						pushCommit.GetSHA(),
 					),
 					Repo: git.Repo{
 						Name: repo,
-						URL:  fmt.Sprintf("%s/%s", homeURL, repo),
+						URL:  fmt.Sprintf("%s/%s", _homeURL, repo),
 					},
 					Timestamp: e.GetCreatedAt(),
 				}

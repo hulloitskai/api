@@ -7,6 +7,7 @@ import (
 	"github.com/cockroachdb/errors"
 
 	"go.stevenxie.me/api/about"
+	"go.stevenxie.me/api/assist/assistgql"
 	"go.stevenxie.me/api/auth"
 	"go.stevenxie.me/api/auth/authgql"
 	"go.stevenxie.me/api/auth/authutil"
@@ -29,6 +30,9 @@ func newQueryResolver(svcs Services) graphql.QueryResolver {
 		authq:  authgql.NewQuery(svcs.Auth),
 		musicq: musicgql.NewQuery(svcs.Music),
 		schedq: schedgql.NewQuery(svcs.Scheduling),
+		assistq: assistgql.NewQuery(assistgql.QueryServices{
+			Transit: svcs.Transit,
+		}),
 	}
 }
 
@@ -37,11 +41,12 @@ type queryResolver struct {
 	prod  productivity.Service
 	auth  auth.Service
 
-	gitq   gitgql.Query
-	locq   locgql.Query
-	authq  authgql.Query
-	musicq musicgql.Query
-	schedq schedgql.Query
+	gitq    gitgql.Query
+	locq    locgql.Query
+	authq   authgql.Query
+	musicq  musicgql.Query
+	schedq  schedgql.Query
+	assistq assistgql.Query
 }
 
 var _ graphql.QueryResolver = (*queryResolver)(nil)
@@ -71,16 +76,20 @@ func (qr queryResolver) Productivity(ctx context.Context) (
 	return qr.prod.CurrentProductivity(ctx)
 }
 
-func (qr queryResolver) Auth(context.Context) (*authgql.Query, error) {
-	return &qr.authq, nil
-}
-
 func (qr queryResolver) Git(context.Context) (*gitgql.Query, error) {
 	return &qr.gitq, nil
 }
 
+func (qr queryResolver) Auth(context.Context) (*authgql.Query, error) {
+	return &qr.authq, nil
+}
+
 func (qr queryResolver) Music(context.Context) (*musicgql.Query, error) {
 	return &qr.musicq, nil
+}
+
+func (qr queryResolver) Assist(context.Context) (*assistgql.Query, error) {
+	return &qr.assistq, nil
 }
 
 func (qr queryResolver) Location(context.Context) (*locgql.Query, error) {

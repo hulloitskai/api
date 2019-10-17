@@ -35,7 +35,7 @@ var _ git.Service = (*service)(nil)
 func (svc service) RecentCommits(
 	ctx context.Context,
 	opts ...git.RecentCommitsOption,
-) ([]*git.Commit, error) {
+) ([]git.Commit, error) {
 	cfg := git.RecentCommitsConfig{
 		Limit: 10,
 	}

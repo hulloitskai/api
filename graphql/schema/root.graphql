@@ -9,6 +9,11 @@ type Query {
   """
   productivity: Productivity!
 
+  """
+  Utility queries, used by personal assistants.
+  """
+  assist: AssistQuery!
+
   git: GitQuery!
   auth: AuthQuery!
   music: MusicQuery!

@@ -12,6 +12,7 @@ import (
 	"github.com/sirupsen/logrus"
 
 	"go.stevenxie.me/api/about"
+	"go.stevenxie.me/api/assist/transit"
 	"go.stevenxie.me/api/auth"
 	"go.stevenxie.me/api/git"
 	"go.stevenxie.me/api/location"
@@ -86,6 +87,7 @@ type (
 		Auth         auth.Service
 		About        about.Service
 		Music        music.Service
+		Transit      transit.Service
 		Location     location.Service
 		Scheduling   scheduling.Service
 		Productivity productivity.Service

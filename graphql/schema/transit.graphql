@@ -1,0 +1,45 @@
+type TransitQuery {
+  """
+  Find nearby transit departures.
+  """
+  findDepartures(route: String!, near: CoordinatesInput!): [NearbyTransitDeparture!]!
+}
+
+type NearbyTransitDeparture {
+  departure: TransitDeparture!
+
+  """
+  The distance from the departure, in meters.
+  """
+  distance: Int!
+}
+
+type TransitDeparture {
+  times: [Time!]!
+  transport: Transport!
+  station: TransitStation!
+
+  """
+  The relative departure times, in described text.
+  """
+  relativeTimes: [String!]!
+  realtime: Boolean!
+}
+
+type Transport {
+  route: String!
+  direction: String!
+  category: String!
+  operator: TransitOperator!
+}
+
+type TransitOperator {
+  code: String!
+  name: String!
+}
+
+type TransitStation {
+  id: String!
+  name: String!
+  position: Coordinates!
+}

@@ -18,6 +18,9 @@ import (
 	"github.com/vektah/gqlparser"
 	"github.com/vektah/gqlparser/ast"
 	"go.stevenxie.me/api/about"
+	"go.stevenxie.me/api/assist/assistgql"
+	"go.stevenxie.me/api/assist/transit"
+	"go.stevenxie.me/api/assist/transit/transgql"
 	"go.stevenxie.me/api/auth/authgql"
 	"go.stevenxie.me/api/git"
 	"go.stevenxie.me/api/git/gitgql"
@@ -59,6 +62,7 @@ type ResolverRoot interface {
 	ProductivityRecord() ProductivityRecordResolver
 	Query() QueryResolver
 	Subscription() SubscriptionResolver
+	TransitDeparture() TransitDepartureResolver
 }
 
 type DirectiveRoot struct {
@@ -75,6 +79,10 @@ type ComplexityRoot struct {
 		Postcode func(childComplexity int) int
 		State    func(childComplexity int) int
 		Street   func(childComplexity int) int
+	}
+
+	AssistQuery struct {
+		Transit func(childComplexity int) int
 	}
 
 	AuthQuery struct {
@@ -202,6 +210,11 @@ type ComplexityRoot struct {
 		Music func(childComplexity int, code string) int
 	}
 
+	NearbyTransitDeparture struct {
+		Departure func(childComplexity int) int
+		Distance  func(childComplexity int) int
+	}
+
 	Place struct {
 		Address  func(childComplexity int) int
 		ID       func(childComplexity int) int
@@ -230,6 +243,7 @@ type ComplexityRoot struct {
 
 	Query struct {
 		About        func(childComplexity int, code *string) int
+		Assist       func(childComplexity int) int
 		Auth         func(childComplexity int) int
 		Git          func(childComplexity int) int
 		Location     func(childComplexity int) int
@@ -254,6 +268,36 @@ type ComplexityRoot struct {
 	TimeZone struct {
 		Name   func(childComplexity int) int
 		Offset func(childComplexity int) int
+	}
+
+	TransitDeparture struct {
+		Realtime      func(childComplexity int) int
+		RelativeTimes func(childComplexity int) int
+		Station       func(childComplexity int) int
+		Times         func(childComplexity int) int
+		Transport     func(childComplexity int) int
+	}
+
+	TransitOperator struct {
+		Code func(childComplexity int) int
+		Name func(childComplexity int) int
+	}
+
+	TransitQuery struct {
+		FindDepartures func(childComplexity int, route string, near locgql.CoordinatesInput) int
+	}
+
+	TransitStation struct {
+		ID       func(childComplexity int) int
+		Name     func(childComplexity int) int
+		Position func(childComplexity int) int
+	}
+
+	Transport struct {
+		Category  func(childComplexity int) int
+		Direction func(childComplexity int) int
+		Operator  func(childComplexity int) int
+		Route     func(childComplexity int) int
 	}
 }
 
@@ -287,6 +331,7 @@ type ProductivityRecordResolver interface {
 type QueryResolver interface {
 	About(ctx context.Context, code *string) (about.ContactInfo, error)
 	Productivity(ctx context.Context) (*productivity.Productivity, error)
+	Assist(ctx context.Context) (*assistgql.Query, error)
 	Git(ctx context.Context) (*gitgql.Query, error)
 	Auth(ctx context.Context) (*authgql.Query, error)
 	Music(ctx context.Context) (*musicgql.Query, error)
@@ -295,6 +340,9 @@ type QueryResolver interface {
 }
 type SubscriptionResolver interface {
 	Music(ctx context.Context) (<-chan *music.CurrentlyPlaying, error)
+}
+type TransitDepartureResolver interface {
+	RelativeTimes(ctx context.Context, obj *transit.Departure) ([]string, error)
 }
 
 type executableSchema struct {
@@ -374,6 +422,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.Address.Street(childComplexity), true
+
+	case "AssistQuery.transit":
+		if e.complexity.AssistQuery.Transit == nil {
+			break
+		}
+
+		return e.complexity.AssistQuery.Transit(childComplexity), true
 
 	case "AuthQuery.permissions":
 		if e.complexity.AuthQuery.Permissions == nil {
@@ -907,6 +962,20 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.Mutation.Music(childComplexity, args["code"].(string)), true
 
+	case "NearbyTransitDeparture.departure":
+		if e.complexity.NearbyTransitDeparture.Departure == nil {
+			break
+		}
+
+		return e.complexity.NearbyTransitDeparture.Departure(childComplexity), true
+
+	case "NearbyTransitDeparture.distance":
+		if e.complexity.NearbyTransitDeparture.Distance == nil {
+			break
+		}
+
+		return e.complexity.NearbyTransitDeparture.Distance(childComplexity), true
+
 	case "Place.address":
 		if e.complexity.Place.Address == nil {
 			break
@@ -1017,6 +1086,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.Query.About(childComplexity, args["code"].(*string)), true
 
+	case "Query.assist":
+		if e.complexity.Query.Assist == nil {
+			break
+		}
+
+		return e.complexity.Query.Assist(childComplexity), true
+
 	case "Query.auth":
 		if e.complexity.Query.Auth == nil {
 			break
@@ -1105,6 +1181,116 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.TimeZone.Offset(childComplexity), true
+
+	case "TransitDeparture.realtime":
+		if e.complexity.TransitDeparture.Realtime == nil {
+			break
+		}
+
+		return e.complexity.TransitDeparture.Realtime(childComplexity), true
+
+	case "TransitDeparture.relativeTimes":
+		if e.complexity.TransitDeparture.RelativeTimes == nil {
+			break
+		}
+
+		return e.complexity.TransitDeparture.RelativeTimes(childComplexity), true
+
+	case "TransitDeparture.station":
+		if e.complexity.TransitDeparture.Station == nil {
+			break
+		}
+
+		return e.complexity.TransitDeparture.Station(childComplexity), true
+
+	case "TransitDeparture.times":
+		if e.complexity.TransitDeparture.Times == nil {
+			break
+		}
+
+		return e.complexity.TransitDeparture.Times(childComplexity), true
+
+	case "TransitDeparture.transport":
+		if e.complexity.TransitDeparture.Transport == nil {
+			break
+		}
+
+		return e.complexity.TransitDeparture.Transport(childComplexity), true
+
+	case "TransitOperator.code":
+		if e.complexity.TransitOperator.Code == nil {
+			break
+		}
+
+		return e.complexity.TransitOperator.Code(childComplexity), true
+
+	case "TransitOperator.name":
+		if e.complexity.TransitOperator.Name == nil {
+			break
+		}
+
+		return e.complexity.TransitOperator.Name(childComplexity), true
+
+	case "TransitQuery.findDepartures":
+		if e.complexity.TransitQuery.FindDepartures == nil {
+			break
+		}
+
+		args, err := ec.field_TransitQuery_findDepartures_args(context.TODO(), rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.TransitQuery.FindDepartures(childComplexity, args["route"].(string), args["near"].(locgql.CoordinatesInput)), true
+
+	case "TransitStation.id":
+		if e.complexity.TransitStation.ID == nil {
+			break
+		}
+
+		return e.complexity.TransitStation.ID(childComplexity), true
+
+	case "TransitStation.name":
+		if e.complexity.TransitStation.Name == nil {
+			break
+		}
+
+		return e.complexity.TransitStation.Name(childComplexity), true
+
+	case "TransitStation.position":
+		if e.complexity.TransitStation.Position == nil {
+			break
+		}
+
+		return e.complexity.TransitStation.Position(childComplexity), true
+
+	case "Transport.category":
+		if e.complexity.Transport.Category == nil {
+			break
+		}
+
+		return e.complexity.Transport.Category(childComplexity), true
+
+	case "Transport.direction":
+		if e.complexity.Transport.Direction == nil {
+			break
+		}
+
+		return e.complexity.Transport.Direction(childComplexity), true
+
+	case "Transport.operator":
+		if e.complexity.Transport.Operator == nil {
+			break
+		}
+
+		return e.complexity.Transport.Operator(childComplexity), true
+
+	case "Transport.route":
+		if e.complexity.Transport.Route == nil {
+			break
+		}
+
+		return e.complexity.Transport.Route(childComplexity), true
 
 	}
 	return 0, false
@@ -1235,6 +1421,10 @@ type MaskedAbout implements PartialAbout {
   whereabouts: String!
 }
 `},
+	&ast.Source{Name: "schema/assist.graphql", Input: `type AssistQuery {
+  transit: TransitQuery!
+}
+`},
 	&ast.Source{Name: "schema/auth.graphql", Input: `type AuthQuery {
   """
   Get the permissions associated with a particular access code.
@@ -1323,6 +1513,17 @@ type Coordinates {
 }
 
 """
+A ` + "`" + `CoordinatesInput` + "`" + ` is used to create a ` + "`" + `Coordinates` + "`" + `.
+
+If its ` + "`" + `z` + "`" + ` component is not set, it will default to zero.
+"""
+input CoordinatesInput {
+  x: Float!
+  y: Float!
+  z: Float
+}
+
+"""
 An ` + "`" + `Address` + "`" + ` describes the position of a ` + "`" + `Place` + "`" + `.
 """
 type Address {
@@ -1350,7 +1551,7 @@ type TimeZone {
 }
 `},
 	&ast.Source{Name: "schema/music.graphql", Input: `type MusicQuery {
-  current: CurrentlyPlayingMusic!
+  current: CurrentlyPlayingMusic
 }
 
 type MusicMutation {
@@ -1478,6 +1679,11 @@ type ProductivityCategory {
   """
   productivity: Productivity!
 
+  """
+  Utility queries, used by personal assistants.
+  """
+  assist: AssistQuery!
+
   git: GitQuery!
   auth: AuthQuery!
   music: MusicQuery!
@@ -1503,6 +1709,52 @@ type TimePeriod {
 
 type SchedulingQuery {
   busyPeriods(date: Time): [TimePeriod!]!
+}
+`},
+	&ast.Source{Name: "schema/transit.graphql", Input: `type TransitQuery {
+  """
+  Find nearby transit departures.
+  """
+  findDepartures(route: String!, near: CoordinatesInput!): [NearbyTransitDeparture!]!
+}
+
+type NearbyTransitDeparture {
+  departure: TransitDeparture!
+
+  """
+  The distance from the departure, in meters.
+  """
+  distance: Int!
+}
+
+type TransitDeparture {
+  times: [Time!]!
+  transport: Transport!
+  station: TransitStation!
+
+  """
+  The relative departure times, in described text.
+  """
+  relativeTimes: [String!]!
+  realtime: Boolean!
+}
+
+type Transport {
+  route: String!
+  direction: String!
+  category: String!
+  operator: TransitOperator!
+}
+
+type TransitOperator {
+  code: String!
+  name: String!
+}
+
+type TransitStation {
+  id: String!
+  name: String!
+  position: Coordinates!
 }
 `},
 )
@@ -1672,6 +1924,28 @@ func (ec *executionContext) field_SchedulingQuery_busyPeriods_args(ctx context.C
 		}
 	}
 	args["date"] = arg0
+	return args, nil
+}
+
+func (ec *executionContext) field_TransitQuery_findDepartures_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+	var err error
+	args := map[string]interface{}{}
+	var arg0 string
+	if tmp, ok := rawArgs["route"]; ok {
+		arg0, err = ec.unmarshalNString2string(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["route"] = arg0
+	var arg1 locgql.CoordinatesInput
+	if tmp, ok := rawArgs["near"]; ok {
+		arg1, err = ec.unmarshalNCoordinatesInput2goᚗstevenxieᚗmeᚋapiᚋlocationᚋlocgqlᚐCoordinatesInput(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["near"] = arg1
 	return args, nil
 }
 
@@ -2033,6 +2307,43 @@ func (ec *executionContext) _Address_number(ctx context.Context, field graphql.C
 	rctx.Result = res
 	ctx = ec.Tracer.StartFieldChildExecution(ctx)
 	return ec.marshalOString2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _AssistQuery_transit(ctx context.Context, field graphql.CollectedField, obj *assistgql.Query) (ret graphql.Marshaler) {
+	ctx = ec.Tracer.StartFieldExecution(ctx, field)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+		ec.Tracer.EndFieldExecution(ctx)
+	}()
+	rctx := &graphql.ResolverContext{
+		Object:   "AssistQuery",
+		Field:    field,
+		Args:     nil,
+		IsMethod: false,
+	}
+	ctx = graphql.WithResolverContext(ctx, rctx)
+	ctx = ec.Tracer.StartFieldResolverExecution(ctx, rctx)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Transit, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !ec.HasError(rctx) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(transgql.Query)
+	rctx.Result = res
+	ctx = ec.Tracer.StartFieldChildExecution(ctx)
+	return ec.marshalNTransitQuery2goᚗstevenxieᚗmeᚋapiᚋassistᚋtransitᚋtransgqlᚐQuery(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _AuthQuery_permissions(ctx context.Context, field graphql.CollectedField, obj *authgql.Query) (ret graphql.Marshaler) {
@@ -3064,10 +3375,10 @@ func (ec *executionContext) _GitQuery_recentCommits(ctx context.Context, field g
 		}
 		return graphql.Null
 	}
-	res := resTmp.([]*git.Commit)
+	res := resTmp.([]git.Commit)
 	rctx.Result = res
 	ctx = ec.Tracer.StartFieldChildExecution(ctx)
-	return ec.marshalNGitCommit2ᚕᚖgoᚗstevenxieᚗmeᚋapiᚋgitᚐCommit(ctx, field.Selections, res)
+	return ec.marshalNGitCommit2ᚕgoᚗstevenxieᚗmeᚋapiᚋgitᚐCommit(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _GitRepo_name(ctx context.Context, field graphql.CollectedField, obj *git.Repo) (ret graphql.Marshaler) {
@@ -4373,15 +4684,12 @@ func (ec *executionContext) _MusicQuery_current(ctx context.Context, field graph
 		return graphql.Null
 	}
 	if resTmp == nil {
-		if !ec.HasError(rctx) {
-			ec.Errorf(ctx, "must not be null")
-		}
 		return graphql.Null
 	}
 	res := resTmp.(*music.CurrentlyPlaying)
 	rctx.Result = res
 	ctx = ec.Tracer.StartFieldChildExecution(ctx)
-	return ec.marshalNCurrentlyPlayingMusic2ᚖgoᚗstevenxieᚗmeᚋapiᚋmusicᚐCurrentlyPlaying(ctx, field.Selections, res)
+	return ec.marshalOCurrentlyPlayingMusic2ᚖgoᚗstevenxieᚗmeᚋapiᚋmusicᚐCurrentlyPlaying(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _MusicTrack_id(ctx context.Context, field graphql.CollectedField, obj *music.Track) (ret graphql.Marshaler) {
@@ -4685,6 +4993,80 @@ func (ec *executionContext) _Mutation_music(ctx context.Context, field graphql.C
 	rctx.Result = res
 	ctx = ec.Tracer.StartFieldChildExecution(ctx)
 	return ec.marshalNMusicMutation2ᚖgoᚗstevenxieᚗmeᚋapiᚋmusicᚋmusicgqlᚐMutation(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _NearbyTransitDeparture_departure(ctx context.Context, field graphql.CollectedField, obj *transit.NearbyDeparture) (ret graphql.Marshaler) {
+	ctx = ec.Tracer.StartFieldExecution(ctx, field)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+		ec.Tracer.EndFieldExecution(ctx)
+	}()
+	rctx := &graphql.ResolverContext{
+		Object:   "NearbyTransitDeparture",
+		Field:    field,
+		Args:     nil,
+		IsMethod: false,
+	}
+	ctx = graphql.WithResolverContext(ctx, rctx)
+	ctx = ec.Tracer.StartFieldResolverExecution(ctx, rctx)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Departure, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !ec.HasError(rctx) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(transit.Departure)
+	rctx.Result = res
+	ctx = ec.Tracer.StartFieldChildExecution(ctx)
+	return ec.marshalNTransitDeparture2goᚗstevenxieᚗmeᚋapiᚋassistᚋtransitᚐDeparture(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _NearbyTransitDeparture_distance(ctx context.Context, field graphql.CollectedField, obj *transit.NearbyDeparture) (ret graphql.Marshaler) {
+	ctx = ec.Tracer.StartFieldExecution(ctx, field)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+		ec.Tracer.EndFieldExecution(ctx)
+	}()
+	rctx := &graphql.ResolverContext{
+		Object:   "NearbyTransitDeparture",
+		Field:    field,
+		Args:     nil,
+		IsMethod: false,
+	}
+	ctx = graphql.WithResolverContext(ctx, rctx)
+	ctx = ec.Tracer.StartFieldResolverExecution(ctx, rctx)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Distance, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !ec.HasError(rctx) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(int)
+	rctx.Result = res
+	ctx = ec.Tracer.StartFieldChildExecution(ctx)
+	return ec.marshalNInt2int(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _Place_id(ctx context.Context, field graphql.CollectedField, obj *locgql.Place) (ret graphql.Marshaler) {
@@ -5277,6 +5659,43 @@ func (ec *executionContext) _Query_productivity(ctx context.Context, field graph
 	return ec.marshalNProductivity2ᚖgoᚗstevenxieᚗmeᚋapiᚋproductivityᚐProductivity(ctx, field.Selections, res)
 }
 
+func (ec *executionContext) _Query_assist(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	ctx = ec.Tracer.StartFieldExecution(ctx, field)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+		ec.Tracer.EndFieldExecution(ctx)
+	}()
+	rctx := &graphql.ResolverContext{
+		Object:   "Query",
+		Field:    field,
+		Args:     nil,
+		IsMethod: true,
+	}
+	ctx = graphql.WithResolverContext(ctx, rctx)
+	ctx = ec.Tracer.StartFieldResolverExecution(ctx, rctx)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Query().Assist(rctx)
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !ec.HasError(rctx) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(*assistgql.Query)
+	rctx.Result = res
+	ctx = ec.Tracer.StartFieldChildExecution(ctx)
+	return ec.marshalNAssistQuery2ᚖgoᚗstevenxieᚗmeᚋapiᚋassistᚋassistgqlᚐQuery(ctx, field.Selections, res)
+}
+
 func (ec *executionContext) _Query_git(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
 	ctx = ec.Tracer.StartFieldExecution(ctx, field)
 	defer func() {
@@ -5770,6 +6189,568 @@ func (ec *executionContext) _TimeZone_offset(ctx context.Context, field graphql.
 	rctx.Result = res
 	ctx = ec.Tracer.StartFieldChildExecution(ctx)
 	return ec.marshalNInt2int(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _TransitDeparture_times(ctx context.Context, field graphql.CollectedField, obj *transit.Departure) (ret graphql.Marshaler) {
+	ctx = ec.Tracer.StartFieldExecution(ctx, field)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+		ec.Tracer.EndFieldExecution(ctx)
+	}()
+	rctx := &graphql.ResolverContext{
+		Object:   "TransitDeparture",
+		Field:    field,
+		Args:     nil,
+		IsMethod: false,
+	}
+	ctx = graphql.WithResolverContext(ctx, rctx)
+	ctx = ec.Tracer.StartFieldResolverExecution(ctx, rctx)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Times, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !ec.HasError(rctx) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.([]time.Time)
+	rctx.Result = res
+	ctx = ec.Tracer.StartFieldChildExecution(ctx)
+	return ec.marshalNTime2ᚕtimeᚐTime(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _TransitDeparture_transport(ctx context.Context, field graphql.CollectedField, obj *transit.Departure) (ret graphql.Marshaler) {
+	ctx = ec.Tracer.StartFieldExecution(ctx, field)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+		ec.Tracer.EndFieldExecution(ctx)
+	}()
+	rctx := &graphql.ResolverContext{
+		Object:   "TransitDeparture",
+		Field:    field,
+		Args:     nil,
+		IsMethod: false,
+	}
+	ctx = graphql.WithResolverContext(ctx, rctx)
+	ctx = ec.Tracer.StartFieldResolverExecution(ctx, rctx)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Transport, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !ec.HasError(rctx) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(*transit.Transport)
+	rctx.Result = res
+	ctx = ec.Tracer.StartFieldChildExecution(ctx)
+	return ec.marshalNTransport2ᚖgoᚗstevenxieᚗmeᚋapiᚋassistᚋtransitᚐTransport(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _TransitDeparture_station(ctx context.Context, field graphql.CollectedField, obj *transit.Departure) (ret graphql.Marshaler) {
+	ctx = ec.Tracer.StartFieldExecution(ctx, field)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+		ec.Tracer.EndFieldExecution(ctx)
+	}()
+	rctx := &graphql.ResolverContext{
+		Object:   "TransitDeparture",
+		Field:    field,
+		Args:     nil,
+		IsMethod: false,
+	}
+	ctx = graphql.WithResolverContext(ctx, rctx)
+	ctx = ec.Tracer.StartFieldResolverExecution(ctx, rctx)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Station, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !ec.HasError(rctx) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(*transit.Station)
+	rctx.Result = res
+	ctx = ec.Tracer.StartFieldChildExecution(ctx)
+	return ec.marshalNTransitStation2ᚖgoᚗstevenxieᚗmeᚋapiᚋassistᚋtransitᚐStation(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _TransitDeparture_relativeTimes(ctx context.Context, field graphql.CollectedField, obj *transit.Departure) (ret graphql.Marshaler) {
+	ctx = ec.Tracer.StartFieldExecution(ctx, field)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+		ec.Tracer.EndFieldExecution(ctx)
+	}()
+	rctx := &graphql.ResolverContext{
+		Object:   "TransitDeparture",
+		Field:    field,
+		Args:     nil,
+		IsMethod: true,
+	}
+	ctx = graphql.WithResolverContext(ctx, rctx)
+	ctx = ec.Tracer.StartFieldResolverExecution(ctx, rctx)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.TransitDeparture().RelativeTimes(rctx, obj)
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !ec.HasError(rctx) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.([]string)
+	rctx.Result = res
+	ctx = ec.Tracer.StartFieldChildExecution(ctx)
+	return ec.marshalNString2ᚕstring(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _TransitDeparture_realtime(ctx context.Context, field graphql.CollectedField, obj *transit.Departure) (ret graphql.Marshaler) {
+	ctx = ec.Tracer.StartFieldExecution(ctx, field)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+		ec.Tracer.EndFieldExecution(ctx)
+	}()
+	rctx := &graphql.ResolverContext{
+		Object:   "TransitDeparture",
+		Field:    field,
+		Args:     nil,
+		IsMethod: false,
+	}
+	ctx = graphql.WithResolverContext(ctx, rctx)
+	ctx = ec.Tracer.StartFieldResolverExecution(ctx, rctx)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Realtime, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !ec.HasError(rctx) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(bool)
+	rctx.Result = res
+	ctx = ec.Tracer.StartFieldChildExecution(ctx)
+	return ec.marshalNBoolean2bool(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _TransitOperator_code(ctx context.Context, field graphql.CollectedField, obj *transit.Operator) (ret graphql.Marshaler) {
+	ctx = ec.Tracer.StartFieldExecution(ctx, field)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+		ec.Tracer.EndFieldExecution(ctx)
+	}()
+	rctx := &graphql.ResolverContext{
+		Object:   "TransitOperator",
+		Field:    field,
+		Args:     nil,
+		IsMethod: false,
+	}
+	ctx = graphql.WithResolverContext(ctx, rctx)
+	ctx = ec.Tracer.StartFieldResolverExecution(ctx, rctx)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Code, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !ec.HasError(rctx) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	rctx.Result = res
+	ctx = ec.Tracer.StartFieldChildExecution(ctx)
+	return ec.marshalNString2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _TransitOperator_name(ctx context.Context, field graphql.CollectedField, obj *transit.Operator) (ret graphql.Marshaler) {
+	ctx = ec.Tracer.StartFieldExecution(ctx, field)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+		ec.Tracer.EndFieldExecution(ctx)
+	}()
+	rctx := &graphql.ResolverContext{
+		Object:   "TransitOperator",
+		Field:    field,
+		Args:     nil,
+		IsMethod: false,
+	}
+	ctx = graphql.WithResolverContext(ctx, rctx)
+	ctx = ec.Tracer.StartFieldResolverExecution(ctx, rctx)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Name, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !ec.HasError(rctx) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	rctx.Result = res
+	ctx = ec.Tracer.StartFieldChildExecution(ctx)
+	return ec.marshalNString2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _TransitQuery_findDepartures(ctx context.Context, field graphql.CollectedField, obj *transgql.Query) (ret graphql.Marshaler) {
+	ctx = ec.Tracer.StartFieldExecution(ctx, field)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+		ec.Tracer.EndFieldExecution(ctx)
+	}()
+	rctx := &graphql.ResolverContext{
+		Object:   "TransitQuery",
+		Field:    field,
+		Args:     nil,
+		IsMethod: true,
+	}
+	ctx = graphql.WithResolverContext(ctx, rctx)
+	rawArgs := field.ArgumentMap(ec.Variables)
+	args, err := ec.field_TransitQuery_findDepartures_args(ctx, rawArgs)
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	rctx.Args = args
+	ctx = ec.Tracer.StartFieldResolverExecution(ctx, rctx)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.FindDepartures(ctx, args["route"].(string), args["near"].(locgql.CoordinatesInput))
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !ec.HasError(rctx) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.([]transit.NearbyDeparture)
+	rctx.Result = res
+	ctx = ec.Tracer.StartFieldChildExecution(ctx)
+	return ec.marshalNNearbyTransitDeparture2ᚕgoᚗstevenxieᚗmeᚋapiᚋassistᚋtransitᚐNearbyDeparture(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _TransitStation_id(ctx context.Context, field graphql.CollectedField, obj *transit.Station) (ret graphql.Marshaler) {
+	ctx = ec.Tracer.StartFieldExecution(ctx, field)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+		ec.Tracer.EndFieldExecution(ctx)
+	}()
+	rctx := &graphql.ResolverContext{
+		Object:   "TransitStation",
+		Field:    field,
+		Args:     nil,
+		IsMethod: false,
+	}
+	ctx = graphql.WithResolverContext(ctx, rctx)
+	ctx = ec.Tracer.StartFieldResolverExecution(ctx, rctx)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.ID, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !ec.HasError(rctx) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	rctx.Result = res
+	ctx = ec.Tracer.StartFieldChildExecution(ctx)
+	return ec.marshalNString2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _TransitStation_name(ctx context.Context, field graphql.CollectedField, obj *transit.Station) (ret graphql.Marshaler) {
+	ctx = ec.Tracer.StartFieldExecution(ctx, field)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+		ec.Tracer.EndFieldExecution(ctx)
+	}()
+	rctx := &graphql.ResolverContext{
+		Object:   "TransitStation",
+		Field:    field,
+		Args:     nil,
+		IsMethod: false,
+	}
+	ctx = graphql.WithResolverContext(ctx, rctx)
+	ctx = ec.Tracer.StartFieldResolverExecution(ctx, rctx)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Name, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !ec.HasError(rctx) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	rctx.Result = res
+	ctx = ec.Tracer.StartFieldChildExecution(ctx)
+	return ec.marshalNString2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _TransitStation_position(ctx context.Context, field graphql.CollectedField, obj *transit.Station) (ret graphql.Marshaler) {
+	ctx = ec.Tracer.StartFieldExecution(ctx, field)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+		ec.Tracer.EndFieldExecution(ctx)
+	}()
+	rctx := &graphql.ResolverContext{
+		Object:   "TransitStation",
+		Field:    field,
+		Args:     nil,
+		IsMethod: false,
+	}
+	ctx = graphql.WithResolverContext(ctx, rctx)
+	ctx = ec.Tracer.StartFieldResolverExecution(ctx, rctx)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Position, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !ec.HasError(rctx) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(location.Coordinates)
+	rctx.Result = res
+	ctx = ec.Tracer.StartFieldChildExecution(ctx)
+	return ec.marshalNCoordinates2goᚗstevenxieᚗmeᚋapiᚋlocationᚐCoordinates(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _Transport_route(ctx context.Context, field graphql.CollectedField, obj *transit.Transport) (ret graphql.Marshaler) {
+	ctx = ec.Tracer.StartFieldExecution(ctx, field)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+		ec.Tracer.EndFieldExecution(ctx)
+	}()
+	rctx := &graphql.ResolverContext{
+		Object:   "Transport",
+		Field:    field,
+		Args:     nil,
+		IsMethod: false,
+	}
+	ctx = graphql.WithResolverContext(ctx, rctx)
+	ctx = ec.Tracer.StartFieldResolverExecution(ctx, rctx)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Route, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !ec.HasError(rctx) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	rctx.Result = res
+	ctx = ec.Tracer.StartFieldChildExecution(ctx)
+	return ec.marshalNString2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _Transport_direction(ctx context.Context, field graphql.CollectedField, obj *transit.Transport) (ret graphql.Marshaler) {
+	ctx = ec.Tracer.StartFieldExecution(ctx, field)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+		ec.Tracer.EndFieldExecution(ctx)
+	}()
+	rctx := &graphql.ResolverContext{
+		Object:   "Transport",
+		Field:    field,
+		Args:     nil,
+		IsMethod: false,
+	}
+	ctx = graphql.WithResolverContext(ctx, rctx)
+	ctx = ec.Tracer.StartFieldResolverExecution(ctx, rctx)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Direction, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !ec.HasError(rctx) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	rctx.Result = res
+	ctx = ec.Tracer.StartFieldChildExecution(ctx)
+	return ec.marshalNString2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _Transport_category(ctx context.Context, field graphql.CollectedField, obj *transit.Transport) (ret graphql.Marshaler) {
+	ctx = ec.Tracer.StartFieldExecution(ctx, field)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+		ec.Tracer.EndFieldExecution(ctx)
+	}()
+	rctx := &graphql.ResolverContext{
+		Object:   "Transport",
+		Field:    field,
+		Args:     nil,
+		IsMethod: false,
+	}
+	ctx = graphql.WithResolverContext(ctx, rctx)
+	ctx = ec.Tracer.StartFieldResolverExecution(ctx, rctx)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Category, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !ec.HasError(rctx) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	rctx.Result = res
+	ctx = ec.Tracer.StartFieldChildExecution(ctx)
+	return ec.marshalNString2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _Transport_operator(ctx context.Context, field graphql.CollectedField, obj *transit.Transport) (ret graphql.Marshaler) {
+	ctx = ec.Tracer.StartFieldExecution(ctx, field)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+		ec.Tracer.EndFieldExecution(ctx)
+	}()
+	rctx := &graphql.ResolverContext{
+		Object:   "Transport",
+		Field:    field,
+		Args:     nil,
+		IsMethod: false,
+	}
+	ctx = graphql.WithResolverContext(ctx, rctx)
+	ctx = ec.Tracer.StartFieldResolverExecution(ctx, rctx)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Operator, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !ec.HasError(rctx) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(*transit.Operator)
+	rctx.Result = res
+	ctx = ec.Tracer.StartFieldChildExecution(ctx)
+	return ec.marshalNTransitOperator2ᚖgoᚗstevenxieᚗmeᚋapiᚋassistᚋtransitᚐOperator(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) ___Directive_name(ctx context.Context, field graphql.CollectedField, obj *introspection.Directive) (ret graphql.Marshaler) {
@@ -6923,6 +7904,36 @@ func (ec *executionContext) ___Type_ofType(ctx context.Context, field graphql.Co
 
 // region    **************************** input.gotpl *****************************
 
+func (ec *executionContext) unmarshalInputCoordinatesInput(ctx context.Context, obj interface{}) (locgql.CoordinatesInput, error) {
+	var it locgql.CoordinatesInput
+	var asMap = obj.(map[string]interface{})
+
+	for k, v := range asMap {
+		switch k {
+		case "x":
+			var err error
+			it.X, err = ec.unmarshalNFloat2float64(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "y":
+			var err error
+			it.Y, err = ec.unmarshalNFloat2float64(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "z":
+			var err error
+			it.Z, err = ec.unmarshalOFloat2ᚖfloat64(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		}
+	}
+
+	return it, nil
+}
+
 // endregion **************************** input.gotpl *****************************
 
 // region    ************************** interface.gotpl ***************************
@@ -6991,6 +8002,33 @@ func (ec *executionContext) _Address(ctx context.Context, sel ast.SelectionSet, 
 			out.Values[i] = ec._Address_street(ctx, field, obj)
 		case "number":
 			out.Values[i] = ec._Address_number(ctx, field, obj)
+		default:
+			panic("unknown field " + strconv.Quote(field.Name))
+		}
+	}
+	out.Dispatch()
+	if invalids > 0 {
+		return graphql.Null
+	}
+	return out
+}
+
+var assistQueryImplementors = []string{"AssistQuery"}
+
+func (ec *executionContext) _AssistQuery(ctx context.Context, sel ast.SelectionSet, obj *assistgql.Query) graphql.Marshaler {
+	fields := graphql.CollectFields(ec.RequestContext, sel, assistQueryImplementors)
+
+	out := graphql.NewFieldSet(fields)
+	var invalids uint32
+	for i, field := range fields {
+		switch field.Name {
+		case "__typename":
+			out.Values[i] = graphql.MarshalString("AssistQuery")
+		case "transit":
+			out.Values[i] = ec._AssistQuery_transit(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
 		default:
 			panic("unknown field " + strconv.Quote(field.Name))
 		}
@@ -7737,9 +8775,6 @@ func (ec *executionContext) _MusicQuery(ctx context.Context, sel ast.SelectionSe
 					}
 				}()
 				res = ec._MusicQuery_current(ctx, field, obj)
-				if res == graphql.Null {
-					atomic.AddUint32(&invalids, 1)
-				}
 				return res
 			})
 		default:
@@ -7845,6 +8880,38 @@ func (ec *executionContext) _Mutation(ctx context.Context, sel ast.SelectionSet)
 			out.Values[i] = graphql.MarshalString("Mutation")
 		case "music":
 			out.Values[i] = ec._Mutation_music(ctx, field)
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		default:
+			panic("unknown field " + strconv.Quote(field.Name))
+		}
+	}
+	out.Dispatch()
+	if invalids > 0 {
+		return graphql.Null
+	}
+	return out
+}
+
+var nearbyTransitDepartureImplementors = []string{"NearbyTransitDeparture"}
+
+func (ec *executionContext) _NearbyTransitDeparture(ctx context.Context, sel ast.SelectionSet, obj *transit.NearbyDeparture) graphql.Marshaler {
+	fields := graphql.CollectFields(ec.RequestContext, sel, nearbyTransitDepartureImplementors)
+
+	out := graphql.NewFieldSet(fields)
+	var invalids uint32
+	for i, field := range fields {
+		switch field.Name {
+		case "__typename":
+			out.Values[i] = graphql.MarshalString("NearbyTransitDeparture")
+		case "departure":
+			out.Values[i] = ec._NearbyTransitDeparture_departure(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		case "distance":
+			out.Values[i] = ec._NearbyTransitDeparture_distance(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
 				invalids++
 			}
@@ -8078,6 +9145,20 @@ func (ec *executionContext) _Query(ctx context.Context, sel ast.SelectionSet) gr
 				}
 				return res
 			})
+		case "assist":
+			field := field
+			out.Concurrently(i, func() (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Query_assist(ctx, field)
+				if res == graphql.Null {
+					atomic.AddUint32(&invalids, 1)
+				}
+				return res
+			})
 		case "git":
 			field := field
 			out.Concurrently(i, func() (res graphql.Marshaler) {
@@ -8269,6 +9350,209 @@ func (ec *executionContext) _TimeZone(ctx context.Context, sel ast.SelectionSet,
 			}
 		case "offset":
 			out.Values[i] = ec._TimeZone_offset(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		default:
+			panic("unknown field " + strconv.Quote(field.Name))
+		}
+	}
+	out.Dispatch()
+	if invalids > 0 {
+		return graphql.Null
+	}
+	return out
+}
+
+var transitDepartureImplementors = []string{"TransitDeparture"}
+
+func (ec *executionContext) _TransitDeparture(ctx context.Context, sel ast.SelectionSet, obj *transit.Departure) graphql.Marshaler {
+	fields := graphql.CollectFields(ec.RequestContext, sel, transitDepartureImplementors)
+
+	out := graphql.NewFieldSet(fields)
+	var invalids uint32
+	for i, field := range fields {
+		switch field.Name {
+		case "__typename":
+			out.Values[i] = graphql.MarshalString("TransitDeparture")
+		case "times":
+			out.Values[i] = ec._TransitDeparture_times(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				atomic.AddUint32(&invalids, 1)
+			}
+		case "transport":
+			out.Values[i] = ec._TransitDeparture_transport(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				atomic.AddUint32(&invalids, 1)
+			}
+		case "station":
+			out.Values[i] = ec._TransitDeparture_station(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				atomic.AddUint32(&invalids, 1)
+			}
+		case "relativeTimes":
+			field := field
+			out.Concurrently(i, func() (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._TransitDeparture_relativeTimes(ctx, field, obj)
+				if res == graphql.Null {
+					atomic.AddUint32(&invalids, 1)
+				}
+				return res
+			})
+		case "realtime":
+			out.Values[i] = ec._TransitDeparture_realtime(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				atomic.AddUint32(&invalids, 1)
+			}
+		default:
+			panic("unknown field " + strconv.Quote(field.Name))
+		}
+	}
+	out.Dispatch()
+	if invalids > 0 {
+		return graphql.Null
+	}
+	return out
+}
+
+var transitOperatorImplementors = []string{"TransitOperator"}
+
+func (ec *executionContext) _TransitOperator(ctx context.Context, sel ast.SelectionSet, obj *transit.Operator) graphql.Marshaler {
+	fields := graphql.CollectFields(ec.RequestContext, sel, transitOperatorImplementors)
+
+	out := graphql.NewFieldSet(fields)
+	var invalids uint32
+	for i, field := range fields {
+		switch field.Name {
+		case "__typename":
+			out.Values[i] = graphql.MarshalString("TransitOperator")
+		case "code":
+			out.Values[i] = ec._TransitOperator_code(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		case "name":
+			out.Values[i] = ec._TransitOperator_name(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		default:
+			panic("unknown field " + strconv.Quote(field.Name))
+		}
+	}
+	out.Dispatch()
+	if invalids > 0 {
+		return graphql.Null
+	}
+	return out
+}
+
+var transitQueryImplementors = []string{"TransitQuery"}
+
+func (ec *executionContext) _TransitQuery(ctx context.Context, sel ast.SelectionSet, obj *transgql.Query) graphql.Marshaler {
+	fields := graphql.CollectFields(ec.RequestContext, sel, transitQueryImplementors)
+
+	out := graphql.NewFieldSet(fields)
+	var invalids uint32
+	for i, field := range fields {
+		switch field.Name {
+		case "__typename":
+			out.Values[i] = graphql.MarshalString("TransitQuery")
+		case "findDepartures":
+			field := field
+			out.Concurrently(i, func() (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._TransitQuery_findDepartures(ctx, field, obj)
+				if res == graphql.Null {
+					atomic.AddUint32(&invalids, 1)
+				}
+				return res
+			})
+		default:
+			panic("unknown field " + strconv.Quote(field.Name))
+		}
+	}
+	out.Dispatch()
+	if invalids > 0 {
+		return graphql.Null
+	}
+	return out
+}
+
+var transitStationImplementors = []string{"TransitStation"}
+
+func (ec *executionContext) _TransitStation(ctx context.Context, sel ast.SelectionSet, obj *transit.Station) graphql.Marshaler {
+	fields := graphql.CollectFields(ec.RequestContext, sel, transitStationImplementors)
+
+	out := graphql.NewFieldSet(fields)
+	var invalids uint32
+	for i, field := range fields {
+		switch field.Name {
+		case "__typename":
+			out.Values[i] = graphql.MarshalString("TransitStation")
+		case "id":
+			out.Values[i] = ec._TransitStation_id(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		case "name":
+			out.Values[i] = ec._TransitStation_name(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		case "position":
+			out.Values[i] = ec._TransitStation_position(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		default:
+			panic("unknown field " + strconv.Quote(field.Name))
+		}
+	}
+	out.Dispatch()
+	if invalids > 0 {
+		return graphql.Null
+	}
+	return out
+}
+
+var transportImplementors = []string{"Transport"}
+
+func (ec *executionContext) _Transport(ctx context.Context, sel ast.SelectionSet, obj *transit.Transport) graphql.Marshaler {
+	fields := graphql.CollectFields(ec.RequestContext, sel, transportImplementors)
+
+	out := graphql.NewFieldSet(fields)
+	var invalids uint32
+	for i, field := range fields {
+		switch field.Name {
+		case "__typename":
+			out.Values[i] = graphql.MarshalString("Transport")
+		case "route":
+			out.Values[i] = ec._Transport_route(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		case "direction":
+			out.Values[i] = ec._Transport_direction(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		case "category":
+			out.Values[i] = ec._Transport_category(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		case "operator":
+			out.Values[i] = ec._Transport_operator(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
 				invalids++
 			}
@@ -8532,6 +9816,20 @@ func (ec *executionContext) marshalNAddress2goᚗstevenxieᚗmeᚋapiᚋlocation
 	return ec._Address(ctx, sel, &v)
 }
 
+func (ec *executionContext) marshalNAssistQuery2goᚗstevenxieᚗmeᚋapiᚋassistᚋassistgqlᚐQuery(ctx context.Context, sel ast.SelectionSet, v assistgql.Query) graphql.Marshaler {
+	return ec._AssistQuery(ctx, sel, &v)
+}
+
+func (ec *executionContext) marshalNAssistQuery2ᚖgoᚗstevenxieᚗmeᚋapiᚋassistᚋassistgqlᚐQuery(ctx context.Context, sel ast.SelectionSet, v *assistgql.Query) graphql.Marshaler {
+	if v == nil {
+		if !ec.HasError(graphql.GetResolverContext(ctx)) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	return ec._AssistQuery(ctx, sel, v)
+}
+
 func (ec *executionContext) marshalNAuthQuery2goᚗstevenxieᚗmeᚋapiᚋauthᚋauthgqlᚐQuery(ctx context.Context, sel ast.SelectionSet, v authgql.Query) graphql.Marshaler {
 	return ec._AuthQuery(ctx, sel, &v)
 }
@@ -8601,18 +9899,8 @@ func (ec *executionContext) marshalNCoordinates2ᚕgoᚗstevenxieᚗmeᚋapiᚋl
 	return ret
 }
 
-func (ec *executionContext) marshalNCurrentlyPlayingMusic2goᚗstevenxieᚗmeᚋapiᚋmusicᚐCurrentlyPlaying(ctx context.Context, sel ast.SelectionSet, v music.CurrentlyPlaying) graphql.Marshaler {
-	return ec._CurrentlyPlayingMusic(ctx, sel, &v)
-}
-
-func (ec *executionContext) marshalNCurrentlyPlayingMusic2ᚖgoᚗstevenxieᚗmeᚋapiᚋmusicᚐCurrentlyPlaying(ctx context.Context, sel ast.SelectionSet, v *music.CurrentlyPlaying) graphql.Marshaler {
-	if v == nil {
-		if !ec.HasError(graphql.GetResolverContext(ctx)) {
-			ec.Errorf(ctx, "must not be null")
-		}
-		return graphql.Null
-	}
-	return ec._CurrentlyPlayingMusic(ctx, sel, v)
+func (ec *executionContext) unmarshalNCoordinatesInput2goᚗstevenxieᚗmeᚋapiᚋlocationᚋlocgqlᚐCoordinatesInput(ctx context.Context, v interface{}) (locgql.CoordinatesInput, error) {
+	return ec.unmarshalInputCoordinatesInput(ctx, v)
 }
 
 func (ec *executionContext) unmarshalNFloat2float64(ctx context.Context, v interface{}) (float64, error) {
@@ -8633,7 +9921,7 @@ func (ec *executionContext) marshalNGitCommit2goᚗstevenxieᚗmeᚋapiᚋgitᚐ
 	return ec._GitCommit(ctx, sel, &v)
 }
 
-func (ec *executionContext) marshalNGitCommit2ᚕᚖgoᚗstevenxieᚗmeᚋapiᚋgitᚐCommit(ctx context.Context, sel ast.SelectionSet, v []*git.Commit) graphql.Marshaler {
+func (ec *executionContext) marshalNGitCommit2ᚕgoᚗstevenxieᚗmeᚋapiᚋgitᚐCommit(ctx context.Context, sel ast.SelectionSet, v []git.Commit) graphql.Marshaler {
 	ret := make(graphql.Array, len(v))
 	var wg sync.WaitGroup
 	isLen1 := len(v) == 1
@@ -8657,7 +9945,7 @@ func (ec *executionContext) marshalNGitCommit2ᚕᚖgoᚗstevenxieᚗmeᚋapiᚋ
 			if !isLen1 {
 				defer wg.Done()
 			}
-			ret[i] = ec.marshalNGitCommit2ᚖgoᚗstevenxieᚗmeᚋapiᚋgitᚐCommit(ctx, sel, v[i])
+			ret[i] = ec.marshalNGitCommit2goᚗstevenxieᚗmeᚋapiᚋgitᚐCommit(ctx, sel, v[i])
 		}
 		if isLen1 {
 			f(i)
@@ -8668,16 +9956,6 @@ func (ec *executionContext) marshalNGitCommit2ᚕᚖgoᚗstevenxieᚗmeᚋapiᚋ
 	}
 	wg.Wait()
 	return ret
-}
-
-func (ec *executionContext) marshalNGitCommit2ᚖgoᚗstevenxieᚗmeᚋapiᚋgitᚐCommit(ctx context.Context, sel ast.SelectionSet, v *git.Commit) graphql.Marshaler {
-	if v == nil {
-		if !ec.HasError(graphql.GetResolverContext(ctx)) {
-			ec.Errorf(ctx, "must not be null")
-		}
-		return graphql.Null
-	}
-	return ec._GitCommit(ctx, sel, v)
 }
 
 func (ec *executionContext) marshalNGitCommitAuthor2goᚗstevenxieᚗmeᚋapiᚋgitᚐCommitAuthor(ctx context.Context, sel ast.SelectionSet, v git.CommitAuthor) graphql.Marshaler {
@@ -8964,6 +10242,47 @@ func (ec *executionContext) marshalNMusicTrack2goᚗstevenxieᚗmeᚋapiᚋmusic
 	return ec._MusicTrack(ctx, sel, &v)
 }
 
+func (ec *executionContext) marshalNNearbyTransitDeparture2goᚗstevenxieᚗmeᚋapiᚋassistᚋtransitᚐNearbyDeparture(ctx context.Context, sel ast.SelectionSet, v transit.NearbyDeparture) graphql.Marshaler {
+	return ec._NearbyTransitDeparture(ctx, sel, &v)
+}
+
+func (ec *executionContext) marshalNNearbyTransitDeparture2ᚕgoᚗstevenxieᚗmeᚋapiᚋassistᚋtransitᚐNearbyDeparture(ctx context.Context, sel ast.SelectionSet, v []transit.NearbyDeparture) graphql.Marshaler {
+	ret := make(graphql.Array, len(v))
+	var wg sync.WaitGroup
+	isLen1 := len(v) == 1
+	if !isLen1 {
+		wg.Add(len(v))
+	}
+	for i := range v {
+		i := i
+		rctx := &graphql.ResolverContext{
+			Index:  &i,
+			Result: &v[i],
+		}
+		ctx := graphql.WithResolverContext(ctx, rctx)
+		f := func(i int) {
+			defer func() {
+				if r := recover(); r != nil {
+					ec.Error(ctx, ec.Recover(ctx, r))
+					ret = nil
+				}
+			}()
+			if !isLen1 {
+				defer wg.Done()
+			}
+			ret[i] = ec.marshalNNearbyTransitDeparture2goᚗstevenxieᚗmeᚋapiᚋassistᚋtransitᚐNearbyDeparture(ctx, sel, v[i])
+		}
+		if isLen1 {
+			f(i)
+		} else {
+			go f(i)
+		}
+
+	}
+	wg.Wait()
+	return ret
+}
+
 func (ec *executionContext) marshalNPartialAbout2goᚗstevenxieᚗmeᚋapiᚋaboutᚐContactInfo(ctx context.Context, sel ast.SelectionSet, v about.ContactInfo) graphql.Marshaler {
 	if v == nil {
 		if !ec.HasError(graphql.GetResolverContext(ctx)) {
@@ -9128,6 +10447,35 @@ func (ec *executionContext) marshalNTime2timeᚐTime(ctx context.Context, sel as
 	return res
 }
 
+func (ec *executionContext) unmarshalNTime2ᚕtimeᚐTime(ctx context.Context, v interface{}) ([]time.Time, error) {
+	var vSlice []interface{}
+	if v != nil {
+		if tmp1, ok := v.([]interface{}); ok {
+			vSlice = tmp1
+		} else {
+			vSlice = []interface{}{v}
+		}
+	}
+	var err error
+	res := make([]time.Time, len(vSlice))
+	for i := range vSlice {
+		res[i], err = ec.unmarshalNTime2timeᚐTime(ctx, vSlice[i])
+		if err != nil {
+			return nil, err
+		}
+	}
+	return res, nil
+}
+
+func (ec *executionContext) marshalNTime2ᚕtimeᚐTime(ctx context.Context, sel ast.SelectionSet, v []time.Time) graphql.Marshaler {
+	ret := make(graphql.Array, len(v))
+	for i := range v {
+		ret[i] = ec.marshalNTime2timeᚐTime(ctx, sel, v[i])
+	}
+
+	return ret
+}
+
 func (ec *executionContext) marshalNTimePeriod2goᚗstevenxieᚗmeᚋapiᚋschedulingᚐTimePeriod(ctx context.Context, sel ast.SelectionSet, v scheduling.TimePeriod) graphql.Marshaler {
 	return ec._TimePeriod(ctx, sel, &v)
 }
@@ -9167,6 +10515,56 @@ func (ec *executionContext) marshalNTimePeriod2ᚕgoᚗstevenxieᚗmeᚋapiᚋsc
 	}
 	wg.Wait()
 	return ret
+}
+
+func (ec *executionContext) marshalNTransitDeparture2goᚗstevenxieᚗmeᚋapiᚋassistᚋtransitᚐDeparture(ctx context.Context, sel ast.SelectionSet, v transit.Departure) graphql.Marshaler {
+	return ec._TransitDeparture(ctx, sel, &v)
+}
+
+func (ec *executionContext) marshalNTransitOperator2goᚗstevenxieᚗmeᚋapiᚋassistᚋtransitᚐOperator(ctx context.Context, sel ast.SelectionSet, v transit.Operator) graphql.Marshaler {
+	return ec._TransitOperator(ctx, sel, &v)
+}
+
+func (ec *executionContext) marshalNTransitOperator2ᚖgoᚗstevenxieᚗmeᚋapiᚋassistᚋtransitᚐOperator(ctx context.Context, sel ast.SelectionSet, v *transit.Operator) graphql.Marshaler {
+	if v == nil {
+		if !ec.HasError(graphql.GetResolverContext(ctx)) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	return ec._TransitOperator(ctx, sel, v)
+}
+
+func (ec *executionContext) marshalNTransitQuery2goᚗstevenxieᚗmeᚋapiᚋassistᚋtransitᚋtransgqlᚐQuery(ctx context.Context, sel ast.SelectionSet, v transgql.Query) graphql.Marshaler {
+	return ec._TransitQuery(ctx, sel, &v)
+}
+
+func (ec *executionContext) marshalNTransitStation2goᚗstevenxieᚗmeᚋapiᚋassistᚋtransitᚐStation(ctx context.Context, sel ast.SelectionSet, v transit.Station) graphql.Marshaler {
+	return ec._TransitStation(ctx, sel, &v)
+}
+
+func (ec *executionContext) marshalNTransitStation2ᚖgoᚗstevenxieᚗmeᚋapiᚋassistᚋtransitᚐStation(ctx context.Context, sel ast.SelectionSet, v *transit.Station) graphql.Marshaler {
+	if v == nil {
+		if !ec.HasError(graphql.GetResolverContext(ctx)) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	return ec._TransitStation(ctx, sel, v)
+}
+
+func (ec *executionContext) marshalNTransport2goᚗstevenxieᚗmeᚋapiᚋassistᚋtransitᚐTransport(ctx context.Context, sel ast.SelectionSet, v transit.Transport) graphql.Marshaler {
+	return ec._Transport(ctx, sel, &v)
+}
+
+func (ec *executionContext) marshalNTransport2ᚖgoᚗstevenxieᚗmeᚋapiᚋassistᚋtransitᚐTransport(ctx context.Context, sel ast.SelectionSet, v *transit.Transport) graphql.Marshaler {
+	if v == nil {
+		if !ec.HasError(graphql.GetResolverContext(ctx)) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	return ec._Transport(ctx, sel, v)
 }
 
 func (ec *executionContext) marshalN__Directive2githubᚗcomᚋ99designsᚋgqlgenᚋgraphqlᚋintrospectionᚐDirective(ctx context.Context, sel ast.SelectionSet, v introspection.Directive) graphql.Marshaler {
@@ -9467,6 +10865,29 @@ func (ec *executionContext) marshalOCurrentlyPlayingMusic2ᚖgoᚗstevenxieᚗme
 		return graphql.Null
 	}
 	return ec._CurrentlyPlayingMusic(ctx, sel, v)
+}
+
+func (ec *executionContext) unmarshalOFloat2float64(ctx context.Context, v interface{}) (float64, error) {
+	return graphql.UnmarshalFloat(v)
+}
+
+func (ec *executionContext) marshalOFloat2float64(ctx context.Context, sel ast.SelectionSet, v float64) graphql.Marshaler {
+	return graphql.MarshalFloat(v)
+}
+
+func (ec *executionContext) unmarshalOFloat2ᚖfloat64(ctx context.Context, v interface{}) (*float64, error) {
+	if v == nil {
+		return nil, nil
+	}
+	res, err := ec.unmarshalOFloat2float64(ctx, v)
+	return &res, err
+}
+
+func (ec *executionContext) marshalOFloat2ᚖfloat64(ctx context.Context, sel ast.SelectionSet, v *float64) graphql.Marshaler {
+	if v == nil {
+		return graphql.Null
+	}
+	return ec.marshalOFloat2float64(ctx, sel, *v)
 }
 
 func (ec *executionContext) marshalOGitCommitAuthor2goᚗstevenxieᚗmeᚋapiᚋgitᚐCommitAuthor(ctx context.Context, sel ast.SelectionSet, v git.CommitAuthor) graphql.Marshaler {

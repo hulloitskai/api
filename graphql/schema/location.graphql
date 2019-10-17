@@ -42,6 +42,17 @@ type Coordinates {
 }
 
 """
+A `CoordinatesInput` is used to create a `Coordinates`.
+
+If its `z` component is not set, it will default to zero.
+"""
+input CoordinatesInput {
+  x: Float!
+  y: Float!
+  z: Float
+}
+
+"""
 An `Address` describes the position of a `Place`.
 """
 type Address {

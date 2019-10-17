@@ -6,6 +6,10 @@ import (
 	"net/http"
 	"os"
 
+	"go.stevenxie.me/api/assist/transit/grt"
+	"go.stevenxie.me/api/assist/transit/heretrans"
+	"go.stevenxie.me/api/assist/transit/transvc"
+
 	"github.com/cockroachdb/errors"
 	"github.com/urfave/cli"
 
@@ -13,13 +17,15 @@ import (
 	"go.stevenxie.me/gopkg/configutil"
 	"go.stevenxie.me/guillotine"
 
+	"go.stevenxie.me/api/assist/transit"
 	"go.stevenxie.me/api/pkg/github"
 	"go.stevenxie.me/api/pkg/google"
+	"go.stevenxie.me/api/pkg/here"
 	"go.stevenxie.me/api/pkg/svcutil"
 
 	"go.stevenxie.me/api/location"
 	"go.stevenxie.me/api/location/geocode"
-	"go.stevenxie.me/api/location/geocode/here"
+	"go.stevenxie.me/api/location/geocode/heregeo"
 	"go.stevenxie.me/api/location/gmaps"
 	"go.stevenxie.me/api/location/locsvc"
 
@@ -161,7 +167,7 @@ func run(*cli.Context) (err error) {
 	{
 		var (
 			source         = gmaps.NewSegmentSource(timelineClient)
-			geocoder       = here.NewGeocoder(hereClient)
+			geocoder       = heregeo.NewGeocoder(hereClient)
 			historyService = locsvc.NewHistoryService(
 				source, geocoder,
 				svcutil.WithLogger(log),
@@ -321,6 +327,18 @@ func run(*cli.Context) (err error) {
 		)
 	}
 
+	var transitService transit.Service
+	{
+		var (
+			loc = heretrans.NewLocator(hereClient)
+			rts = grt.NewRealtimeSource(nil)
+		)
+		transitService = transvc.NewService(
+			loc, rts,
+			svcutil.WithLogger(log),
+		)
+	}
+
 	// Start HTTP server.
 	log.Info("Initializing HTTP server...")
 	srv := httpsrv.NewServer(
@@ -330,6 +348,7 @@ func run(*cli.Context) (err error) {
 			Music:        musicService,
 			Auth:         authService,
 			Location:     locationService,
+			Transit:      transitService,
 			Scheduling:   schedulingService,
 			Productivity: productivityService,
 		},

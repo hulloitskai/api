@@ -14,10 +14,12 @@ require (
 	github.com/google/go-github/v25 v25.1.3
 	github.com/gorilla/websocket v1.4.0
 	github.com/hashicorp/golang-lru v0.5.3 // indirect
+	github.com/k0kubun/colorstring v0.0.0-20150214042306-9440f1994b88 // indirect
+	github.com/k0kubun/pp v3.0.1+incompatible
 	github.com/kelseyhightower/envconfig v1.4.0
 	github.com/labstack/echo/v4 v4.1.10
 	github.com/mitchellh/mapstructure v1.1.2
-	github.com/pkg/errors v0.8.1
+	github.com/schollz/closestmatch v2.1.0+incompatible
 	github.com/sirupsen/logrus v1.4.2
 	github.com/thoas/go-funk v0.4.0
 	github.com/urfave/cli v1.21.0

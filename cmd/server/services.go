@@ -26,8 +26,7 @@ func buildRaven() *raven.Client {
 	return rc
 }
 
-// buildLogger builds an application-level logger, which also captures errors
-// using Sentry.
+// Build an application-level logger, which also captures errors using Sentry.
 func buildLogger(rc *raven.Client) *logrus.Entry {
 	log := logrus.New()
 	log.SetOutput(os.Stdout)

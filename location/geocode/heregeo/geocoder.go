@@ -1,4 +1,4 @@
-package here
+package heregeo
 
 import (
 	"context"
@@ -13,17 +13,18 @@ import (
 	"github.com/cockroachdb/errors"
 	"go.stevenxie.me/api/location"
 	"go.stevenxie.me/api/location/geocode"
+	"go.stevenxie.me/api/pkg/here"
 )
 
 // NewGeocoder creates a new geocode.Geocoder.
-func NewGeocoder(c Client) geocode.Geocoder {
+func NewGeocoder(c here.Client) geocode.Geocoder {
 	return geocoder{
 		client: c,
 	}
 }
 
 type geocoder struct {
-	client Client
+	client here.Client
 }
 
 var _ geocode.Geocoder = (*geocoder)(nil)
@@ -39,19 +40,14 @@ func (g geocoder) ReverseGeocode(
 		opt(&cfg)
 	}
 	if err := validateReverseGeocodeConfig(&cfg); err != nil {
-		return nil, errors.Wrap(err, "here: invalid config")
+		return nil, errors.Wrap(err, "heregeo: invalid config")
 	}
 
-	// Build request URL.
-	url, err := buildReverseGeocodeURL(coord, &cfg)
-	if err != nil {
-		return nil, errors.Wrap(err, "here: building request")
-	}
-
-	// Perform request.
+	// Create and perform request.
+	url := buildReverseGeocodeURL(coord, &cfg)
 	req, err := http.NewRequestWithContext(ctx, http.MethodGet, url, nil)
 	if err != nil {
-		return nil, errors.Wrap(err, "here: creating request")
+		return nil, errors.Wrap(err, "heregeo: creating request")
 	}
 	res, err := g.client.Do(req)
 	if err != nil {
@@ -99,15 +95,15 @@ func (g geocoder) ReverseGeocode(
 		}
 	}
 	if err = json.NewDecoder(res.Body).Decode(&data); err != nil {
-		return nil, errors.Wrap(err, "here: decoding response body")
+		return nil, errors.Wrap(err, "heregeo: decoding response body")
 	}
 	if err = res.Body.Close(); err != nil {
-		return nil, errors.Wrap(err, "here: closing response body")
+		return nil, errors.Wrap(err, "heregeo: closing response body")
 	}
 
 	// Parse response.
 	if len(data.Response.View) == 0 {
-		return nil, errors.New("here: no result views")
+		return nil, errors.New("heregeo: no result views")
 	}
 
 	var (
@@ -125,7 +121,7 @@ func (g geocoder) ReverseGeocode(
 		var shape []location.Coordinates
 		if res := loc.Shape; res != nil {
 			if shape, err = decodeShapeResponse(res.Value); err != nil {
-				return nil, errors.Wrap(err, "here: decoding shape")
+				return nil, errors.Wrap(err, "heregeo: decoding shape")
 			}
 		}
 
@@ -133,7 +129,7 @@ func (g geocoder) ReverseGeocode(
 		var timeZone *time.Location
 		if info := loc.AdminInfo; info != nil {
 			if timeZone, err = time.LoadLocation(info.TimeZone.ID); err != nil {
-				return nil, errors.Wrap(err, "here: parsing timezone")
+				return nil, errors.Wrap(err, "heregeo: parsing timezone")
 			}
 		}
 
@@ -173,15 +169,15 @@ func validateReverseGeocodeConfig(cfg *geocode.ReverseGeocodeConfig) error {
 	return nil
 }
 
-const reverseGeocodeURL = "https://reverse.geocoder.api.here.com/6.2/" +
+const _reverseGeocodeURL = "https://reverse.geocoder.api.here.com/6.2/" +
 	"reversegeocode.json"
 
 func buildReverseGeocodeURL(
 	coord location.Coordinates,
 	cfg *geocode.ReverseGeocodeConfig,
-) (string, error) {
+) string {
 	// Build request URL.
-	url, err := url.Parse(reverseGeocodeURL)
+	url, err := url.Parse(_reverseGeocodeURL)
 	if err != nil {
 		panic(err)
 	}
@@ -222,7 +218,7 @@ func buildReverseGeocodeURL(
 
 	// Encode params and build URL.
 	url.RawQuery = params.Encode()
-	return url.String(), nil
+	return url.String()
 }
 
 func decodeShapeResponse(value string) (shape []location.Coordinates,

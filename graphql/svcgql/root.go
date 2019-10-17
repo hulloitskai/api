@@ -2,6 +2,7 @@ package svcgql
 
 import (
 	"go.stevenxie.me/api/about"
+	"go.stevenxie.me/api/assist/transit"
 	"go.stevenxie.me/api/auth"
 	"go.stevenxie.me/api/git"
 	"go.stevenxie.me/api/graphql"
@@ -27,6 +28,8 @@ func NewResolverRoot(svcs Services, strms Streamers) graphql.ResolverRoot {
 
 		productivity:       newProductivityResolver(),
 		productivityRecord: newProductivityRecordResolver(),
+
+		transitDeparture: newTransitDepartureResolver(),
 	}
 }
 
@@ -45,6 +48,8 @@ type (
 
 		productivity       graphql.ProductivityResolver
 		productivityRecord graphql.ProductivityRecordResolver
+
+		transitDeparture graphql.TransitDepartureResolver
 	}
 
 	// Services handles requests for a graphql.ResolverRoot.
@@ -53,6 +58,7 @@ type (
 		Auth         auth.Service
 		About        about.Service
 		Music        music.Service
+		Transit      transit.Service
 		Location     location.Service
 		Scheduling   scheduling.Service
 		Productivity productivity.Service
@@ -104,4 +110,8 @@ func (root resolverRoot) Productivity() graphql.ProductivityResolver {
 
 func (root resolverRoot) ProductivityRecord() graphql.ProductivityRecordResolver {
 	return root.productivityRecord
+}
+
+func (root resolverRoot) TransitDeparture() graphql.TransitDepartureResolver {
+	return root.transitDeparture
 }

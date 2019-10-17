@@ -1,5 +1,5 @@
 type MusicQuery {
-  current: CurrentlyPlayingMusic!
+  current: CurrentlyPlayingMusic
 }
 
 type MusicMutation {

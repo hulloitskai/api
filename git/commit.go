@@ -31,5 +31,5 @@ type Repo struct {
 
 // A Source can retrieve recent Git commits from various projects.
 type Source interface {
-	RecentCommits(ctx context.Context, limit int) ([]*Commit, error)
+	RecentCommits(ctx context.Context, limit int) ([]Commit, error)
 }

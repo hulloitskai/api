@@ -208,7 +208,7 @@ func (svc *service) getPermissions(
 				continue
 			}
 
-			// Format and return permissions.
+			// Marshal to auth.Permissions.
 			permissions := make([]auth.Permission, len(fields.Perms))
 			for i, p := range fields.Perms {
 				permissions[i] = auth.Permission(p)

@@ -32,9 +32,10 @@ func (srv *Server) registerRoutes() error {
 			Resolvers: svcgql.NewResolverRoot(
 				svcgql.Services{
 					Git:          srv.svcs.Git,
+					Auth:         srv.svcs.Auth,
 					About:        srv.svcs.About,
 					Music:        srv.svcs.Music,
-					Auth:         srv.svcs.Auth,
+					Transit:      srv.svcs.Transit,
 					Location:     srv.svcs.Location,
 					Scheduling:   srv.svcs.Scheduling,
 					Productivity: srv.svcs.Productivity,

@@ -20,7 +20,7 @@ type Query struct {
 func (q Query) RecentCommits(
 	ctx context.Context,
 	limit *int,
-) ([]*git.Commit, error) {
+) ([]git.Commit, error) {
 	return q.svc.RecentCommits(
 		ctx,
 		func(cfg *git.RecentCommitsConfig) {

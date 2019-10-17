@@ -70,12 +70,12 @@ var _ git.Service = (*ServicePrecacher)(nil)
 func (sp ServicePrecacher) RecentCommits(
 	_ context.Context,
 	opts ...git.RecentCommitsOption,
-) ([]*git.Commit, error) {
+) ([]git.Commit, error) {
 	v, err := sp.pc.Results()
 	if err != nil {
 		return nil, err
 	}
-	if cms, ok := v.([]*git.Commit); ok {
+	if cms, ok := v.([]git.Commit); ok {
 		cfg := git.RecentCommitsConfig{
 			Limit: len(cms),
 		}
