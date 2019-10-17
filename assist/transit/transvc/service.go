@@ -4,6 +4,9 @@ import (
 	"context"
 	"fmt"
 	"sort"
+	"strings"
+
+	"go.stevenxie.me/api/assist/assistutil"
 
 	"github.com/lithammer/fuzzysearch/fuzzy"
 
@@ -101,6 +104,14 @@ func (svc service) FindDepartures(
 
 	// If fuzzy-matching, update route to the closest matching route.
 	if cfg.FuzzyMatch {
+		// Basic input normalization.
+		query := strings.ToLower(route)
+		query = strings.TrimSpace(query)
+		query = strings.TrimPrefix(query, "the ")
+		query = strings.Trim(query, ".!?")
+		query = assistutil.ReplaceNumberWords(query)
+
+		// Construct search strings to match against.
 		var (
 			routes            = make([]string, len(nds))
 			routesWithContext = make([]string, len(nds))
@@ -108,13 +119,13 @@ func (svc service) FindDepartures(
 		for i := range nds {
 			tp := nds[i].Transport
 			routes[i] = tp.Route
-			routesWithContext[i] = fmt.Sprintf(
+			routesWithContext[i] = assistutil.ReplaceNumberWords(fmt.Sprintf(
 				"%s %s to %s",
 				tp.Route, tp.Operator.Name, tp.Direction,
-			)
+			))
 		}
 
-		matches := fuzzy.RankFind(route, routesWithContext)
+		matches := fuzzy.RankFind(query, routesWithContext)
 		if len(matches) == 0 {
 			return nil, errors.WithHintf(
 				errors.New("transvc: no matching route"),
