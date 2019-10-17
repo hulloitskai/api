@@ -7,6 +7,7 @@ import (
 	"net/http"
 	"net/url"
 	"strconv"
+	"strings"
 	"time"
 
 	"github.com/cockroachdb/errors"
@@ -65,7 +66,7 @@ func (l locator) NearbyDepartures(
 					}
 					NextDepartures struct {
 						Dep []struct {
-							Time      time.Time
+							Time      time.Time `json:"time"`
 							Transport struct {
 								Dir  string `json:"dir"`
 								Name string `json:"name"`
@@ -152,9 +153,14 @@ func (l locator) NearbyDepartures(
 								dt.At.Operator,
 							)
 						}
+
+						// Format direction.
+						dir := strings.ReplaceAll(dt.Dir, dt.Name, "")
+						dir = strings.Trim(dir, ` \/-*()`)
+
 						tp = &transit.Transport{
 							Route:     dt.Name,
-							Direction: dt.Dir,
+							Direction: dir,
 							Category:  dt.At.Category,
 							Operator:  op,
 						}

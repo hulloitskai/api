@@ -18,8 +18,8 @@ require (
 	github.com/k0kubun/pp v3.0.1+incompatible
 	github.com/kelseyhightower/envconfig v1.4.0
 	github.com/labstack/echo/v4 v4.1.10
+	github.com/lithammer/fuzzysearch v1.0.2
 	github.com/mitchellh/mapstructure v1.1.2
-	github.com/schollz/closestmatch v2.1.0+incompatible
 	github.com/sirupsen/logrus v1.4.2
 	github.com/thoas/go-funk v0.4.0
 	github.com/urfave/cli v1.21.0

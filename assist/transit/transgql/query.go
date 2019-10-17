@@ -22,10 +22,16 @@ func (q Query) FindDepartures(
 	ctx context.Context,
 	route string,
 	near locgql.CoordinatesInput,
+	limit *int,
 ) ([]transit.NearbyDeparture, error) {
+	lim := 2
+	if limit != nil {
+		lim = *limit
+	}
 	return q.svc.FindDepartures(
 		ctx,
 		route, locgql.CoordinatesFromInput(near),
-		transit.FindWithFuzzyMatch(),
+		transit.FindWithFuzzyMatch(true),
+		transit.FindWithLimit(lim),
 	)
 }

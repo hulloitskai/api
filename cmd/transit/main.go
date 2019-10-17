@@ -75,7 +75,8 @@ func main() {
 		context.Background(),
 		os.Args[2],
 		pos,
-		transit.FindWithFuzzyMatch(),
+		transit.FindWithFuzzyMatch(true),
+		transit.FindWithGroupByStation(true),
 		transit.FindWithLimit(2),
 	)
 	if err != nil {

@@ -21,21 +21,28 @@ type (
 
 	// A FindDeparturesConfig configures a Service.FindDepartures request.
 	FindDeparturesConfig struct {
-		OperatorCode string // filter by operator code
-		FuzzyMatch   bool   // use fuzzy match algorithm for route
-		Radius       *uint  // the search radius, in meters
-		MaxStations  *uint  // max number of stations to search
-		Limit        int    // limit number of results
+		GroupByStation bool   // group results by station
+		FuzzyMatch     bool   // use fuzzy match algorithm for route
+		OperatorCode   string // filter by operator code
+		Radius         *uint  // the search radius, in meters
+		MaxStations    *uint  // max number of stations to search
+		Limit          int    // limit number of results
 	}
 
 	// A FindDeparturesOption modifies a FindDeparturesConfig.
 	FindDeparturesOption func(*FindDeparturesConfig)
 )
 
+// FindWithGroupByStation enables the grouping of results by station for a
+// Service.FindDepartures request.
+func FindWithGroupByStation(enable bool) FindDeparturesOption {
+	return func(cfg *FindDeparturesConfig) { cfg.FuzzyMatch = enable }
+}
+
 // FindWithFuzzyMatch enables fuzzy-matching on the route for a
 // Service.FindDepartures request.
-func FindWithFuzzyMatch() FindDeparturesOption {
-	return func(cfg *FindDeparturesConfig) { cfg.FuzzyMatch = true }
+func FindWithFuzzyMatch(enable bool) FindDeparturesOption {
+	return func(cfg *FindDeparturesConfig) { cfg.FuzzyMatch = enable }
 }
 
 // FindWithRadius configures a Service.FindDepartures request to limit search

@@ -284,7 +284,7 @@ type ComplexityRoot struct {
 	}
 
 	TransitQuery struct {
-		FindDepartures func(childComplexity int, route string, near locgql.CoordinatesInput) int
+		FindDepartures func(childComplexity int, route string, near locgql.CoordinatesInput, limit *int) int
 	}
 
 	TransitStation struct {
@@ -1241,7 +1241,7 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 			return 0, false
 		}
 
-		return e.complexity.TransitQuery.FindDepartures(childComplexity, args["route"].(string), args["near"].(locgql.CoordinatesInput)), true
+		return e.complexity.TransitQuery.FindDepartures(childComplexity, args["route"].(string), args["near"].(locgql.CoordinatesInput), args["limit"].(*int)), true
 
 	case "TransitStation.id":
 		if e.complexity.TransitStation.ID == nil {
@@ -1715,7 +1715,11 @@ type SchedulingQuery {
   """
   Find nearby transit departures.
   """
-  findDepartures(route: String!, near: CoordinatesInput!): [NearbyTransitDeparture!]!
+  findDepartures(
+    route: String!
+    near: CoordinatesInput!
+    limit: Int
+  ): [NearbyTransitDeparture!]!
 }
 
 type NearbyTransitDeparture {
@@ -1946,6 +1950,14 @@ func (ec *executionContext) field_TransitQuery_findDepartures_args(ctx context.C
 		}
 	}
 	args["near"] = arg1
+	var arg2 *int
+	if tmp, ok := rawArgs["limit"]; ok {
+		arg2, err = ec.unmarshalOInt2ᚖint(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["limit"] = arg2
 	return args, nil
 }
 
@@ -6476,7 +6488,7 @@ func (ec *executionContext) _TransitQuery_findDepartures(ctx context.Context, fi
 	ctx = ec.Tracer.StartFieldResolverExecution(ctx, rctx)
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return obj.FindDepartures(ctx, args["route"].(string), args["near"].(locgql.CoordinatesInput))
+		return obj.FindDepartures(ctx, args["route"].(string), args["near"].(locgql.CoordinatesInput), args["limit"].(*int))
 	})
 	if err != nil {
 		ec.Error(ctx, err)

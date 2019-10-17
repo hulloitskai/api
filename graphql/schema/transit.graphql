@@ -2,7 +2,11 @@ type TransitQuery {
   """
   Find nearby transit departures.
   """
-  findDepartures(route: String!, near: CoordinatesInput!): [NearbyTransitDeparture!]!
+  findDepartures(
+    route: String!
+    near: CoordinatesInput!
+    limit: Int
+  ): [NearbyTransitDeparture!]!
 }
 
 type NearbyTransitDeparture {
