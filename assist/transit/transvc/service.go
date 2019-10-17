@@ -58,6 +58,11 @@ func (svc service) FindDepartures(
 		"pos":    pos,
 	}).WithContext(ctx)
 
+	// Validate inputs.
+	if route == "" {
+		return nil, errors.New("transvc: route is empty")
+	}
+
 	var cfg transit.FindDeparturesConfig
 	for _, opt := range opts {
 		opt(&cfg)
