@@ -3,6 +3,7 @@ package transvc
 import (
 	"context"
 	"fmt"
+	"regexp"
 	"sort"
 	"strings"
 
@@ -36,7 +37,8 @@ func (svc service) FindDepartures(
 	}
 
 	cfg := transit.FindDeparturesConfig{
-		MaxTimes: 3,
+		PreferRealtime: true,
+		MaxTimes:       3,
 	}
 	for _, opt := range opts {
 		opt(&cfg)
@@ -77,11 +79,12 @@ func (svc service) FindDepartures(
 	// If fuzzy-matching, update route to the closest matching route.
 	var route string
 	if cfg.FuzzyMatch {
-		// Basic input normalization.
+		// Input normalization.
 		route = strings.ToLower(routeQuery)
 		route = strings.TrimSpace(route)
 		route = strings.TrimPrefix(route, "the ")
 		route = strings.TrimSuffix(route, "th")
+		route = strings.ReplaceAll(route, "be", "b")
 		route = strings.Trim(route, ".!?")
 		route = assistutil.ReplaceNumberWords(route)
 
@@ -94,7 +97,8 @@ func (svc service) FindDepartures(
 			tp := nds[i].Transport
 			routes[i] = tp.Route
 
-			rwc := fmt.Sprintf("%s %s", tp.Operator.Name, tp.Route)
+			r := normalizeAdjacentNumAlpha(tp.Route)
+			rwc := fmt.Sprintf("%s %s", tp.Operator.Name, r)
 			rwc = assistutil.ReplaceNumberWords(rwc)
 			routesWithContext[i] = rwc
 		}
@@ -175,37 +179,45 @@ func (svc service) FindDepartures(
 	}
 
 	// Update with realtime departures times, if available.
-	log.Trace("Update results with realtime departures...")
-	for i := range nds {
-		if nds[i].Realtime {
-			continue // departure already is realtime
-		}
+	if cfg.PreferRealtime {
+		log.Trace("Update results with realtime departures...")
+		for i := range nds {
+			if nds[i].Realtime {
+				continue // departure already is realtime
+			}
 
-		var (
-			tp  = nds[i].Transport
-			stn = nds[i].Station
-		)
-		log := log.WithFields(logrus.Fields{
-			"direction": tp.Direction,
-			"station":   stn.Name,
-		})
-		log.Trace("Getting realtime departure...")
+			var (
+				tp  = nds[i].Transport
+				stn = nds[i].Station
+			)
+			log := log.WithFields(logrus.Fields{
+				"direction": tp.Direction,
+				"station":   stn.Name,
+			})
+			log.Trace("Getting realtime departure...")
 
-		times, err := svc.rts.GetDepartureTimes(ctx, *tp, *stn)
-		if err != nil {
-			if errors.Is(err, transit.ErrOperatorNotSupported) {
+			times, err := svc.rts.GetDepartureTimes(ctx, *tp, *stn)
+			if err != nil {
+				if errors.Is(err, transit.ErrOperatorNotSupported) {
+					continue
+				}
+				return nil, errors.Wrap(err, "transvc: get realtime departure times")
+			}
+			if len(times) == 0 {
+				log.Warn("No realtime departure times found, skipping.")
 				continue
 			}
-			return nil, errors.Wrap(err, "transvc: get realtime departure times")
-		}
-		if len(times) == 0 {
-			log.Warn("No realtime departure times found, skipping.")
-			continue
-		}
 
-		nd := &nds[i]
-		nd.Times = times
-		nd.Realtime = true
+			nd := &nds[i]
+			nd.Times = times
+			nd.Realtime = true
+		}
 	}
 	return nds, nil
+}
+
+var adjNumAlphaRegexp = regexp.MustCompile(`([0-9])([a-zA-Z])`)
+
+func normalizeAdjacentNumAlpha(s string) string {
+	return adjNumAlphaRegexp.ReplaceAllString(s, "$1 $2")
 }

@@ -28,6 +28,7 @@ type (
 
 	// A FindDeparturesConfig configures a Service.FindDepartures request.
 	FindDeparturesConfig struct {
+		PreferRealtime bool   // make extra queries for realtime data
 		GroupByStation bool   // group results by station
 		FuzzyMatch     bool   // use fuzzy match algorithm for route
 		OperatorCode   string // filter by operator code
