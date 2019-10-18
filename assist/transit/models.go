@@ -8,9 +8,9 @@ import (
 
 // A Station is a place where one can board a transit vehicle.
 type Station struct {
-	ID       string               `json:"id"`
-	Name     string               `json:"name"`
-	Position location.Coordinates `json:"position"`
+	ID          string               `json:"id"`
+	Name        string               `json:"name"`
+	Coordinates location.Coordinates `json:"coordinates"`
 }
 
 // A Transport is a vehicle travelling on a transit route.

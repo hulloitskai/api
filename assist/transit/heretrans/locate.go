@@ -33,11 +33,11 @@ var _ transit.Locator = (*locator)(nil)
 
 func (l locator) NearbyDepartures(
 	ctx context.Context,
-	pos location.Coordinates,
+	coords location.Coordinates,
 	cfg transit.NearbyDeparturesConfig,
 ) ([]transit.NearbyDeparture, error) {
 	// Build and perform request.
-	url := buildNearbyDeparturesURL(pos, &cfg)
+	url := buildNearbyDeparturesURL(coords, &cfg)
 	req, err := http.NewRequestWithContext(ctx, http.MethodGet, url, nil)
 	if err != nil {
 		return nil, errors.Wrap(err, "heretrans: create request")
@@ -62,7 +62,10 @@ func (l locator) NearbyDepartures(
 					}
 					NextDepartures struct {
 						Dep []struct {
-							Time      time.Time `json:"time"`
+							Time time.Time `json:"time"`
+							RT   *struct {
+								Dep time.Time `json:"dep"`
+							}
 							Transport struct {
 								Dir  string `json:"dir"`
 								Name string `json:"name"`
@@ -93,7 +96,7 @@ func (l locator) NearbyDepartures(
 	// Marshal response to []transit.NearbyDeparture.
 	var (
 		ops = make(map[string]*transit.Operator)
-		tps = make(map[string]*transit.Transport)
+		tps = make(map[uint32]*transit.Transport)
 		nds []transit.NearbyDeparture
 	)
 	{
@@ -109,9 +112,9 @@ func (l locator) NearbyDepartures(
 			{
 				s := set.Stn
 				stn = &transit.Station{
-					ID:       s.ID,
-					Name:     transutil.NormalizeStationName(s.Name),
-					Position: location.Coordinates{X: s.X, Y: s.Y},
+					ID:          s.ID,
+					Name:        transutil.NormalizeStationName(s.Name),
+					Coordinates: location.Coordinates{X: s.X, Y: s.Y},
 				}
 				distance = s.Distance
 			}
@@ -130,31 +133,33 @@ func (l locator) NearbyDepartures(
 				}
 			}
 
+			ndsByHash := make(map[uint32]*transit.NearbyDeparture)
 			for j := range deps.Dep {
-				dep := &deps.Dep[j]
-
-				// Derive transport, add to cache if not yet exists.
-				var tp *transit.Transport
-				{
-					var (
-						dt  = &dep.Transport
-						key = dt.Name + dt.Dir
-						ok  bool
+				var (
+					dep  = &deps.Dep[j]
+					dtp  = &dep.Transport
+					hash = transutil.HashTransportComponents(
+						dtp.Name, dtp.Dir, dtp.At.Operator,
 					)
-					if tp, ok = tps[key]; !ok {
-						op, ok := ops[dt.At.Operator]
+				)
+
+				nd, ok := ndsByHash[hash]
+				if !ok {
+					tp, ok := tps[hash]
+					if !ok {
+						op, ok := ops[dtp.At.Operator]
 						if !ok {
 							return nil, errors.Newf(
 								"heretrans: unknown operator with code '%s'",
-								dt.At.Operator,
+								dtp.At.Operator,
 							)
 						}
 
 						// Create transit.Transport.
 						tp = &transit.Transport{
-							Route:     dt.Name,
-							Direction: transutil.NormalizeStationName(dt.Dir),
-							Category:  dt.At.Category,
+							Route:     dtp.Name,
+							Direction: transutil.NormalizeStationName(dtp.Dir),
+							Category:  dtp.At.Category,
 							Operator:  op,
 						}
 
@@ -167,21 +172,44 @@ func (l locator) NearbyDepartures(
 									tp.Direction = tp.Direction[n+2:]
 								}
 							}
+						case transit.OpCodeGRT:
+							if tp.Category == "Bus" {
+								if tp.Direction[1] == '-' {
+									tp.Route += tp.Direction[:1]
+									tp.Direction = tp.Direction[2:]
+								}
+							}
 						}
 
-						tps[key] = tp
+						// Cache transit.Transport.
+						tps[hash] = tp
 					}
+
+					// Construct transit.NearbyDeparture without times, and save to cache.
+					nd = &transit.NearbyDeparture{
+						Distance: distance,
+						Departure: transit.Departure{
+							Transport: tp,
+							Station:   stn,
+						},
+					}
+					ndsByHash[hash] = nd
 				}
 
-				// Build transit.NearbyDeparture.
-				nds = append(nds, transit.NearbyDeparture{
-					Distance: distance,
-					Departure: transit.Departure{
-						Times:     []time.Time{dep.Time},
-						Transport: tp,
-						Station:   stn,
-					},
-				})
+				if rt := dep.RT; rt != nil {
+					// Only tag departure as realtime if first result is real-time.
+					if len(nd.Times) == 0 {
+						nd.Realtime = true
+					}
+					nd.Times = append(nd.Times, rt.Dep)
+				} else {
+					nd.Times = append(nd.Times, dep.Time)
+				}
+			}
+
+			// Save ndsByHash to nds.
+			for _, nd := range ndsByHash {
+				nds = append(nds, *nd)
 			}
 		}
 	}
@@ -204,16 +232,18 @@ func buildNearbyDeparturesURL(
 	ps := u.Query()
 	ps.Set("time", time.Now().Format(time.RFC3339))
 	ps.Set("center", fmt.Sprintf("%f,%f", pos.Y, pos.X))
-	ps.Set("maxPerTransport", "1")
 
 	if r := cfg.Radius; r != nil {
-		ps.Set("radius", formatUint(*r))
+		ps.Set("radius", formatInt(*r))
 	}
 	if m := cfg.MaxPerStation; m != nil {
-		ps.Set("max", formatUint(*m))
+		ps.Set("max", formatInt(*m))
 	}
 	if m := cfg.MaxStations; m != nil {
-		ps.Set("maxStn", formatUint(*m))
+		ps.Set("maxStn", formatInt(*m))
+	}
+	if m := cfg.MaxPerTransport; m != nil {
+		ps.Set("maxPerTransport", formatInt(*m))
 	}
 
 	// Encode query params and return URL.
@@ -221,4 +251,4 @@ func buildNearbyDeparturesURL(
 	return u.String()
 }
 
-func formatUint(u uint) string { return strconv.FormatUint(uint64(u), 10) }
+func formatInt(u int) string { return strconv.FormatInt(int64(u), 10) }

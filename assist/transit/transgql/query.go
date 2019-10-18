@@ -3,7 +3,6 @@ package transgql
 import (
 	"context"
 
-	"github.com/cockroachdb/errors"
 	"go.stevenxie.me/api/assist/transit"
 	"go.stevenxie.me/api/location/locgql"
 )
@@ -22,34 +21,45 @@ type Query struct {
 func (q Query) FindDepartures(
 	ctx context.Context,
 	route string,
-	near locgql.CoordinatesInput,
+	coords locgql.CoordinatesInput,
 	radius *int,
 	limit *int,
 ) ([]transit.NearbyDeparture, error) {
 	// Marshal input parameters.
-	var (
-		lim = 2
-		rad *uint
-	)
+	lim := 2
 	if limit != nil {
 		lim = *limit
 	}
-	if radius != nil {
-		if *radius < 0 {
-			return nil, errors.New("transgql: radius may not be negative")
-		}
-		r := uint(*radius)
-		rad = &r
-	}
 	return q.svc.FindDepartures(
 		ctx,
-		route, locgql.CoordinatesFromInput(near),
+		route, locgql.CoordinatesFromInput(coords),
 		func(cfg *transit.FindDeparturesConfig) {
 			cfg.GroupByStation = true
 			cfg.FuzzyMatch = true
 			cfg.Limit = lim
-			if rad != nil {
-				cfg.Radius = rad
+			if radius != nil {
+				cfg.Radius = radius
+			}
+		},
+	)
+}
+
+// NearbyTransports forwards a definition.
+func (q Query) NearbyTransports(
+	ctx context.Context,
+	coords locgql.CoordinatesInput,
+	radius *int,
+	limit *int,
+) ([]transit.Transport, error) {
+	return q.svc.NearbyTransports(
+		ctx,
+		locgql.CoordinatesFromInput(coords),
+		func(cfg *transit.NearbyTransportsConfig) {
+			if radius != nil {
+				cfg.Radius = radius
+			}
+			if limit != nil {
+				cfg.Limit = limit
 			}
 		},
 	)

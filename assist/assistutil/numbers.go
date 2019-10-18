@@ -28,7 +28,7 @@ func ReplaceNumberWords(s string) string {
 	for k, v := range numberWords {
 		for _, variant := range []string{k, strings.Title(k)} {
 			if variant == sTrimmed {
-				return strings.ReplaceAll(s, variant, strconv.FormatInt(int64(v), 64))
+				return strings.ReplaceAll(s, variant, strconv.FormatInt(int64(v), 10))
 			}
 		}
 	}

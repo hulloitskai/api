@@ -5,10 +5,10 @@ import (
 	"strings"
 )
 
-var ampNoSpaceReplacer = regexp.MustCompile(`([^ ])&([^ ])`)
+var matchAmpWithoutSpace = regexp.MustCompile(`([^ ])&([^ ])`)
 
 func fixAmpSpacing(s string) string {
-	return ampNoSpaceReplacer.ReplaceAllString(s, "$1 & $2")
+	return matchAmpWithoutSpace.ReplaceAllString(s, "$1 & $2")
 }
 
 // NormalizeStationName normalizes a station name.

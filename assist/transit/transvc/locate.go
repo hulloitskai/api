@@ -62,6 +62,9 @@ func (svc locatorService) NearbyDepartures(
 		if m := cfg.MaxPerStation; m != nil {
 			fields["max_per_station"] = *m
 		}
+		if m := cfg.MaxPerTransport; m != nil {
+			fields["max_per_transport"] = *m
+		}
 		log = logrus.WithFields(fields)
 	}
 

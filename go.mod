@@ -20,6 +20,8 @@ require (
 	github.com/labstack/echo/v4 v4.1.10
 	github.com/lithammer/fuzzysearch v1.0.2
 	github.com/mitchellh/mapstructure v1.1.2
+	github.com/openlyinc/pointy v1.1.2
+	github.com/segmentio/fasthash v1.0.1
 	github.com/sirupsen/logrus v1.4.2
 	github.com/thoas/go-funk v0.4.0
 	github.com/urfave/cli v1.21.0

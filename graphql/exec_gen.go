@@ -284,13 +284,14 @@ type ComplexityRoot struct {
 	}
 
 	TransitQuery struct {
-		FindDepartures func(childComplexity int, route string, near locgql.CoordinatesInput, radius *int, limit *int) int
+		FindDepartures   func(childComplexity int, route string, coords locgql.CoordinatesInput, radius *int, limit *int) int
+		NearbyTransports func(childComplexity int, coords locgql.CoordinatesInput, radius *int, limit *int) int
 	}
 
 	TransitStation struct {
-		ID       func(childComplexity int) int
-		Name     func(childComplexity int) int
-		Position func(childComplexity int) int
+		Coordinates func(childComplexity int) int
+		ID          func(childComplexity int) int
+		Name        func(childComplexity int) int
 	}
 
 	Transport struct {
@@ -1241,7 +1242,26 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 			return 0, false
 		}
 
-		return e.complexity.TransitQuery.FindDepartures(childComplexity, args["route"].(string), args["near"].(locgql.CoordinatesInput), args["radius"].(*int), args["limit"].(*int)), true
+		return e.complexity.TransitQuery.FindDepartures(childComplexity, args["route"].(string), args["coords"].(locgql.CoordinatesInput), args["radius"].(*int), args["limit"].(*int)), true
+
+	case "TransitQuery.nearbyTransports":
+		if e.complexity.TransitQuery.NearbyTransports == nil {
+			break
+		}
+
+		args, err := ec.field_TransitQuery_nearbyTransports_args(context.TODO(), rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.TransitQuery.NearbyTransports(childComplexity, args["coords"].(locgql.CoordinatesInput), args["radius"].(*int), args["limit"].(*int)), true
+
+	case "TransitStation.coordinates":
+		if e.complexity.TransitStation.Coordinates == nil {
+			break
+		}
+
+		return e.complexity.TransitStation.Coordinates(childComplexity), true
 
 	case "TransitStation.id":
 		if e.complexity.TransitStation.ID == nil {
@@ -1256,13 +1276,6 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.TransitStation.Name(childComplexity), true
-
-	case "TransitStation.position":
-		if e.complexity.TransitStation.Position == nil {
-			break
-		}
-
-		return e.complexity.TransitStation.Position(childComplexity), true
 
 	case "Transport.category":
 		if e.complexity.Transport.Category == nil {
@@ -1719,10 +1732,12 @@ type SchedulingQuery {
   """
   findDepartures(
     route: String!
-    near: CoordinatesInput!
+    coords: CoordinatesInput!
     radius: Int
     limit: Int
   ): [NearbyTransitDeparture!]!
+
+  nearbyTransports(coords: CoordinatesInput!, radius: Int, limit: Int): [Transport!]!
 }
 
 type NearbyTransitDeparture {
@@ -1761,7 +1776,7 @@ type TransitOperator {
 type TransitStation {
   id: String!
   name: String!
-  position: Coordinates!
+  coordinates: Coordinates!
 }
 `},
 )
@@ -1946,13 +1961,13 @@ func (ec *executionContext) field_TransitQuery_findDepartures_args(ctx context.C
 	}
 	args["route"] = arg0
 	var arg1 locgql.CoordinatesInput
-	if tmp, ok := rawArgs["near"]; ok {
+	if tmp, ok := rawArgs["coords"]; ok {
 		arg1, err = ec.unmarshalNCoordinatesInput2goᚗstevenxieᚗmeᚋapiᚋlocationᚋlocgqlᚐCoordinatesInput(ctx, tmp)
 		if err != nil {
 			return nil, err
 		}
 	}
-	args["near"] = arg1
+	args["coords"] = arg1
 	var arg2 *int
 	if tmp, ok := rawArgs["radius"]; ok {
 		arg2, err = ec.unmarshalOInt2ᚖint(ctx, tmp)
@@ -1969,6 +1984,36 @@ func (ec *executionContext) field_TransitQuery_findDepartures_args(ctx context.C
 		}
 	}
 	args["limit"] = arg3
+	return args, nil
+}
+
+func (ec *executionContext) field_TransitQuery_nearbyTransports_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+	var err error
+	args := map[string]interface{}{}
+	var arg0 locgql.CoordinatesInput
+	if tmp, ok := rawArgs["coords"]; ok {
+		arg0, err = ec.unmarshalNCoordinatesInput2goᚗstevenxieᚗmeᚋapiᚋlocationᚋlocgqlᚐCoordinatesInput(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["coords"] = arg0
+	var arg1 *int
+	if tmp, ok := rawArgs["radius"]; ok {
+		arg1, err = ec.unmarshalOInt2ᚖint(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["radius"] = arg1
+	var arg2 *int
+	if tmp, ok := rawArgs["limit"]; ok {
+		arg2, err = ec.unmarshalOInt2ᚖint(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["limit"] = arg2
 	return args, nil
 }
 
@@ -6499,7 +6544,7 @@ func (ec *executionContext) _TransitQuery_findDepartures(ctx context.Context, fi
 	ctx = ec.Tracer.StartFieldResolverExecution(ctx, rctx)
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return obj.FindDepartures(ctx, args["route"].(string), args["near"].(locgql.CoordinatesInput), args["radius"].(*int), args["limit"].(*int))
+		return obj.FindDepartures(ctx, args["route"].(string), args["coords"].(locgql.CoordinatesInput), args["radius"].(*int), args["limit"].(*int))
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -6515,6 +6560,50 @@ func (ec *executionContext) _TransitQuery_findDepartures(ctx context.Context, fi
 	rctx.Result = res
 	ctx = ec.Tracer.StartFieldChildExecution(ctx)
 	return ec.marshalNNearbyTransitDeparture2ᚕgoᚗstevenxieᚗmeᚋapiᚋassistᚋtransitᚐNearbyDeparture(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _TransitQuery_nearbyTransports(ctx context.Context, field graphql.CollectedField, obj *transgql.Query) (ret graphql.Marshaler) {
+	ctx = ec.Tracer.StartFieldExecution(ctx, field)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+		ec.Tracer.EndFieldExecution(ctx)
+	}()
+	rctx := &graphql.ResolverContext{
+		Object:   "TransitQuery",
+		Field:    field,
+		Args:     nil,
+		IsMethod: true,
+	}
+	ctx = graphql.WithResolverContext(ctx, rctx)
+	rawArgs := field.ArgumentMap(ec.Variables)
+	args, err := ec.field_TransitQuery_nearbyTransports_args(ctx, rawArgs)
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	rctx.Args = args
+	ctx = ec.Tracer.StartFieldResolverExecution(ctx, rctx)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.NearbyTransports(ctx, args["coords"].(locgql.CoordinatesInput), args["radius"].(*int), args["limit"].(*int))
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !ec.HasError(rctx) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.([]transit.Transport)
+	rctx.Result = res
+	ctx = ec.Tracer.StartFieldChildExecution(ctx)
+	return ec.marshalNTransport2ᚕgoᚗstevenxieᚗmeᚋapiᚋassistᚋtransitᚐTransport(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _TransitStation_id(ctx context.Context, field graphql.CollectedField, obj *transit.Station) (ret graphql.Marshaler) {
@@ -6591,7 +6680,7 @@ func (ec *executionContext) _TransitStation_name(ctx context.Context, field grap
 	return ec.marshalNString2string(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) _TransitStation_position(ctx context.Context, field graphql.CollectedField, obj *transit.Station) (ret graphql.Marshaler) {
+func (ec *executionContext) _TransitStation_coordinates(ctx context.Context, field graphql.CollectedField, obj *transit.Station) (ret graphql.Marshaler) {
 	ctx = ec.Tracer.StartFieldExecution(ctx, field)
 	defer func() {
 		if r := recover(); r != nil {
@@ -6610,7 +6699,7 @@ func (ec *executionContext) _TransitStation_position(ctx context.Context, field 
 	ctx = ec.Tracer.StartFieldResolverExecution(ctx, rctx)
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return obj.Position, nil
+		return obj.Coordinates, nil
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -9500,6 +9589,20 @@ func (ec *executionContext) _TransitQuery(ctx context.Context, sel ast.Selection
 				}
 				return res
 			})
+		case "nearbyTransports":
+			field := field
+			out.Concurrently(i, func() (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._TransitQuery_nearbyTransports(ctx, field, obj)
+				if res == graphql.Null {
+					atomic.AddUint32(&invalids, 1)
+				}
+				return res
+			})
 		default:
 			panic("unknown field " + strconv.Quote(field.Name))
 		}
@@ -9532,8 +9635,8 @@ func (ec *executionContext) _TransitStation(ctx context.Context, sel ast.Selecti
 			if out.Values[i] == graphql.Null {
 				invalids++
 			}
-		case "position":
-			out.Values[i] = ec._TransitStation_position(ctx, field, obj)
+		case "coordinates":
+			out.Values[i] = ec._TransitStation_coordinates(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
 				invalids++
 			}
@@ -10578,6 +10681,43 @@ func (ec *executionContext) marshalNTransitStation2ᚖgoᚗstevenxieᚗmeᚋapi�
 
 func (ec *executionContext) marshalNTransport2goᚗstevenxieᚗmeᚋapiᚋassistᚋtransitᚐTransport(ctx context.Context, sel ast.SelectionSet, v transit.Transport) graphql.Marshaler {
 	return ec._Transport(ctx, sel, &v)
+}
+
+func (ec *executionContext) marshalNTransport2ᚕgoᚗstevenxieᚗmeᚋapiᚋassistᚋtransitᚐTransport(ctx context.Context, sel ast.SelectionSet, v []transit.Transport) graphql.Marshaler {
+	ret := make(graphql.Array, len(v))
+	var wg sync.WaitGroup
+	isLen1 := len(v) == 1
+	if !isLen1 {
+		wg.Add(len(v))
+	}
+	for i := range v {
+		i := i
+		rctx := &graphql.ResolverContext{
+			Index:  &i,
+			Result: &v[i],
+		}
+		ctx := graphql.WithResolverContext(ctx, rctx)
+		f := func(i int) {
+			defer func() {
+				if r := recover(); r != nil {
+					ec.Error(ctx, ec.Recover(ctx, r))
+					ret = nil
+				}
+			}()
+			if !isLen1 {
+				defer wg.Done()
+			}
+			ret[i] = ec.marshalNTransport2goᚗstevenxieᚗmeᚋapiᚋassistᚋtransitᚐTransport(ctx, sel, v[i])
+		}
+		if isLen1 {
+			f(i)
+		} else {
+			go f(i)
+		}
+
+	}
+	wg.Wait()
+	return ret
 }
 
 func (ec *executionContext) marshalNTransport2ᚖgoᚗstevenxieᚗmeᚋapiᚋassistᚋtransitᚐTransport(ctx context.Context, sel ast.SelectionSet, v *transit.Transport) graphql.Marshaler {

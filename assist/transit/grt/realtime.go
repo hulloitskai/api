@@ -3,6 +3,7 @@ package grt
 import (
 	"context"
 	"encoding/json"
+	"io/ioutil"
 	"net/http"
 	"net/url"
 	"sort"
@@ -35,8 +36,6 @@ func NewRealtimeService(opts ...RealtimeServiceOption) transit.RealTimeService {
 	return &realtimeService{
 		client: cfg.HTTPClient,
 		log:    logutil.AddComponent(cfg.Logger, (*realtimeService)(nil)),
-
-		stopTimesCache: make(map[string][]string),
 	}
 }
 
@@ -51,8 +50,8 @@ type (
 		client *http.Client
 		log    *logrus.Entry
 
-		stopTimesCache          map[string][]string
-		stopTimesCacheCleanTime time.Time
+		depResCache          map[string][]byte
+		depResCacheTimestamp time.Time
 	}
 
 	// A RealtimeServiceConfig configures a transit.RealtimeService.
@@ -79,7 +78,7 @@ func (src *realtimeService) GetDepartureTimes(
 		"route":           tp.Route,
 		"direction":       tp.Direction,
 		"station":         stn.Name,
-	})
+	}).WithContext(ctx)
 
 	// Check if operator is supported.
 	if tp.Operator.Code != transit.OpCodeGRT {
@@ -165,10 +164,14 @@ func (src *realtimeService) getStopIDs(
 	if err != nil {
 		panic(err)
 	}
-	qp := u.Query()
-	qp.Set("routeId", tp.Route)
+	var (
+		id = stripRouteDirection(tp.Route)
+		qp = u.Query()
+	)
+	qp.Set("routeId", id)
 	u.RawQuery = qp.Encode()
 
+	// Perform request.
 	req, err := http.NewRequestWithContext(ctx, http.MethodGet, u.String(), nil)
 	if err != nil {
 		return nil, errors.Wrap(err, "create request")
@@ -179,6 +182,7 @@ func (src *realtimeService) getStopIDs(
 	}
 	defer res.Body.Close()
 
+	// Decode response.
 	var stops []struct {
 		ID   string `json:"StopId"`
 		Name string
@@ -190,6 +194,7 @@ func (src *realtimeService) getStopIDs(
 		return nil, errors.Wrap(err, "closing response body")
 	}
 
+	// Collect stop IDs.
 	var ids []string
 	for _, s := range stops {
 		if transutil.NormalizeStationName(s.Name) == stn.Name {
@@ -215,27 +220,30 @@ func (src *realtimeService) getDepartureTimes(
 	if err != nil {
 		panic(err)
 	}
-	qp := u.Query()
-	qp.Set("routeId", tp.Route)
+	var (
+		id = stripRouteDirection(tp.Route)
+		qp = u.Query()
+	)
+	qp.Set("routeId", id)
 	qp.Set("stopId", stopID)
 	u.RawQuery = qp.Encode()
 
 	// If the cache hasn't been cleaned in 30 seconds, clean it!
 	{
 		now := time.Now()
-		if src.stopTimesCacheCleanTime.Before(now.Add(-30 * time.Second)) {
-			src.stopTimesCache = make(map[string][]string)
-			src.stopTimesCacheCleanTime = now
+		if src.depResCacheTimestamp.Before(now.Add(-30 * time.Second)) {
+			src.depResCache = make(map[string][]byte)
+			src.depResCacheTimestamp = now
 		}
 	}
 
 	// Get stop times either from cache or from source.
 	var (
-		stopTimes []string
-		key       = stopID + tp.Route
-		ok        bool
+		body []byte
+		key  = stopID + tp.Route
+		ok   bool
 	)
-	if stopTimes, ok = src.stopTimesCache[key]; !ok {
+	if body, ok = src.depResCache[key]; !ok {
 		// Perform request.
 		req, err := http.NewRequestWithContext(ctx, http.MethodGet, u.String(), nil)
 		if err != nil {
@@ -247,38 +255,45 @@ func (src *realtimeService) getDepartureTimes(
 		}
 		defer res.Body.Close()
 
-		// Decode response as JSON.
-		var data struct {
-			StopTimes []struct {
-				ArrivalDateTime string
-				HeadSign        string
-			}
-		}
-		if err = json.NewDecoder(res.Body).Decode(&data); err != nil {
-			return nil, errors.Wrap(err, "decoding response as JSON")
+		// Read response body and cache it.
+		// TODO: Use a generic HTTP caching client.
+		if body, err = ioutil.ReadAll(res.Body); err != nil {
+			return nil, errors.Wrap(err, "read response body")
 		}
 		if err = res.Body.Close(); err != nil {
-			return nil, errors.Wrap(err, "closing response body")
+			return nil, errors.Wrap(err, "close response body")
 		}
-
-		stopTimes = make([]string, len(data.StopTimes))
-		for i, st := range data.StopTimes {
-			stopTimes[i] = st.ArrivalDateTime
-		}
-		src.stopTimesCache[key] = stopTimes
-
-		// Return early if no results or wrong direction.
-		if len(stopTimes) == 0 {
-			return nil, nil
-		}
-		if data.StopTimes[0].HeadSign != tp.Direction {
-			return []time.Time{}, nil
-		}
+		src.depResCache[key] = body
 	}
 
-	deps := make([]time.Time, len(stopTimes))
-	for i, st := range stopTimes {
-		s := strings.Trim(st, `\/`)
+	// Decode response as JSON.
+	var data struct {
+		StopTimes []struct {
+			ArrivalDateTime string
+			HeadSign        string
+		}
+	}
+	if err = json.Unmarshal(body, &data); err != nil {
+		return nil, errors.Wrap(err, "decoding JSON body")
+	}
+
+	// Marshal results to time.Time.
+	times := make([]time.Time, 0, len(data.StopTimes))
+	for _, st := range data.StopTimes {
+		// Ensure matching direction.
+		dir := st.HeadSign
+		if dir[1] == '-' {
+			if c := dir[0]; c != tp.Route[len(tp.Route)-1] {
+				continue
+			}
+			dir = dir[2:]
+		}
+		if dir != tp.Direction {
+			continue
+		}
+
+		// Parse date-time.
+		s := strings.Trim(st.ArrivalDateTime, `\/`)
 		if !strings.HasPrefix(s, "Date") {
 			return nil, errors.Newf("unknown datetime format '%s'", s)
 		}
@@ -287,7 +302,14 @@ func (src *realtimeService) getDepartureTimes(
 		if err != nil {
 			return nil, errors.Wrap(err, "converting datetime '%s' to int")
 		}
-		deps[i] = time.Unix(n/1000, n%1000)
+		times = append(times, time.Unix(n/1000, n%1000))
 	}
-	return deps, nil
+	return times, nil
+}
+
+func stripRouteDirection(route string) string {
+	if c := route[len(route)-1]; ('A' <= c) && (c <= 'Z') {
+		return route[:len(route)-1]
+	}
+	return route
 }

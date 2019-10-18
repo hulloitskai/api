@@ -14,9 +14,16 @@ type (
 		FindDepartures(
 			ctx context.Context,
 			routeQuery string,
-			pos location.Coordinates,
+			coords location.Coordinates,
 			opts ...FindDeparturesOption,
 		) ([]NearbyDeparture, error)
+
+		// NearbyTransports reports active Transports near a particular position.
+		NearbyTransports(
+			ctx context.Context,
+			coords location.Coordinates,
+			opts ...NearbyTransportsOption,
+		) ([]Transport, error)
 	}
 
 	// A FindDeparturesConfig configures a Service.FindDepartures request.
@@ -25,12 +32,23 @@ type (
 		FuzzyMatch     bool   // use fuzzy match algorithm for route
 		OperatorCode   string // filter by operator code
 		Limit          int    // limit number of results
-		Radius         *uint  // the search radius, in meters
-		MaxStations    *uint  // max number of stations to search
+		MaxTimes       int    // maximum number of departure times to include
+		Radius         *int   // the search radius, in meters
+		MaxStations    *int   // max number of stations to search
 	}
 
 	// A FindDeparturesOption modifies a FindDeparturesConfig.
 	FindDeparturesOption func(*FindDeparturesConfig)
+
+	// A NearbyTransportsConfig configures a Service.NearbyTransports request.
+	NearbyTransportsConfig struct {
+		Radius      *int
+		Limit       *int
+		MaxStations *int
+	}
+
+	// A NearbyTransportsOption modifies a NearbyTransportsConfig.
+	NearbyTransportsOption func(*NearbyTransportsConfig)
 )
 
 // FindWithGroupByStation enables the grouping of results by station for a
@@ -47,7 +65,7 @@ func FindWithFuzzyMatch(enable bool) FindDeparturesOption {
 
 // FindWithRadius configures a Service.FindDepartures request to limit search
 // to departures within r meters of the provided position.
-func FindWithRadius(r uint) FindDeparturesOption {
+func FindWithRadius(r int) FindDeparturesOption {
 	return func(cfg *FindDeparturesConfig) { cfg.Radius = &r }
 }
 
