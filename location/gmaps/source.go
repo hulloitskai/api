@@ -45,7 +45,7 @@ func (svc segmentSource) GetHistory(
 	// Perform request.
 	req, err := http.NewRequestWithContext(ctx, http.MethodGet, url, nil)
 	if err != nil {
-		return nil, errors.Wrap(err, "gmaps: creating request")
+		return nil, errors.Wrap(err, "gmaps: create request")
 	}
 	res, err := svc.client.Do(req)
 	if err != nil {

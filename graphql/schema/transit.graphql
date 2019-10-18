@@ -1,10 +1,13 @@
 type TransitQuery {
   """
   Find nearby transit departures.
+
+  Optionally specify a radius (in meters) and limit to restrict results to.
   """
   findDepartures(
     route: String!
     near: CoordinatesInput!
+    radius: Int
     limit: Int
   ): [NearbyTransitDeparture!]!
 }

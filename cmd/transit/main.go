@@ -56,13 +56,14 @@ func main() {
 		}
 	}
 
-	var loc transit.Locator
+	var loc transit.LocatorService
 	{
 		client, err := here.NewClient(_appID)
 		if err != nil {
 			log.WithError(err).Fatal("Creating Here client.")
 		}
-		loc = heretrans.NewLocator(client)
+		locator := heretrans.NewLocator(client)
+		loc = transvc.NewLocatorService(locator, svcutil.WithLogger(log))
 	}
 
 	var rts transit.RealtimeSource

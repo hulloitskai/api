@@ -9,13 +9,13 @@ type Source interface {
 	GetAlbumTracks(
 		ctx context.Context,
 		id string,
-		limit, offset int,
+		cfg PaginationConfig,
 	) ([]Track, error)
 
 	GetArtistAlbums(
 		ctx context.Context,
 		id string,
-		limit, offset int,
+		cfg PaginationConfig,
 	) ([]Album, error)
 }
 

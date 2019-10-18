@@ -30,23 +30,18 @@ func (res transitDepartureResolver) RelativeTimes(
 		var (
 			h = int(rt.Hours())
 			m = int(rt.Minutes()) % 60
-			s = int(rt.Seconds()) % 60
 		)
 
 		// Derive units.
 		var (
 			hourUnit = "hours"
 			minUnit  = "minutes"
-			secUnit  = "seconds"
 		)
 		if h == 1 {
 			hourUnit = "hour"
 		}
 		if m == 1 {
 			minUnit = "minute"
-		}
-		if s == 1 {
-			secUnit = "second"
 		}
 
 		if rt.Hours() > 1 {
@@ -56,11 +51,7 @@ func (res transitDepartureResolver) RelativeTimes(
 				descs[i] = fmt.Sprintf("%d %s", h, hourUnit)
 			}
 		} else {
-			if s > 0 {
-				descs[i] = fmt.Sprintf("%d %s and %d %s", m, minUnit, s, secUnit)
-			} else {
-				descs[i] = fmt.Sprintf("%d %s", m, minUnit)
-			}
+			descs[i] = fmt.Sprintf("%d %s", m, minUnit)
 		}
 	}
 	return descs, nil

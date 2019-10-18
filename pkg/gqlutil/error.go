@@ -19,6 +19,9 @@ func PresentError(ctx context.Context, err error) *gqlerror.Error {
 	if hints := errors.GetAllHints(err); len(hints) > 0 {
 		exts["hints"] = hints
 	}
+	if details := errors.GetAllDetails(err); len(details) > 0 {
+		exts["details"] = details
+	}
 	if links := errors.GetAllIssueLinks(err); len(links) > 0 {
 		exts["issueLinks"] = links
 	}

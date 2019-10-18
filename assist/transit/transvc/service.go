@@ -6,17 +6,15 @@ import (
 	"sort"
 	"strings"
 
-	"go.stevenxie.me/api/assist/assistutil"
-
-	"github.com/lithammer/fuzzysearch/fuzzy"
-
 	"github.com/cockroachdb/errors"
+	"github.com/lithammer/fuzzysearch/fuzzy"
 	"github.com/sirupsen/logrus"
 
 	"go.stevenxie.me/gopkg/logutil"
 	"go.stevenxie.me/gopkg/name"
 	"go.stevenxie.me/gopkg/zero"
 
+	"go.stevenxie.me/api/assist/assistutil"
 	"go.stevenxie.me/api/assist/transit"
 	"go.stevenxie.me/api/location"
 	"go.stevenxie.me/api/pkg/svcutil"
@@ -24,7 +22,7 @@ import (
 
 // NewService creates a new transit.Service.
 func NewService(
-	loc transit.Locator,
+	loc transit.LocatorService,
 	rts transit.RealtimeSource,
 	opts ...svcutil.BasicOption,
 ) transit.Service {
@@ -42,7 +40,7 @@ func NewService(
 }
 
 type service struct {
-	loc transit.Locator
+	loc transit.LocatorService
 	rts transit.RealtimeSource
 	log *logrus.Entry
 }
@@ -51,18 +49,18 @@ var _ transit.Service = (*service)(nil)
 
 func (svc service) FindDepartures(
 	ctx context.Context,
-	route string,
+	routeQuery string,
 	pos location.Coordinates,
 	opts ...transit.FindDeparturesOption,
 ) ([]transit.NearbyDeparture, error) {
 	log := svc.log.WithFields(logrus.Fields{
-		"method": name.OfMethod(service.FindDepartures),
-		"route":  route,
-		"pos":    pos,
+		"method":      name.OfMethod(service.FindDepartures),
+		"route_query": routeQuery,
+		"pos":         pos,
 	}).WithContext(ctx)
 
 	// Validate inputs.
-	if route == "" {
+	if routeQuery == "" {
 		return nil, errors.New("transvc: route is empty")
 	}
 
@@ -87,7 +85,6 @@ func (svc service) FindDepartures(
 		},
 	)
 	if err != nil {
-		log.WithError(err).Error("Failed to get nearby departures.")
 		return nil, errors.Wrap(err, "transvc: get nearby departures")
 	}
 
@@ -103,13 +100,14 @@ func (svc service) FindDepartures(
 	}
 
 	// If fuzzy-matching, update route to the closest matching route.
+	var route string
 	if cfg.FuzzyMatch {
 		// Basic input normalization.
-		query := strings.ToLower(route)
-		query = strings.TrimSpace(query)
-		query = strings.TrimPrefix(query, "the ")
-		query = strings.Trim(query, ".!?")
-		query = assistutil.ReplaceNumberWords(query)
+		route = strings.ToLower(routeQuery)
+		route = strings.TrimSpace(route)
+		route = strings.TrimPrefix(route, "the ")
+		route = strings.Trim(route, ".!?")
+		route = assistutil.ReplaceNumberWords(route)
 
 		// Construct search strings to match against.
 		var (
@@ -119,22 +117,29 @@ func (svc service) FindDepartures(
 		for i := range nds {
 			tp := nds[i].Transport
 			routes[i] = tp.Route
-			routesWithContext[i] = assistutil.ReplaceNumberWords(fmt.Sprintf(
+
+			rwc := fmt.Sprintf(
 				"%s %s to %s",
 				tp.Route, tp.Operator.Name, tp.Direction,
-			))
+			)
+			rwc = assistutil.ReplaceNumberWords(rwc)
+			rwc = strings.ToLower(rwc)
+			routesWithContext[i] = rwc
 		}
 
-		matches := fuzzy.RankFind(query, routesWithContext)
+		matches := fuzzy.RankFind(route, routesWithContext)
 		if len(matches) == 0 {
-			return nil, errors.WithHintf(
+			return nil, errors.WithDetailf(
 				errors.New("transvc: no matching route"),
-				"No nearby routes matching '%s'.", route,
+				"No nearby routes matching '%s'.", routeQuery,
 			)
 		}
 		sort.Sort(matches)
 		route = routes[matches[0].OriginalIndex]
+	} else {
+		route = routeQuery
 	}
+	log = log.WithField("route", route)
 
 	// Filter based on route.
 	{
@@ -145,14 +150,14 @@ func (svc service) FindDepartures(
 					continue
 				}
 			}
-			if route == nds[i].Transport.Route {
+			if routeQuery == nds[i].Transport.Route {
 				filtered = append(filtered, nds[i])
 			}
 		}
 		if len(filtered) == 0 {
 			return nil, errors.WithHintf(
 				errors.New("transvc: no departures matching route"),
-				"No departures found for '%s'.", route,
+				"No departures found for '%s'.", routeQuery,
 			)
 		}
 		nds = filtered
@@ -187,7 +192,7 @@ func (svc service) FindDepartures(
 	}
 
 	// Apply limit if it exists.
-	if l := cfg.Limit; l > 0 {
+	if l := cfg.Limit; (l > 0) && (len(nds) > l) {
 		nds = nds[:l]
 	}
 

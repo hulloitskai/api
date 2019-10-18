@@ -162,7 +162,7 @@ func (svc *service) getPermissions(
 		)
 		if err != nil {
 			log.WithError(err).Error("Failed to create request.")
-			return nil, "", errors.Wrap(err, "airtable: creating request")
+			return nil, "", errors.Wrap(err, "airtable: create request")
 		}
 		res, err := svc.client.Do(req)
 		if err != nil {

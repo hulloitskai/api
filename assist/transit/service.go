@@ -13,7 +13,7 @@ type (
 		// pos.
 		FindDepartures(
 			ctx context.Context,
-			route string,
+			routeQuery string,
 			pos location.Coordinates,
 			opts ...FindDeparturesOption,
 		) ([]NearbyDeparture, error)
@@ -24,9 +24,9 @@ type (
 		GroupByStation bool   // group results by station
 		FuzzyMatch     bool   // use fuzzy match algorithm for route
 		OperatorCode   string // filter by operator code
+		Limit          int    // limit number of results
 		Radius         *uint  // the search radius, in meters
 		MaxStations    *uint  // max number of stations to search
-		Limit          int    // limit number of results
 	}
 
 	// A FindDeparturesOption modifies a FindDeparturesConfig.

@@ -34,9 +34,12 @@ func (src source) GetTrack(_ context.Context, id string) (*music.Track, error) {
 func (src source) GetAlbumTracks(
 	_ context.Context,
 	id string,
-	limit, offset int,
+	cfg music.PaginationConfig,
 ) ([]music.Track, error) {
-	sts, err := src.client.GetAlbumTracksOpt(spotify.ID(id), limit, offset)
+	sts, err := src.client.GetAlbumTracksOpt(
+		spotify.ID(id),
+		cfg.Limit, cfg.Offset,
+	)
 	if err != nil {
 		return nil, errors.WithMessage(err, "spotify")
 	}
@@ -48,13 +51,13 @@ func (src source) GetAlbumTracks(
 func (src source) GetArtistAlbums(
 	_ context.Context,
 	id string,
-	limit, offset int,
+	cfg music.PaginationConfig,
 ) ([]music.Album, error) {
 	sas, err := src.client.GetArtistAlbumsOpt(
 		spotify.ID(id),
 		&spotify.Options{
-			Limit:  &limit,
-			Offset: &offset,
+			Limit:  &cfg.Limit,
+			Offset: &cfg.Offset,
 		},
 		nil,
 	)

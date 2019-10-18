@@ -20,7 +20,7 @@ type Service interface {
 }
 
 // ErrInvalidCode is returned by a Service when a provided code is invalid.
-var ErrInvalidCode = errors.WithHint(
+var ErrInvalidCode = errors.WithDetailf(
 	stderrs.New("auth: invalid code"),
 	"Code is invalid or expired.",
 )

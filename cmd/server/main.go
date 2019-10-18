@@ -6,10 +6,6 @@ import (
 	"net/http"
 	"os"
 
-	"go.stevenxie.me/api/assist/transit/grt"
-	"go.stevenxie.me/api/assist/transit/heretrans"
-	"go.stevenxie.me/api/assist/transit/transvc"
-
 	"github.com/cockroachdb/errors"
 	"github.com/urfave/cli"
 
@@ -48,6 +44,10 @@ import (
 	"go.stevenxie.me/api/git"
 	"go.stevenxie.me/api/git/gitgh"
 	"go.stevenxie.me/api/git/gitsvc"
+
+	"go.stevenxie.me/api/assist/transit/grt"
+	"go.stevenxie.me/api/assist/transit/heretrans"
+	"go.stevenxie.me/api/assist/transit/transvc"
 
 	"go.stevenxie.me/api/auth"
 	"go.stevenxie.me/api/auth/airtable"
@@ -127,37 +127,37 @@ func run(*cli.Context) (err error) {
 
 	timelineClient, err := gmaps.NewTimelineClient()
 	if err != nil {
-		return errors.Wrap(err, "creating Google Maps timeline client")
+		return errors.Wrap(err, "create Google Maps timeline client")
 	}
 
 	hereClient, err := here.NewClient(cfg.Location.Here.AppID)
 	if err != nil {
-		return errors.Wrap(err, "creating Here client")
+		return errors.Wrap(err, "create Here client")
 	}
 
 	githubClient, err := github.New()
 	if err != nil {
-		return errors.Wrap(err, "creating GitHub client")
+		return errors.Wrap(err, "create GitHub client")
 	}
 
 	spotifyClient, err := spotify.New()
 	if err != nil {
-		return errors.Wrap(err, "creating Spotify client")
+		return errors.Wrap(err, "create Spotify client")
 	}
 
 	googleClients, err := google.NewClientSet()
 	if err != nil {
-		return errors.Wrap(err, "creating Google client set")
+		return errors.Wrap(err, "create Google client set")
 	}
 
 	rtimeClient, err := rescuetime.NewClient()
 	if err != nil {
-		return errors.Wrap(err, "creating RescueTime client")
+		return errors.Wrap(err, "create RescueTime client")
 	}
 
 	airtableClient, err := airtable.NewClient()
 	if err != nil {
-		return errors.Wrap(err, "creating Airtable client")
+		return errors.Wrap(err, "create Airtable client")
 	}
 
 	// Init services.
@@ -219,10 +219,7 @@ func run(*cli.Context) (err error) {
 	{
 		var (
 			source        = spotify.NewSource(spotifyClient)
-			sourceService = musicsvc.NewSourceService(
-				source,
-				svcutil.WithLogger(log),
-			)
+			sourceService = musicsvc.NewSourceService(source, svcutil.WithLogger(log))
 		)
 		var (
 			currentSource  = spotify.NewCurrentSource(spotifyClient)
@@ -263,25 +260,16 @@ func run(*cli.Context) (err error) {
 	{
 		calsvc, err := googleClients.CalendarService(context.Background())
 		if err != nil {
-			return errors.Wrap(err, "creating Google calendar service")
+			return errors.Wrap(err, "create Google calendar service")
 		}
-		source := gcal.NewBusySource(
-			calsvc,
-			cfg.Scheduling.GCal.CalendarIDs,
-		)
-		schedulingService = schedsvc.NewService(
-			source,
-			svcutil.WithLogger(log),
-		)
+		source := gcal.NewBusySource(calsvc, cfg.Scheduling.GCal.CalendarIDs)
+		schedulingService = schedsvc.NewService(source, svcutil.WithLogger(log))
 	}
 
 	var gitService git.Service
 	{
 		source := gitgh.NewSource(githubClient)
-		gitService = gitsvc.NewService(
-			source,
-			svcutil.WithLogger(log),
-		)
+		gitService = gitsvc.NewService(source, svcutil.WithLogger(log))
 
 		if cfg := cfg.Git.Precacher; cfg.Enabled {
 			precacher := gitsvc.NewServicePrecacher(
@@ -330,11 +318,15 @@ func run(*cli.Context) (err error) {
 	var transitService transit.Service
 	{
 		var (
-			loc = heretrans.NewLocator(hereClient)
-			rts = grt.NewRealtimeSource(nil)
+			rts            = grt.NewRealtimeSource(nil)
+			locator        = heretrans.NewLocator(hereClient)
+			locatorService = transvc.NewLocatorService(
+				locator,
+				svcutil.WithLogger(log),
+			)
 		)
 		transitService = transvc.NewService(
-			loc, rts,
+			locatorService, rts,
 			svcutil.WithLogger(log),
 		)
 	}

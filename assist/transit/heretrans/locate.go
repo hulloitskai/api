@@ -13,6 +13,7 @@ import (
 	"github.com/cockroachdb/errors"
 
 	"go.stevenxie.me/api/assist/transit"
+	"go.stevenxie.me/api/assist/transit/transutil"
 	"go.stevenxie.me/api/location"
 	"go.stevenxie.me/api/pkg/here"
 )
@@ -33,18 +34,13 @@ var _ transit.Locator = (*locator)(nil)
 func (l locator) NearbyDepartures(
 	ctx context.Context,
 	pos location.Coordinates,
-	opts ...transit.NearbyDeparturesOption,
+	cfg transit.NearbyDeparturesConfig,
 ) ([]transit.NearbyDeparture, error) {
-	var cfg transit.NearbyDeparturesConfig
-	for _, opt := range opts {
-		opt(&cfg)
-	}
-
 	// Build and perform request.
 	url := buildNearbyDeparturesURL(pos, &cfg)
 	req, err := http.NewRequestWithContext(ctx, http.MethodGet, url, nil)
 	if err != nil {
-		return nil, errors.Wrap(err, "heretrans: creating request")
+		return nil, errors.Wrap(err, "heretrans: create request")
 	}
 	res, err := l.client.Do(req)
 	if err != nil {
@@ -114,7 +110,7 @@ func (l locator) NearbyDepartures(
 				s := set.Stn
 				stn = &transit.Station{
 					ID:       s.ID,
-					Name:     s.Name,
+					Name:     transutil.NormalizeStationName(s.Name),
 					Position: location.Coordinates{X: s.X, Y: s.Y},
 				}
 				distance = s.Distance
@@ -154,16 +150,25 @@ func (l locator) NearbyDepartures(
 							)
 						}
 
-						// Format direction.
-						dir := strings.ReplaceAll(dt.Dir, dt.Name, "")
-						dir = strings.Trim(dir, ` \/-*()`)
-
+						// Create transit.Transport.
 						tp = &transit.Transport{
 							Route:     dt.Name,
-							Direction: dir,
+							Direction: transutil.NormalizeStationName(dt.Dir),
 							Category:  dt.At.Category,
 							Operator:  op,
 						}
+
+						// Modify tp based on well-known op codes.
+						switch tp.Operator.Code {
+						case transit.OpCodeGoTransit:
+							if tp.Category == "Bus" {
+								if n := strings.IndexByte(tp.Direction, '-'); n != -1 {
+									tp.Route = tp.Direction[:n-1]
+									tp.Direction = tp.Direction[n+2:]
+								}
+							}
+						}
+
 						tps[key] = tp
 					}
 				}

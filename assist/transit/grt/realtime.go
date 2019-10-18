@@ -11,6 +11,7 @@ import (
 
 	"github.com/cockroachdb/errors"
 	"go.stevenxie.me/api/assist/transit"
+	"go.stevenxie.me/api/assist/transit/transutil"
 )
 
 // NewRealtimeSource creates a transit.RealtimeSource that gets realtime data
@@ -85,7 +86,7 @@ func (src *realtimeSource) getStopIDs(
 
 	req, err := http.NewRequestWithContext(ctx, http.MethodGet, u.String(), nil)
 	if err != nil {
-		return nil, errors.Wrap(err, "creating request")
+		return nil, errors.Wrap(err, "create request")
 	}
 	res, err := src.client.Do(req)
 	if err != nil {
@@ -106,12 +107,15 @@ func (src *realtimeSource) getStopIDs(
 
 	var ids []string
 	for _, s := range stops {
-		if s.Name == stn.Name {
+		if transutil.NormalizeStationName(s.Name) == stn.Name {
 			ids = append(ids, s.ID)
 		}
 	}
 	if len(ids) == 0 {
-		return nil, errors.New("none found")
+		return nil, errors.WithDetailf(
+			errors.New("none found"),
+			"No GRT stops found with the name '%s'.", stn.Name,
+		)
 	}
 	return ids, nil
 }
@@ -150,7 +154,7 @@ func (src *realtimeSource) getDepartureTimes(
 		// Perform request.
 		req, err := http.NewRequestWithContext(ctx, http.MethodGet, u.String(), nil)
 		if err != nil {
-			return nil, errors.Wrap(err, "creating request")
+			return nil, errors.Wrap(err, "create request")
 		}
 		res, err := src.client.Do(req)
 		if err != nil {

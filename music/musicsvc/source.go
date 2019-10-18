@@ -75,7 +75,7 @@ func (svc sourceService) GetAlbumTracks(
 		"offset":          cfg.Offset,
 	}).WithContext(ctx)
 
-	ts, err := svc.src.GetAlbumTracks(ctx, id, cfg.Limit, cfg.Offset)
+	ts, err := svc.src.GetAlbumTracks(ctx, id, cfg)
 	if err != nil {
 		log.WithError(err).Error("Failed to get album tracks.")
 		return nil, err
@@ -105,7 +105,7 @@ func (svc sourceService) GetArtistAlbums(
 		"offset":          cfg.Offset,
 	}).WithContext(ctx)
 
-	as, err := svc.src.GetArtistAlbums(ctx, id, cfg.Limit, cfg.Offset)
+	as, err := svc.src.GetArtistAlbums(ctx, id, cfg)
 	if err != nil {
 		log.WithError(err).Error("Failed to get artist albums.")
 		return nil, err

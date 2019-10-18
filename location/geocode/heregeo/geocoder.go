@@ -47,7 +47,7 @@ func (g geocoder) ReverseGeocode(
 	url := buildReverseGeocodeURL(coord, &cfg)
 	req, err := http.NewRequestWithContext(ctx, http.MethodGet, url, nil)
 	if err != nil {
-		return nil, errors.Wrap(err, "heregeo: creating request")
+		return nil, errors.Wrap(err, "heregeo: create request")
 	}
 	res, err := g.client.Do(req)
 	if err != nil {
