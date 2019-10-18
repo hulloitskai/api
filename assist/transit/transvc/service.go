@@ -127,6 +127,11 @@ func (svc service) FindDepartures(
 			routesWithContext[i] = rwc
 		}
 
+		fmt.Println(route)
+		for _, r := range routesWithContext {
+			fmt.Println(r)
+		}
+
 		matches := fuzzy.RankFind(route, routesWithContext)
 		if len(matches) == 0 {
 			return nil, errors.WithDetailf(
@@ -150,12 +155,12 @@ func (svc service) FindDepartures(
 					continue
 				}
 			}
-			if routeQuery == nds[i].Transport.Route {
+			if route == nds[i].Transport.Route {
 				filtered = append(filtered, nds[i])
 			}
 		}
 		if len(filtered) == 0 {
-			return nil, errors.WithHintf(
+			return nil, errors.WithDetailf(
 				errors.New("transvc: no departures matching route"),
 				"No departures found for '%s'.", routeQuery,
 			)

@@ -12,12 +12,14 @@ steps:
       - name: gopath
         path: /go
 
-  - name: generate
-    image: golang:1.13
-    commands: ["go generate ./..."]
-    volumes:
-      - name: gopath
-        path: /go
+  # NOTE: Disable "go generate" because generating the GraphQL server takes
+  # a really long time and doesn't need to be done every time.
+  # - name: generate
+  #   image: golang:1.13
+  #   commands: ["go generate ./..."]
+  #   volumes:
+  #     - name: gopath
+  #       path: /go
 
   - name: diff
     image: alpine/git
