@@ -23,7 +23,7 @@ import (
 // NewService creates a new transit.Service.
 func NewService(
 	loc transit.LocatorService,
-	rts transit.RealtimeSource,
+	rts transit.RealTimeService,
 	opts ...svcutil.BasicOption,
 ) transit.Service {
 	cfg := svcutil.BasicConfig{
@@ -41,7 +41,7 @@ func NewService(
 
 type service struct {
 	loc transit.LocatorService
-	rts transit.RealtimeSource
+	rts transit.RealTimeService
 	log *logrus.Entry
 }
 
@@ -90,6 +90,7 @@ func (svc service) FindDepartures(
 
 	// Filter based on operator, if applicable.
 	if code := cfg.OperatorCode; code != "" {
+		log.WithField("code", code).Trace("Filtering by code...")
 		var filtered []transit.NearbyDeparture
 		for i := range nds {
 			if nds[i].Transport.Operator.Code == code {
@@ -106,6 +107,7 @@ func (svc service) FindDepartures(
 		route = strings.ToLower(routeQuery)
 		route = strings.TrimSpace(route)
 		route = strings.TrimPrefix(route, "the ")
+		route = strings.TrimSuffix(route, "th")
 		route = strings.Trim(route, ".!?")
 		route = assistutil.ReplaceNumberWords(route)
 
@@ -120,19 +122,16 @@ func (svc service) FindDepartures(
 
 			rwc := fmt.Sprintf(
 				"%s %s to %s",
-				tp.Route, tp.Operator.Name, tp.Direction,
+				tp.Operator.Name, tp.Route, tp.Direction,
 			)
 			rwc = assistutil.ReplaceNumberWords(rwc)
-			rwc = strings.ToLower(rwc)
 			routesWithContext[i] = rwc
 		}
 
-		fmt.Println(route)
-		for _, r := range routesWithContext {
-			fmt.Println(r)
-		}
-
-		matches := fuzzy.RankFind(route, routesWithContext)
+		log.
+			WithField("targets", routesWithContext).
+			Debug("Performing fuzzy search against targets.")
+		matches := fuzzy.RankFindFold(route, routesWithContext)
 		if len(matches) == 0 {
 			return nil, errors.WithDetailf(
 				errors.New("transvc: no matching route"),
@@ -145,9 +144,11 @@ func (svc service) FindDepartures(
 		route = routeQuery
 	}
 	log = log.WithField("route", route)
+	log.Trace("Derived route.")
 
 	// Filter based on route.
 	{
+		log.Trace("Filtering results by route...")
 		var filtered []transit.NearbyDeparture
 		for i := range nds {
 			if code := cfg.OperatorCode; code != "" {
@@ -170,6 +171,7 @@ func (svc service) FindDepartures(
 
 	// Group by station, if enabled.
 	if cfg.GroupByStation {
+		log.Trace("Grouping results by station...")
 		var (
 			included = make(map[string]zero.Struct)
 			sorted   = make([]transit.NearbyDeparture, 0, len(nds))
@@ -202,17 +204,26 @@ func (svc service) FindDepartures(
 	}
 
 	// Update with realtime departures times, if available.
+	log.Trace("Update results with realtime departures...")
 	for i := range nds {
-		times, err := svc.rts.GetDepartureTimes(
-			ctx,
-			*nds[i].Transport, *nds[i].Station,
+		var (
+			tp  = nds[i].Transport
+			stn = nds[i].Station
 		)
+
+		times, err := svc.rts.GetDepartureTimes(ctx, *tp, *stn)
 		if err != nil {
 			if errors.Is(err, transit.ErrOperatorNotSupported) {
 				continue
 			}
-			log.WithError(err).Error("Failed to get realtime departure times.")
 			return nil, errors.Wrap(err, "transvc: get realtime departure times")
+		}
+		if len(times) == 0 {
+			log.WithFields(logrus.Fields{
+				"direction": tp.Direction,
+				"station":   stn.Name,
+			}).Warn("No realtime departure times found, skipping.")
+			continue
 		}
 
 		nd := &nds[i]

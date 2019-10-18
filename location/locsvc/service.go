@@ -4,13 +4,12 @@ import (
 	"context"
 	"time"
 
-	"go.stevenxie.me/api/location/geocode/geoutil"
-
 	"github.com/cockroachdb/errors"
 	"github.com/sirupsen/logrus"
 
 	"go.stevenxie.me/api/location"
 	"go.stevenxie.me/api/location/geocode"
+	"go.stevenxie.me/api/location/geocode/geoutil"
 	"go.stevenxie.me/gopkg/logutil"
 	"go.stevenxie.me/gopkg/name"
 )

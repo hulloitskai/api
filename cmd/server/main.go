@@ -318,15 +318,15 @@ func run(*cli.Context) (err error) {
 	var transitService transit.Service
 	{
 		var (
-			rts            = grt.NewRealtimeSource(nil)
 			locator        = heretrans.NewLocator(hereClient)
 			locatorService = transvc.NewLocatorService(
 				locator,
 				svcutil.WithLogger(log),
 			)
+			realtimeService = grt.NewRealtimeService(grt.WithRealtimeLogger(log))
 		)
 		transitService = transvc.NewService(
-			locatorService, rts,
+			locatorService, realtimeService,
 			svcutil.WithLogger(log),
 		)
 	}

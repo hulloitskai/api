@@ -5,62 +5,147 @@ import (
 	"encoding/json"
 	"net/http"
 	"net/url"
+	"sort"
 	"strconv"
 	"strings"
 	"time"
 
 	"github.com/cockroachdb/errors"
+	"github.com/sirupsen/logrus"
+
+	"go.stevenxie.me/gopkg/logutil"
+	"go.stevenxie.me/gopkg/name"
+
 	"go.stevenxie.me/api/assist/transit"
 	"go.stevenxie.me/api/assist/transit/transutil"
 )
 
-// NewRealtimeSource creates a transit.RealtimeSource that gets realtime data
+// NewRealtimeService creates a transit.RealtimeSource that gets realtime data
 // using GRT.
 //
 // If c == nil, http.DefaultClient will be used.
-func NewRealtimeSource(c *http.Client) transit.RealtimeSource {
-	if c == nil {
-		c = http.DefaultClient
+func NewRealtimeService(opts ...RealtimeServiceOption) transit.RealTimeService {
+	cfg := RealtimeServiceConfig{
+		HTTPClient: http.DefaultClient,
+		Logger:     logutil.NoopEntry(),
 	}
-	return &realtimeSource{
-		client:         c,
+	for _, opt := range opts {
+		opt(&cfg)
+	}
+	return &realtimeService{
+		client: cfg.HTTPClient,
+		log:    logutil.AddComponent(cfg.Logger, (*realtimeService)(nil)),
+
 		stopTimesCache: make(map[string][]string),
 	}
 }
 
-type realtimeSource struct {
-	client *http.Client
-
-	stopTimesCache          map[string][]string
-	stopTimesCacheCleanTime time.Time
+// WithRealtimeLogger configures a transit.RealtimeService to write logs with
+// log.
+func WithRealtimeLogger(log *logrus.Entry) RealtimeServiceOption {
+	return func(cfg *RealtimeServiceConfig) { cfg.Logger = log }
 }
 
-var _ transit.RealtimeSource = (*realtimeSource)(nil)
+type (
+	realtimeService struct {
+		client *http.Client
+		log    *logrus.Entry
+
+		stopTimesCache          map[string][]string
+		stopTimesCacheCleanTime time.Time
+	}
+
+	// A RealtimeServiceConfig configures a transit.RealtimeService.
+	RealtimeServiceConfig struct {
+		Logger     *logrus.Entry
+		HTTPClient *http.Client
+	}
+
+	// A RealtimeServiceOption modifies a RealtimeServiceConfig.
+	RealtimeServiceOption func(*RealtimeServiceConfig)
+)
+
+var _ transit.RealTimeService = (*realtimeService)(nil)
 
 // GetDepartureTime gets the realtime departure time for a given
 // transit.Transport and transit.Station.
-func (src *realtimeSource) GetDepartureTimes(
+func (src *realtimeService) GetDepartureTimes(
 	ctx context.Context,
 	tp transit.Transport,
 	stn transit.Station,
 ) ([]time.Time, error) {
+	log := logrus.WithFields(logrus.Fields{
+		logutil.MethodKey: name.OfMethod((*realtimeService).GetDepartureTimes),
+		"route":           tp.Route,
+		"direction":       tp.Direction,
+		"station":         stn.Name,
+	})
+
 	// Check if operator is supported.
 	if tp.Operator.Code != transit.OpCodeGRT {
+		log.
+			WithField("op_code", tp.Operator.Code).
+			Warn("Only GRT routes are supported.")
 		return nil, transit.ErrOperatorNotSupported
 	}
+
+	// Get stop IDs.
 	stopIDs, err := src.getStopIDs(ctx, &stn, &tp)
 	if err != nil {
-		return nil, errors.Wrap(err, "grt: get matching stop IDs")
+		log.
+			WithError(errors.WithMessage(err, "grt")).
+			Error("Failed to get corresponding stop IDs.")
+		return nil, errors.Wrap(err, "grt: get corresponding stop IDs")
 	}
+	log = log.WithField("stop_ids", stopIDs)
+	log.Trace("Got stop IDs.")
+
+	// Get times for the correct stop ID.
 	var times []time.Time
 	for _, id := range stopIDs {
 		if times, err = src.getDepartureTimes(ctx, &tp, id); err != nil {
-			return nil, errors.WithMessage(err, "grt")
+			err = errors.WithMessage(err, "grt")
+			log.WithError(err).Error("Failed to get departure times.")
+			return nil, err
 		}
 		if len(times) > 0 {
 			break
 		}
 	}
+	log = log.WithField("times", times)
+	log.Trace("Got departure times.")
+
+	// Break early if no times.
+	if len(times) == 0 {
+		return []time.Time{}, nil
+	}
+
+	// ISSUE: Account for hiccups in the GRT realtime results, where incorrect
+	// departure times (> 12 hours from current time) are returned.
+	//
+	// See: https://github.com/stevenxie/api/issues/3
+	{
+		var (
+			now     = time.Now()
+			alerted bool
+		)
+		for i, t := range times {
+			if t.Sub(now) > (12 * time.Hour) {
+				if !alerted {
+					log.Warn("Detected departure time anomaly from GRT. Removing " +
+						"affected results.")
+					alerted = true
+				}
+
+				// Remove this departure time.
+				times = append(times[:i], times[i+1:]...)
+			}
+		}
+	}
+
+	// Sort times in ascending order.
+	log.Trace("Sorting departure times...")
+	sort.Slice(times, func(i, j int) bool { return times[i].Before(times[j]) })
 	return times, nil
 }
 
@@ -70,7 +155,7 @@ const (
 	_depsURL = _baseURL + "/Stop/GetStopInfo"
 )
 
-func (src *realtimeSource) getStopIDs(
+func (src *realtimeService) getStopIDs(
 	ctx context.Context,
 	stn *transit.Station,
 	tp *transit.Transport,
@@ -120,7 +205,7 @@ func (src *realtimeSource) getStopIDs(
 	return ids, nil
 }
 
-func (src *realtimeSource) getDepartureTimes(
+func (src *realtimeService) getDepartureTimes(
 	ctx context.Context,
 	tp *transit.Transport,
 	stopID string,
@@ -180,12 +265,11 @@ func (src *realtimeSource) getDepartureTimes(
 		for i, st := range data.StopTimes {
 			stopTimes[i] = st.ArrivalDateTime
 		}
-
 		src.stopTimesCache[key] = stopTimes
 
 		// Return early if no results or wrong direction.
 		if len(stopTimes) == 0 {
-			return nil, errors.New("no results")
+			return nil, nil
 		}
 		if data.StopTimes[0].HeadSign != tp.Direction {
 			return []time.Time{}, nil
