@@ -12,7 +12,7 @@ import (
 	"go.stevenxie.me/api/location"
 	"go.stevenxie.me/api/location/geocode"
 	"go.stevenxie.me/api/location/geocode/geoutil"
-	"go.stevenxie.me/api/pkg/svcutil"
+	"go.stevenxie.me/api/pkg/basic"
 )
 
 // NewHistoryService creates a HistoryService from a location.SegmentSource and
@@ -20,14 +20,9 @@ import (
 func NewHistoryService(
 	src location.SegmentSource,
 	geo geocode.Geocoder,
-	opts ...svcutil.BasicOption,
+	opts ...basic.Option,
 ) location.HistoryService {
-	cfg := svcutil.BasicConfig{
-		Logger: logutil.NoopEntry(),
-	}
-	for _, opt := range opts {
-		opt(&cfg)
-	}
+	cfg := basic.BuildConfig(opts...)
 	return &historyService{
 		src: src,
 		geo: geo,

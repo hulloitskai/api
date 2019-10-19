@@ -57,7 +57,7 @@ func (src staticSource) GetStatic() (*about.Static, error) {
 		Birthday string `json:"birthday"`
 	}
 	if err = json.Unmarshal(raw, &data); err != nil {
-		return nil, errors.Wrap(err, "aboutgh: decoding file contents as JSON")
+		return nil, errors.Wrap(err, "aboutgh: decode file contents as JSON")
 	}
 
 	// Derive age from birthday.

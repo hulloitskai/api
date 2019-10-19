@@ -6,19 +6,14 @@ import (
 	"github.com/sirupsen/logrus"
 
 	"go.stevenxie.me/api/git"
-	"go.stevenxie.me/api/pkg/svcutil"
+	"go.stevenxie.me/api/pkg/basic"
 	"go.stevenxie.me/gopkg/logutil"
 	"go.stevenxie.me/gopkg/name"
 )
 
 // NewService creates a new git.Service.
-func NewService(src git.Source, opts ...svcutil.BasicOption) git.Service {
-	cfg := svcutil.BasicConfig{
-		Logger: logutil.NoopEntry(),
-	}
-	for _, opt := range opts {
-		opt(&cfg)
-	}
+func NewService(src git.Source, opts ...basic.Option) git.Service {
+	cfg := basic.BuildConfig(opts...)
 	return service{
 		src: src,
 		log: logutil.AddComponent(cfg.Logger, (*service)(nil)),

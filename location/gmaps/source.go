@@ -75,10 +75,10 @@ func (svc segmentSource) GetHistory(
 		} `xml:"Document>Placemark"`
 	}
 	if err = xml.NewDecoder(res.Body).Decode(&data); err != nil {
-		return nil, errors.Wrap(err, "gmaps: decoding response as XML")
+		return nil, errors.Wrap(err, "gmaps: decode response as XML")
 	}
 	if err = res.Body.Close(); err != nil {
-		return nil, errors.Wrap(err, "gmaps: closing response body")
+		return nil, errors.Wrap(err, "gmaps: close response body")
 	}
 
 	results := make([]location.HistorySegment, len(data.Placemarks))

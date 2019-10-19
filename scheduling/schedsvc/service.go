@@ -7,7 +7,7 @@ import (
 
 	"github.com/sirupsen/logrus"
 
-	"go.stevenxie.me/api/pkg/svcutil"
+	"go.stevenxie.me/api/pkg/basic"
 	"go.stevenxie.me/api/scheduling"
 	"go.stevenxie.me/gopkg/logutil"
 	"go.stevenxie.me/gopkg/name"
@@ -16,14 +16,9 @@ import (
 // NewService creates a new Service.
 func NewService(
 	src scheduling.BusySource,
-	opts ...svcutil.BasicOption,
+	opts ...basic.Option,
 ) scheduling.Service {
-	cfg := svcutil.BasicConfig{
-		Logger: logutil.NoopEntry(),
-	}
-	for _, opt := range opts {
-		opt(&cfg)
-	}
+	cfg := basic.BuildConfig(opts...)
 	return service{
 		src: src,
 		log: logutil.AddComponent(cfg.Logger, (*service)(nil)),

@@ -19,7 +19,7 @@ func (c *Client) CurrentUserLogin() (string, error) {
 			Login string `json:"login"`
 		}
 		if err = json.NewDecoder(res.Body).Decode(&data); err != nil {
-			return "", errors.Wrap(err, "github: decoding response as JSON")
+			return "", errors.Wrap(err, "github: decode response as JSON")
 		}
 		c.currentUserLogin = data.Login
 	}

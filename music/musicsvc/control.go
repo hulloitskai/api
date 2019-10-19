@@ -5,21 +5,16 @@ import (
 
 	"github.com/sirupsen/logrus"
 	"go.stevenxie.me/api/music"
-	"go.stevenxie.me/api/pkg/svcutil"
+	"go.stevenxie.me/api/pkg/basic"
 	"go.stevenxie.me/gopkg/logutil"
 )
 
 // NewControlService creates a new music.ControlService.
 func NewControlService(
 	ctrl music.Controller,
-	opts ...svcutil.BasicOption,
+	opts ...basic.Option,
 ) music.ControlService {
-	cfg := svcutil.BasicConfig{
-		Logger: logutil.NoopEntry(),
-	}
-	for _, opt := range opts {
-		opt(&cfg)
-	}
+	cfg := basic.BuildConfig(opts...)
 	return controlService{
 		ctrl: ctrl,
 		log:  logutil.AddComponent(cfg.Logger, (*controlService)(nil)),

@@ -69,10 +69,10 @@ func (svc recordSource) GetRecords(
 		Rows [][]int `json:"rows"`
 	}
 	if err = json.NewDecoder(res.Body).Decode(&data); err != nil {
-		return nil, errors.Wrap(err, "rescuetime: decoding response as JSON")
+		return nil, errors.Wrap(err, "rescuetime: decode response as JSON")
 	}
 	if err = res.Body.Close(); err != nil {
-		return nil, errors.Wrap(err, "rescuetime: closing response body")
+		return nil, errors.Wrap(err, "rescuetime: close response body")
 	}
 
 	// Parse productivity data.

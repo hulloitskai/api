@@ -95,10 +95,10 @@ func (g geocoder) ReverseGeocode(
 		}
 	}
 	if err = json.NewDecoder(res.Body).Decode(&data); err != nil {
-		return nil, errors.Wrap(err, "heregeo: decoding response body")
+		return nil, errors.Wrap(err, "heregeo: decode response body")
 	}
 	if err = res.Body.Close(); err != nil {
-		return nil, errors.Wrap(err, "heregeo: closing response body")
+		return nil, errors.Wrap(err, "heregeo: close response body")
 	}
 
 	// Parse response.
@@ -121,7 +121,7 @@ func (g geocoder) ReverseGeocode(
 		var shape []location.Coordinates
 		if res := loc.Shape; res != nil {
 			if shape, err = decodeShapeResponse(res.Value); err != nil {
-				return nil, errors.Wrap(err, "heregeo: decoding shape")
+				return nil, errors.Wrap(err, "heregeo: decode shape")
 			}
 		}
 

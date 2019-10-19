@@ -16,9 +16,10 @@ import (
 	"go.stevenxie.me/api/assist/transit/grt"
 	"go.stevenxie.me/api/assist/transit/heretrans"
 	"go.stevenxie.me/api/assist/transit/transvc"
+
 	"go.stevenxie.me/api/location"
+	"go.stevenxie.me/api/pkg/basic"
 	"go.stevenxie.me/api/pkg/here"
-	"go.stevenxie.me/api/pkg/svcutil"
 )
 
 const _appID = "NJBvN0hkaR2Fv7bNpNpU"
@@ -63,7 +64,7 @@ func main() {
 			log.WithError(err).Fatal("Creating Here client.")
 		}
 		locator := heretrans.NewLocator(client)
-		loc = transvc.NewLocatorService(locator, svcutil.WithLogger(log))
+		loc = transvc.NewLocatorService(locator, basic.WithLogger(log))
 	}
 
 	var rts transit.RealtimeSource
@@ -71,7 +72,7 @@ func main() {
 		rts = grt.NewRealtimeSource(grt.WithRealtimeLogger(log))
 	}
 
-	svc := transvc.NewService(loc, rts, svcutil.WithLogger(log))
+	svc := transvc.NewService(loc, rts, basic.WithLogger(log))
 	deps, err := svc.FindDepartures(
 		context.Background(),
 		os.Args[2],

@@ -8,21 +8,16 @@ import (
 	"github.com/sirupsen/logrus"
 	"go.stevenxie.me/api/assist/transit"
 	"go.stevenxie.me/api/location"
-	"go.stevenxie.me/api/pkg/svcutil"
+	"go.stevenxie.me/api/pkg/basic"
 	"go.stevenxie.me/gopkg/logutil"
 )
 
 // NewLocatorService creates a new transit.LocatorService.
 func NewLocatorService(
 	loc transit.Locator,
-	opts ...svcutil.BasicOption,
+	opts ...basic.Option,
 ) transit.LocatorService {
-	cfg := svcutil.BasicConfig{
-		Logger: logutil.NoopEntry(),
-	}
-	for _, opt := range opts {
-		opt(&cfg)
-	}
+	cfg := basic.BuildConfig(opts...)
 	return locatorService{
 		loc: loc,
 		log: logutil.AddComponent(cfg.Logger, (*locatorService)(nil)),

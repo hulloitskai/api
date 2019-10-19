@@ -13,11 +13,10 @@ import (
 	"go.stevenxie.me/gopkg/configutil"
 	"go.stevenxie.me/guillotine"
 
-	"go.stevenxie.me/api/assist/transit"
+	"go.stevenxie.me/api/pkg/basic"
 	"go.stevenxie.me/api/pkg/github"
 	"go.stevenxie.me/api/pkg/google"
 	"go.stevenxie.me/api/pkg/here"
-	"go.stevenxie.me/api/pkg/svcutil"
 
 	"go.stevenxie.me/api/location"
 	"go.stevenxie.me/api/location/geocode"
@@ -45,6 +44,7 @@ import (
 	"go.stevenxie.me/api/git/gitgh"
 	"go.stevenxie.me/api/git/gitsvc"
 
+	"go.stevenxie.me/api/assist/transit"
 	"go.stevenxie.me/api/assist/transit/grt"
 	"go.stevenxie.me/api/assist/transit/heretrans"
 	"go.stevenxie.me/api/assist/transit/transvc"
@@ -170,7 +170,7 @@ func run(*cli.Context) (err error) {
 			geocoder       = heregeo.NewGeocoder(hereClient)
 			historyService = locsvc.NewHistoryService(
 				source, geocoder,
-				svcutil.WithLogger(log),
+				basic.WithLogger(log),
 			)
 		)
 
@@ -178,7 +178,7 @@ func run(*cli.Context) (err error) {
 			historyPrecacher := locsvc.NewHistoryServicePrecacher(
 				historyService,
 				cfg.Interval,
-				svcutil.WithLogger(log),
+				basic.WithLogger(log),
 			)
 			guillo.AddFunc(
 				historyPrecacher.Stop,
@@ -211,7 +211,7 @@ func run(*cli.Context) (err error) {
 		)
 		aboutService = aboutsvc.NewService(
 			source, locationService,
-			svcutil.WithLogger(log),
+			basic.WithLogger(log),
 		)
 	}
 
@@ -219,17 +219,17 @@ func run(*cli.Context) (err error) {
 	{
 		var (
 			source         = spotify.NewSource(spotifyClient)
-			sourceService  = musicsvc.NewSourceService(source, svcutil.WithLogger(log))
+			sourceService  = musicsvc.NewSourceService(source, basic.WithLogger(log))
 			currentService = spotify.NewCurrentService(
 				spotifyClient,
-				svcutil.WithLogger(log),
+				basic.WithLogger(log),
 			)
 		)
 		var (
 			controller     = spotify.NewController(spotifyClient)
 			controlService = musicsvc.NewControlService(
 				controller,
-				svcutil.WithLogger(log),
+				basic.WithLogger(log),
 			)
 		)
 		musicService = musicsvc.NewService(
@@ -252,7 +252,7 @@ func run(*cli.Context) (err error) {
 		)
 		musicStreamer = currentStreamer
 	} else {
-		musicStreamer = musicsvc.NewNoopCurrentStreamer(svcutil.WithLogger(log))
+		musicStreamer = musicsvc.NewNoopCurrentStreamer(basic.WithLogger(log))
 	}
 
 	var schedulingService scheduling.Service
@@ -262,13 +262,13 @@ func run(*cli.Context) (err error) {
 			return errors.Wrap(err, "create Google calendar service")
 		}
 		source := gcal.NewBusySource(calsvc, cfg.Scheduling.GCal.CalendarIDs)
-		schedulingService = schedsvc.NewService(source, svcutil.WithLogger(log))
+		schedulingService = schedsvc.NewService(source, basic.WithLogger(log))
 	}
 
 	var gitService git.Service
 	{
 		source := gitgh.NewSource(githubClient)
-		gitService = gitsvc.NewService(source, svcutil.WithLogger(log))
+		gitService = gitsvc.NewService(source, basic.WithLogger(log))
 
 		if cfg := cfg.Git.Precacher; cfg.Enabled {
 			precacher := gitsvc.NewServicePrecacher(
@@ -295,7 +295,7 @@ func run(*cli.Context) (err error) {
 		productivityService = prodsvc.NewService(
 			source,
 			locationService,
-			svcutil.WithLogger(log),
+			basic.WithLogger(log),
 		)
 	}
 
@@ -320,13 +320,13 @@ func run(*cli.Context) (err error) {
 			locator        = heretrans.NewLocator(hereClient)
 			locatorService = transvc.NewLocatorService(
 				locator,
-				svcutil.WithLogger(log),
+				basic.WithLogger(log),
 			)
 			realtimeService = grt.NewRealtimeSource(grt.WithRealtimeLogger(log))
 		)
 		transitService = transvc.NewService(
 			locatorService, realtimeService,
-			svcutil.WithLogger(log),
+			basic.WithLogger(log),
 		)
 	}
 

@@ -5,7 +5,7 @@ import (
 
 	"github.com/sirupsen/logrus"
 	"go.stevenxie.me/api/music"
-	"go.stevenxie.me/api/pkg/svcutil"
+	"go.stevenxie.me/api/pkg/basic"
 	"go.stevenxie.me/gopkg/logutil"
 	"go.stevenxie.me/gopkg/name"
 )
@@ -13,14 +13,9 @@ import (
 // NewSourceService creates a new SourceService.
 func NewSourceService(
 	src music.Source,
-	opts ...svcutil.BasicOption,
+	opts ...basic.Option,
 ) music.SourceService {
-	cfg := svcutil.BasicConfig{
-		Logger: logutil.NoopEntry(),
-	}
-	for _, opt := range opts {
-		opt(&cfg)
-	}
+	cfg := basic.BuildConfig(opts...)
 	return sourceService{
 		src: src,
 		log: logutil.AddComponent(cfg.Logger, (*sourceService)(nil)),

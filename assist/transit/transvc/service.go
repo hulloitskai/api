@@ -4,7 +4,7 @@ import (
 	"github.com/sirupsen/logrus"
 
 	"go.stevenxie.me/api/assist/transit"
-	"go.stevenxie.me/api/pkg/svcutil"
+	"go.stevenxie.me/api/pkg/basic"
 	"go.stevenxie.me/gopkg/logutil"
 )
 
@@ -12,14 +12,9 @@ import (
 func NewService(
 	loc transit.LocatorService,
 	rts transit.RealtimeSource,
-	opts ...svcutil.BasicOption,
+	opts ...basic.Option,
 ) transit.Service {
-	cfg := svcutil.BasicConfig{
-		Logger: logutil.NoopEntry(),
-	}
-	for _, opt := range opts {
-		opt(&cfg)
-	}
+	cfg := basic.BuildConfig(opts...)
 	return service{
 		loc: loc,
 		rts: rts,

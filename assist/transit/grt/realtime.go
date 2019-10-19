@@ -3,13 +3,14 @@ package grt
 import (
 	"context"
 	"encoding/json"
-	"io/ioutil"
 	"net/http"
 	"net/url"
 	"sort"
 	"strconv"
 	"strings"
 	"time"
+
+	"go.stevenxie.me/api/pkg/httputil"
 
 	"github.com/cockroachdb/errors"
 	"github.com/sirupsen/logrus"
@@ -21,21 +22,39 @@ import (
 	"go.stevenxie.me/api/assist/transit/transutil"
 )
 
+const _cacheMaxAge = 30 * time.Second
+
 // NewRealtimeSource creates a transit.RealtimeSource that gets realtime data
 // using GRT.
 //
-// If c == nil, http.DefaultClient will be used.
+// If c == nil, a zero-value http.Client will be used.
 func NewRealtimeSource(opts ...RealtimeSourceOption) transit.RealtimeSource {
 	cfg := RealtimeSourceConfig{
-		HTTPClient: http.DefaultClient,
+		HTTPClient: new(http.Client),
 		Logger:     logutil.NoopEntry(),
 	}
 	for _, opt := range opts {
 		opt(&cfg)
 	}
+
+	// Create log with component name.
+	log := logutil.AddComponent(cfg.Logger, (*realtimeSource)(nil))
+
+	// Use custom caching round-tripper.
+	var (
+		client = cfg.HTTPClient
+		cache  = httputil.NewCachingTripper(
+			client.Transport,
+			httputil.WithCachingTripperLogger(log),
+			httputil.WithCachingTripperMaxAge(_cacheMaxAge),
+		)
+	)
+	client.Transport = cache
+
 	return &realtimeSource{
-		client: cfg.HTTPClient,
-		log:    logutil.AddComponent(cfg.Logger, (*realtimeSource)(nil)),
+		client: client,
+		log:    log,
+		cache:  cache,
 	}
 }
 
@@ -50,14 +69,17 @@ type (
 		client *http.Client
 		log    *logrus.Entry
 
-		depResCache          map[string][]byte
-		depResCacheTimestamp time.Time
+		cache          *httputil.CachingTripper
+		cacheTimestamp time.Time
+
+		// depResCache          map[string][]byte
+		// depResCacheTimestamp time.Time
 	}
 
 	// A RealtimeSourceConfig configures a transit.RealtimeService.
 	RealtimeSourceConfig struct {
-		Logger     *logrus.Entry
 		HTTPClient *http.Client
+		Logger     *logrus.Entry
 	}
 
 	// A RealtimeSourceOption modifies a RealtimeServiceConfig.
@@ -200,10 +222,10 @@ func (src *realtimeSource) getStopIDs(
 		Name string
 	}
 	if err = json.NewDecoder(res.Body).Decode(&stops); err != nil {
-		return nil, errors.Wrap(err, "decoding response as JSON")
+		return nil, errors.Wrap(err, "decode response as JSON")
 	}
 	if err = res.Body.Close(); err != nil {
-		return nil, errors.Wrap(err, "closing response body")
+		return nil, errors.Wrap(err, "close response body")
 	}
 	log.
 		WithField("response", stops).
@@ -253,62 +275,18 @@ func (src *realtimeSource) getDepartureTimes(
 	qp.Set("routeId", id)
 	qp.Set("stopId", stopID)
 	u.RawQuery = qp.Encode()
+
 	url := u.String()
-
-	// If the cache hasn't been cleaned in 30 seconds, clean it!
-	{
-		now := time.Now()
-		if src.depResCacheTimestamp.Before(now.Add(-30 * time.Second)) {
-			log.
-				WithField("cache_timestamp", src.depResCacheTimestamp).
-				Trace("Cache expired; cleaning...")
-			src.depResCache = make(map[string][]byte)
-			src.depResCacheTimestamp = now
-		}
+	log.WithField("url", url).Trace("Requesting stop info from GRT.")
+	req, err := http.NewRequestWithContext(ctx, http.MethodGet, url, nil)
+	if err != nil {
+		return nil, errors.Wrap(err, "create request")
 	}
-
-	// Get stop times either from cache or from source.
-	var body []byte
-	{
-		var (
-			key = stopID + tp.Route
-			log = log.WithField("key", key)
-			ok  bool
-		)
-		if body, ok = src.depResCache[key]; !ok {
-			log.Trace("Cache miss, making fresh request.")
-
-			// Perform request.
-			log.WithField("url", url).Trace("Requesting stop info from GRT.")
-			req, err := http.NewRequestWithContext(ctx, http.MethodGet, url, nil)
-			if err != nil {
-				return nil, errors.Wrap(err, "create request")
-			}
-			res, err := src.client.Do(req)
-			if err != nil {
-				return nil, err
-			}
-			defer res.Body.Close()
-
-			// Read response body and cache it.
-			// TODO: Use a generic HTTP caching client.
-			if body, err = ioutil.ReadAll(res.Body); err != nil {
-				return nil, errors.Wrap(err, "read response body")
-			}
-			if err = res.Body.Close(); err != nil {
-				return nil, errors.Wrap(err, "close response body")
-			}
-			src.depResCache[key] = body
-
-			log.
-				WithField("body", string(body)).
-				Trace("Saved response data from GRT to cache.")
-		} else {
-			log.
-				WithField("body", string(body)).
-				Trace("Cache hit, using cached response data.")
-		}
+	res, err := src.client.Do(req)
+	if err != nil {
+		return nil, err
 	}
+	defer res.Body.Close()
 
 	// Decode response as JSON.
 	var data struct {
@@ -317,8 +295,8 @@ func (src *realtimeSource) getDepartureTimes(
 			HeadSign        string
 		}
 	}
-	if err = json.Unmarshal(body, &data); err != nil {
-		return nil, errors.Wrap(err, "decoding JSON body")
+	if err = json.NewDecoder(res.Body).Decode(&data); err != nil {
+		return nil, errors.Wrap(err, "decode JSON body")
 	}
 	log.WithField("response", data).Trace("Decoded response data.")
 
@@ -365,8 +343,9 @@ func (src *realtimeSource) getDepartureTimes(
 }
 
 func stripRouteDirection(route string) string {
-	if c := route[len(route)-1]; ('A' <= c) && (c <= 'Z') {
-		return route[:len(route)-1]
+	index := len(route) - 1
+	if c := route[index]; ('A' <= c) && (c <= 'Z') {
+		return route[:index]
 	}
 	return route
 }

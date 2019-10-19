@@ -43,6 +43,15 @@ func New() (*Client, error) {
 		source = oauth2.StaticTokenSource(&oauth2.Token{AccessToken: token})
 		client = oauth2.NewClient(context.Background(), source)
 	)
+
+	// Modify client's http.RoundTripper to account for
+	// https://github.com/google/go-github/issues/1037.
+	client.Transport = newAcceptFilteringTripper(
+		client.Transport,
+		"application/vnd.github.scarlet-witch-preview+json",
+		"application/vnd.github.mercy-preview+json",
+	)
+
 	return &Client{
 		ghc:   github.NewClient(client),
 		httpc: client,

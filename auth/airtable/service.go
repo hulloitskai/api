@@ -192,11 +192,11 @@ func (svc *service) getPermissions(
 		}
 		if err = json.NewDecoder(res.Body).Decode(&data); err != nil {
 			log.WithError(err).Error("Failed to decode response as JSON.")
-			return nil, "", errors.Wrap(err, "airtable: decoding response as JSON")
+			return nil, "", errors.Wrap(err, "airtable: decode response as JSON")
 		}
 		if err = res.Body.Close(); err != nil {
 			log.WithError(err).Error("Failed to close response body.")
-			return nil, "", errors.Wrap(err, "airtable: closing response body")
+			return nil, "", errors.Wrap(err, "airtable: close response body")
 		}
 		log.WithField("response", data).Trace("Got response data.")
 

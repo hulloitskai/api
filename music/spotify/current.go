@@ -10,21 +10,16 @@ import (
 	"github.com/zmb3/spotify"
 
 	"go.stevenxie.me/api/music"
-	"go.stevenxie.me/api/pkg/svcutil"
+	"go.stevenxie.me/api/pkg/basic"
 	"go.stevenxie.me/gopkg/logutil"
 )
 
 // NewCurrentService creates a new music.CurrentSource.
 func NewCurrentService(
 	c *spotify.Client,
-	opts ...svcutil.BasicOption,
+	opts ...basic.Option,
 ) music.CurrentService {
-	cfg := svcutil.BasicConfig{
-		Logger: logutil.NoopEntry(),
-	}
-	for _, opt := range opts {
-		opt(&cfg)
-	}
+	cfg := basic.BuildConfig(opts...)
 	return currentService{
 		client: c,
 		log:    logutil.AddComponent(cfg.Logger, (*currentService)(nil)),

@@ -87,10 +87,10 @@ func (l locator) NearbyDepartures(
 		}
 	}
 	if err = json.NewDecoder(res.Body).Decode(&data); err != nil {
-		return nil, errors.Wrap(err, "heretrans: decoding response body")
+		return nil, errors.Wrap(err, "heretrans: decode response body")
 	}
 	if err = res.Body.Close(); err != nil {
-		return nil, errors.Wrap(err, "heretrans: closing response body")
+		return nil, errors.Wrap(err, "heretrans: close response body")
 	}
 
 	// Marshal response to []transit.NearbyDeparture.

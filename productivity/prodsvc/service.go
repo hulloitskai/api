@@ -12,7 +12,7 @@ import (
 	"go.stevenxie.me/gopkg/name"
 
 	"go.stevenxie.me/api/location"
-	"go.stevenxie.me/api/pkg/svcutil"
+	"go.stevenxie.me/api/pkg/basic"
 	"go.stevenxie.me/api/productivity"
 )
 
@@ -20,14 +20,9 @@ import (
 func NewService(
 	records productivity.RecordSource,
 	zones location.TimeZoneService,
-	opts ...svcutil.BasicOption,
+	opts ...basic.Option,
 ) productivity.Service {
-	cfg := svcutil.BasicConfig{
-		Logger: logutil.NoopEntry(),
-	}
-	for _, opt := range opts {
-		opt(&cfg)
-	}
+	cfg := basic.BuildConfig(opts...)
 	return service{
 		records: records,
 		zones:   zones,

@@ -11,21 +11,16 @@ import (
 
 	"go.stevenxie.me/api/about"
 	"go.stevenxie.me/api/location"
-	"go.stevenxie.me/api/pkg/svcutil"
+	"go.stevenxie.me/api/pkg/basic"
 )
 
 // NewService creates a new about.Service.
 func NewService(
 	static about.StaticSource,
 	locations location.Service,
-	opts ...svcutil.BasicOption,
+	opts ...basic.Option,
 ) about.Service {
-	cfg := svcutil.BasicConfig{
-		Logger: logutil.NoopEntry(),
-	}
-	for _, opt := range opts {
-		opt(&cfg)
-	}
+	cfg := basic.BuildConfig(opts...)
 	return service{
 		static:    static,
 		locations: locations,
