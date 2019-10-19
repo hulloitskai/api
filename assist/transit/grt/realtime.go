@@ -21,32 +21,32 @@ import (
 	"go.stevenxie.me/api/assist/transit/transutil"
 )
 
-// NewRealtimeService creates a transit.RealtimeSource that gets realtime data
+// NewRealtimeSource creates a transit.RealtimeSource that gets realtime data
 // using GRT.
 //
 // If c == nil, http.DefaultClient will be used.
-func NewRealtimeService(opts ...RealtimeServiceOption) transit.RealTimeService {
-	cfg := RealtimeServiceConfig{
+func NewRealtimeSource(opts ...RealtimeSourceOption) transit.RealtimeSource {
+	cfg := RealtimeSourceConfig{
 		HTTPClient: http.DefaultClient,
 		Logger:     logutil.NoopEntry(),
 	}
 	for _, opt := range opts {
 		opt(&cfg)
 	}
-	return &realtimeService{
+	return &realtimeSource{
 		client: cfg.HTTPClient,
-		log:    logutil.AddComponent(cfg.Logger, (*realtimeService)(nil)),
+		log:    logutil.AddComponent(cfg.Logger, (*realtimeSource)(nil)),
 	}
 }
 
 // WithRealtimeLogger configures a transit.RealtimeService to write logs with
 // log.
-func WithRealtimeLogger(log *logrus.Entry) RealtimeServiceOption {
-	return func(cfg *RealtimeServiceConfig) { cfg.Logger = log }
+func WithRealtimeLogger(log *logrus.Entry) RealtimeSourceOption {
+	return func(cfg *RealtimeSourceConfig) { cfg.Logger = log }
 }
 
 type (
-	realtimeService struct {
+	realtimeSource struct {
 		client *http.Client
 		log    *logrus.Entry
 
@@ -54,27 +54,27 @@ type (
 		depResCacheTimestamp time.Time
 	}
 
-	// A RealtimeServiceConfig configures a transit.RealtimeService.
-	RealtimeServiceConfig struct {
+	// A RealtimeSourceConfig configures a transit.RealtimeService.
+	RealtimeSourceConfig struct {
 		Logger     *logrus.Entry
 		HTTPClient *http.Client
 	}
 
-	// A RealtimeServiceOption modifies a RealtimeServiceConfig.
-	RealtimeServiceOption func(*RealtimeServiceConfig)
+	// A RealtimeSourceOption modifies a RealtimeServiceConfig.
+	RealtimeSourceOption func(*RealtimeSourceConfig)
 )
 
-var _ transit.RealTimeService = (*realtimeService)(nil)
+var _ transit.RealtimeSource = (*realtimeSource)(nil)
 
 // GetDepartureTime gets the realtime departure time for a given
 // transit.Transport and transit.Station.
-func (src *realtimeService) GetDepartureTimes(
+func (src *realtimeSource) GetDepartureTimes(
 	ctx context.Context,
 	tp transit.Transport,
 	stn transit.Station,
 ) ([]time.Time, error) {
 	log := logrus.WithFields(logrus.Fields{
-		logutil.MethodKey: name.OfMethod((*realtimeService).GetDepartureTimes),
+		logutil.MethodKey: name.OfMethod((*realtimeSource).GetDepartureTimes),
 		"route":           tp.Route,
 		"direction":       tp.Direction,
 		"station":         stn.Name,
@@ -154,7 +154,7 @@ const (
 	_depsURL = _baseURL + "/Stop/GetStopInfo"
 )
 
-func (src *realtimeService) getStopIDs(
+func (src *realtimeSource) getStopIDs(
 	ctx context.Context,
 	stn *transit.Station,
 	tp *transit.Transport,
@@ -210,7 +210,7 @@ func (src *realtimeService) getStopIDs(
 	return ids, nil
 }
 
-func (src *realtimeService) getDepartureTimes(
+func (src *realtimeSource) getDepartureTimes(
 	ctx context.Context,
 	tp *transit.Transport,
 	stopID string,

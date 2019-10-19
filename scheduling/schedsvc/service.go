@@ -60,3 +60,5 @@ func (svc service) BusyPeriods(
 
 	return periods, nil
 }
+
+func (service) Service() {}

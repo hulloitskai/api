@@ -37,16 +37,8 @@ type TimeZoneService interface {
 	CurrentTimeZone(ctx context.Context) (*time.Location, error)
 }
 
-type (
-	// A HistoryService can determine where I've been in the past.
-	HistoryService interface {
-		RecentHistory(ctx context.Context) ([]HistorySegment, error)
-		GetHistory(ctx context.Context, date time.Time) ([]HistorySegment, error)
-	}
-
-	// A SegmentSource can get my location history segments for a particular
-	// date.
-	SegmentSource interface {
-		GetHistory(ctx context.Context, date time.Time) ([]HistorySegment, error)
-	}
-)
+// A HistoryService can determine where I've been in the past.
+type HistoryService interface {
+	RecentHistory(ctx context.Context) ([]HistorySegment, error)
+	GetHistory(ctx context.Context, date time.Time) ([]HistorySegment, error)
+}

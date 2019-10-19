@@ -6,8 +6,8 @@ import (
 	"time"
 )
 
-// A RealTimeService can get realtime transit departure information.
-type RealTimeService interface {
+// A RealtimeSource can get realtime transit departure information.
+type RealtimeSource interface {
 	GetDepartureTimes(context.Context, Transport, Station) ([]time.Time, error)
 }
 

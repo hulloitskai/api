@@ -28,6 +28,30 @@ curl \
 
 _Check out [the interactive API explorer](https://api.stevenxie.me/v2/graphiql)!_
 
+## Transit Shortcuts
+
+There are several transit-related
+[Siri Shortcuts](https://support.apple.com/en-ca/guide/shortcuts/welcome/ios)
+that can be used with my API.
+
+I really wanted to be able to get the next bus departures without taking my
+phone out of my pocket (using Siri-enabled earbuds) in the mornings, so I
+built some shortcuts that let me do that:
+
+- **[When's the next bus?](https://www.icloud.com/shortcuts/470a587011524120a5cf301f1e6b4ebb)**
+
+  This shortcut asks for the transit route you want to take (i.e. "The 7", "The 19B", "The GO 25"), and computes the departure times for that route
+  at the stop closest to you. Uses realtime transit data when available.
+
+- **[When's the next ION?](https://www.icloud.com/shortcuts/e954c9ec16d2440196c6bff0c0c7add3)**
+
+  Like the above shortcut, but hard-codes the route to the
+  [GRT 301 ION](https://www.grt.ca/en/ion-light-rail.aspx).
+
+- **[Find nearby buses](https://www.icloud.com/shortcuts/d392c9705f0f442aadd2e19284118b4d)**
+
+  Get a list of nearby transports (transit routes and direction of travel).
+
 [tag]: https://github.com/stevenxie/api/releases
 [tag-img]: https://img.shields.io/github/tag/stevenxie/api.svg
 [drone]: https://ci.stevenxie.me/stevenxie/api

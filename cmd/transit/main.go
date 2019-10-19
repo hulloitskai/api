@@ -66,9 +66,9 @@ func main() {
 		loc = transvc.NewLocatorService(locator, svcutil.WithLogger(log))
 	}
 
-	var rts transit.RealTimeService
+	var rts transit.RealtimeSource
 	{
-		rts = grt.NewRealtimeService(grt.WithRealtimeLogger(log))
+		rts = grt.NewRealtimeSource(grt.WithRealtimeLogger(log))
 	}
 
 	svc := transvc.NewService(loc, rts, svcutil.WithLogger(log))

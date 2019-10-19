@@ -22,6 +22,7 @@ type (
 	// A CurrentService handles requests for a description of my currently
 	// playing music.
 	CurrentService interface {
+		Service()
 		CurrentSource
 	}
 

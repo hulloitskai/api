@@ -243,10 +243,10 @@ func run(*cli.Context) (err error) {
 	}
 
 	var musicStreamer music.Streamer
-	{
+	if cfg := cfg.Music.Streamer; cfg.Enabled {
 		currentStreamer := musicsvc.NewCurrentStreamer(
 			musicService,
-			musicsvc.WithCurrentStreamerPollInterval(cfg.Music.Streamer.PollInterval),
+			musicsvc.WithCurrentStreamerPollInterval(cfg.PollInterval),
 			musicsvc.WithCurrentStreamerLogger(log),
 		)
 		guillo.AddFunc(
@@ -254,6 +254,8 @@ func run(*cli.Context) (err error) {
 			guillotine.WithPrefix("stopping music streamer"),
 		)
 		musicStreamer = currentStreamer
+	} else {
+		musicStreamer = musicsvc.NewNoopCurrentStreamer(svcutil.WithLogger(log))
 	}
 
 	var schedulingService scheduling.Service
@@ -323,7 +325,7 @@ func run(*cli.Context) (err error) {
 				locator,
 				svcutil.WithLogger(log),
 			)
-			realtimeService = grt.NewRealtimeService(grt.WithRealtimeLogger(log))
+			realtimeService = grt.NewRealtimeSource(grt.WithRealtimeLogger(log))
 		)
 		transitService = transvc.NewService(
 			locatorService, realtimeService,

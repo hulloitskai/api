@@ -1,6 +1,7 @@
 package location
 
 import (
+	"context"
 	"fmt"
 	"time"
 )
@@ -26,4 +27,10 @@ type (
 
 func (seg *HistorySegment) String() string {
 	return fmt.Sprintf("%+v", *seg)
+}
+
+// A SegmentSource can get my location history segments for a particular
+// date.
+type SegmentSource interface {
+	GetHistory(ctx context.Context, date time.Time) ([]HistorySegment, error)
 }

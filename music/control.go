@@ -15,7 +15,7 @@ func PlayURI(uri string) PlayOption {
 }
 
 type (
-	// A ControlService wraps a Controller with logging and a friendlier API.
+	// A ControlService wraps a Controller with a friendlier API.
 	ControlService interface {
 		Play(ctx context.Context, opts ...PlayOption) error
 		Pause(ctx context.Context) error

@@ -15,7 +15,7 @@ import (
 )
 
 func newCurrentStreamActor(
-	src music.CurrentSource,
+	src music.CurrentService,
 	log *logrus.Entry,
 ) *currentStreamActor {
 	return &currentStreamActor{

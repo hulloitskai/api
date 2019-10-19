@@ -1,6 +1,7 @@
 package scheduling
 
 import (
+	"context"
 	"encoding/json"
 	"time"
 )
@@ -52,4 +53,9 @@ func (tp *TimePeriod) MarshalJSON() ([]byte, error) {
 		End:   tp.End.Format(TimeLayout),
 	}
 	return json.Marshal(&formatted)
+}
+
+// A BusySource can determine my busy time periods.
+type BusySource interface {
+	BusyPeriods(ctx context.Context, date time.Time) ([]TimePeriod, error)
 }

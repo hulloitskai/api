@@ -51,3 +51,5 @@ func (svc currentService) GetCurrent(ctx context.Context) (
 
 	return cp, nil
 }
+
+func (currentService) Service() {}

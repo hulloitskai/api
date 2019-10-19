@@ -11,7 +11,7 @@ import (
 // NewService creates a new transit.Service.
 func NewService(
 	loc transit.LocatorService,
-	rts transit.RealTimeService,
+	rts transit.RealtimeSource,
 	opts ...svcutil.BasicOption,
 ) transit.Service {
 	cfg := svcutil.BasicConfig{
@@ -29,7 +29,7 @@ func NewService(
 
 type service struct {
 	loc transit.LocatorService
-	rts transit.RealTimeService
+	rts transit.RealtimeSource
 	log *logrus.Entry
 }
 

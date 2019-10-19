@@ -37,6 +37,7 @@ type Config struct {
 
 	Music struct {
 		Streamer struct {
+			Enabled      bool          `yaml:"enabled"`
 			PollInterval time.Duration `yaml:"pollInterval"`
 		} `yaml:"streamer"`
 	} `yaml:"music"`
@@ -89,6 +90,7 @@ func defaultConfig() *Config {
 	// Default music streamer settings.
 	{
 		cfg := &cfg.Music.Streamer
+		cfg.Enabled = true
 		cfg.PollInterval = time.Second
 	}
 

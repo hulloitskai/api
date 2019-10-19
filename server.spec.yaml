@@ -25,6 +25,7 @@ location:
 
 music:
   streamer:
+    enabled: Bool          # default: True
     pollInterval: Duration # default: 1s
 
 scheduling:
