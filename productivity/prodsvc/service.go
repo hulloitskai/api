@@ -53,11 +53,13 @@ func (svc service) GetProductivity(
 	}).WithContext(ctx)
 
 	// Get records.
+	log.Trace("Getting records...")
 	recs, err := svc.records.GetRecords(ctx, date)
 	if err != nil {
 		log.WithError(err).Error("Failed to get records.")
 		return nil, err
 	}
+	log.WithField("records", recs).Trace("Got records.")
 
 	// Return early if no records.
 	if len(recs) == 0 {
@@ -70,6 +72,9 @@ func (svc service) GetProductivity(
 	sort.Slice(recs, func(i, j int) bool {
 		return recs[i].Category.Weight() < recs[j].Category.Weight()
 	})
+	log.
+		WithField("records", recs).
+		Trace("Sorted records by weight.")
 
 	// Compute score.
 	var score uint
@@ -82,6 +87,9 @@ func (svc service) GetProductivity(
 		}
 		score = uint(math.Round(float64(score) / float64(totalSecs*4) * 100))
 	}
+	log.
+		WithField("score", score).
+		Trace("Computed productivity score.")
 
 	return &productivity.Productivity{
 		Records: recs,
@@ -91,8 +99,14 @@ func (svc service) GetProductivity(
 
 func (svc service) CurrentProductivity(ctx context.Context) (
 	*productivity.Productivity, error) {
+	log := logutil.
+		WithMethod(svc.log, service.CurrentProductivity).
+		WithContext(ctx)
+
+	log.Trace("Getting current time zone.")
 	zone, err := svc.zones.CurrentTimeZone(ctx)
 	if err != nil {
+		log.WithError(err).Error("Failed to get current time zone.")
 		return nil, errors.Wrap(err, "prodsvc: getting current time zone")
 	}
 	return svc.GetProductivity(ctx, time.Now().In(zone))

@@ -68,12 +68,12 @@ func (svc locatorService) NearbyDepartures(
 		log = logrus.WithFields(fields)
 	}
 
+	log.Trace("Getting nearby departures...")
 	nds, err := svc.loc.NearbyDepartures(ctx, pos, cfg)
 	if err != nil {
 		log.WithError(err).Error("Failed to get nearby departures.")
 		return nil, err
 	}
-	log.Trace("Got nearby departures.")
 
 	return nds, nil
 }

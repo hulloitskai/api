@@ -9,9 +9,10 @@ import (
 	"strings"
 	"time"
 
-	"github.com/mitchellh/mapstructure"
+	"github.com/openlyinc/pointy"
 
 	"github.com/cockroachdb/errors"
+	"github.com/mitchellh/mapstructure"
 	"github.com/sirupsen/logrus"
 
 	"go.stevenxie.me/api/auth"
@@ -91,24 +92,39 @@ func (svc *service) HasPermission(
 	ctx context.Context,
 	code string, p auth.Permission,
 ) (ok bool, err error) {
+	log := svc.log.WithFields(logrus.Fields{
+		logutil.MethodKey: name.OfMethod((*service).HasPermission),
+		"code":            code,
+		"permission":      p,
+	}).WithContext(ctx)
+
 	// Validate inputs.
 	if p == "" {
+		log.Warn("Invalid permission (empty).")
 		return false, errors.Newf("airtable: invalid permission")
 	}
 
+	log.Trace("Getting permissions for code...")
 	perms, id, err := svc.getPermissions(ctx, code)
 	if err != nil {
 		if !errors.Is(err, auth.ErrInvalidCode) {
-			err = errors.Wrap(err, "airtable: getting permissions")
+			log.WithError(err).Error("Failed to get code permissions.")
+			err = errors.Wrap(err, "airtable: getting code permissions")
 		}
 		return false, err
 	}
+	log = log.WithField("code_permissions", perms)
+	log.Trace("Got code permissions.")
+
 	for _, perm := range perms {
 		if p == perm {
+			log.Trace("Requested permission matches code permissions.")
 			go svc.recordAccess(id, p)
 			return true, nil
 		}
 	}
+
+	log.Trace("No matching code permission.")
 	return false, nil
 }
 
@@ -116,50 +132,45 @@ func (svc *service) getPermissions(
 	ctx context.Context,
 	code string,
 ) (perms []auth.Permission, recordID string, err error) {
-	// Validate inputs.
-	if code == "" {
-		return nil, "", auth.ErrInvalidCode
-	}
-
 	log := svc.log.WithFields(logrus.Fields{
-		logutil.MethodKey: name.OfMethod(svc.getPermissions),
+		logutil.MethodKey: name.OfMethod((*service).getPermissions),
 		"code":            code,
 	}).WithContext(ctx)
 
+	// Validate inputs.
+	if code == "" {
+		log.Warn("Code is invalid (empty).")
+		return nil, "", auth.ErrInvalidCode
+	}
+
 	var (
 		selector = svc.selectors.codes
-		offset   *string // used for pagination.
+		offset   = pointy.String("") // used for pagination.
 	)
-	{
-		empty := ""
-		offset = &empty
-	}
 	log = log.WithField("selector", selector)
 
-	// Start building request URL.
-	url, err := selector.BuildURL()
+	// Build initial request URL.
+	u, err := selector.BuildURL()
 	if err != nil {
 		log.WithError(err).Error("Failed to build selection URL.")
 		return nil, "", errors.Wrap(err, "airtable: building selection URL")
 	}
-	params := url.Query()
+	params := u.Query()
 
 	for offset != nil {
 		log := log
 		if *offset != "" {
 			log = log.WithField("offset", *offset)
-
-			// Set query params.
-			params.Set("offset", *offset)
-			url.RawQuery = params.Encode()
 		}
 
+		// Build final URL.
+		params.Set("offset", *offset)
+		u.RawQuery = params.Encode()
+		url := u.String()
+
 		// Perform request.
-		req, err := http.NewRequestWithContext(
-			ctx,
-			http.MethodGet, url.String(),
-			nil,
-		)
+		log.WithField("url", url).Trace("Getting records matching selection...")
+		req, err := http.NewRequestWithContext(ctx, http.MethodGet, url, nil)
 		if err != nil {
 			log.WithError(err).Error("Failed to create request.")
 			return nil, "", errors.Wrap(err, "airtable: create request")
@@ -187,8 +198,10 @@ func (svc *service) getPermissions(
 			log.WithError(err).Error("Failed to close response body.")
 			return nil, "", errors.Wrap(err, "airtable: closing response body")
 		}
+		log.WithField("response", data).Trace("Got response data.")
 
 		// Range through each record; if the codes match, return permissions.
+		log.Trace("Checking records for matching code.")
 		for _, record := range data.Records {
 			log := log.WithField("record_id", record.ID)
 			var fields struct {
@@ -202,11 +215,13 @@ func (svc *service) getPermissions(
 					"airtable: parsing fields for record with ID '%s'", record.ID,
 				)
 			}
+			log.WithField("fields", fields).Trace("Decoded record fields.")
 
 			// Check to see if the code matches.
 			if c := strings.TrimSpace(fields.Code); c != code {
 				continue
 			}
+			log.Trace("Found field with matching code.")
 
 			// Marshal to auth.Permissions.
 			permissions := make([]auth.Permission, len(fields.Perms))
@@ -220,6 +235,7 @@ func (svc *service) getPermissions(
 	}
 
 	// All records have been checked; no such code.
+	log.Warn("No matching records found; invalid code.")
 	return nil, "", auth.ErrInvalidCode
 }
 
@@ -235,7 +251,8 @@ func (svc service) recordAccess(id string, p auth.Permission) {
 		log.Warn("No access mapping; skipping.")
 		return
 	}
-	log.WithField("selector", selector)
+	log = log.WithField("selector", selector)
+	log.Trace("Recording permissions record access...")
 
 	// Map access record to table fields.
 	fields := map[string]zero.Interface{
@@ -243,13 +260,13 @@ func (svc service) recordAccess(id string, p auth.Permission) {
 		selector.FieldSelector.Perm:         string(p),
 		selector.FieldSelector.CodeRecordID: []string{id},
 	}
-
 	type recordData struct {
 		Fields map[string]zero.Interface `json:"fields"`
 	}
 	data := struct {
 		Records []recordData `json:"records"`
 	}{[]recordData{recordData{Fields: fields}}}
+	log.WithField("payload", data).Trace("Constructed request payload.")
 
 	// Encode fields as JSON.
 	buf := new(bytes.Buffer)
@@ -259,12 +276,15 @@ func (svc service) recordAccess(id string, p auth.Permission) {
 	}
 
 	// Build request.
-	url, err := selector.BuildURL()
+	u, err := selector.BuildURL()
 	if err != nil {
 		log.WithError(err).Error("Failed to build URL.")
 		return
 	}
-	req, err := http.NewRequest(http.MethodPost, url.String(), buf)
+	url := u.String()
+
+	log.WithField("url", url).Trace("Sending record update request...")
+	req, err := http.NewRequest(http.MethodPost, url, buf)
 	if err != nil {
 		log.WithError(err).Error("Failed to create request.")
 		return
@@ -278,11 +298,12 @@ func (svc service) recordAccess(id string, p auth.Permission) {
 		return
 	}
 	if res.StatusCode != http.StatusOK {
-		entry := log.WithField("status", res.StatusCode)
+		log := log.WithField("status", res.StatusCode)
 		if body, err := ioutil.ReadAll(res.Body); err == nil {
-			entry = log.WithField("body", string(body))
+			log = log.WithField("response", string(body))
 		}
-		entry.Error("Bad status in access update response.")
+		log.Error("Bad status in access update response.")
 		return
 	}
+	log.Trace("Record update success!")
 }

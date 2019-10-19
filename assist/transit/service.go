@@ -1,4 +1,4 @@
-package transit
+package transit // import "go.stevenxie.me/api/assist/transit"
 
 import (
 	"context"

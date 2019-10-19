@@ -46,6 +46,7 @@ func (svc service) GetAbout(ctx context.Context) (*about.About, error) {
 		WithMethod(svc.log, service.GetAbout).
 		WithContext(ctx)
 
+	log.Trace("Getting static attributes...")
 	static, err := svc.static.GetStatic()
 	if err != nil {
 		log.WithError(err).Error("Failed to get static attributes.")
@@ -54,8 +55,10 @@ func (svc service) GetAbout(ctx context.Context) (*about.About, error) {
 	log = log.WithField("static_attrs", static)
 	log.Trace("Got static attributes.")
 
+	log.Trace("Getting current position...")
 	pos, err := svc.locations.CurrentPosition(ctx)
 	if err != nil {
+		log.WithError(err).Error("Failed to get current position.")
 		return nil, errors.Wrap(err, "about: getting current position")
 	}
 	log.
@@ -79,6 +82,7 @@ func (svc service) GetMasked(ctx context.Context) (*about.Masked, error) {
 		WithMethod(svc.log, service.GetMasked).
 		WithContext(ctx)
 
+	log.Trace("Getting static attributes...")
 	static, err := svc.static.GetStatic()
 	if err != nil {
 		log.WithError(err).Error("Failed to get static attributes.")
@@ -87,13 +91,13 @@ func (svc service) GetMasked(ctx context.Context) (*about.Masked, error) {
 	log = log.WithField("static_attrs", static)
 	log.Trace("Got static attributes.")
 
+	log.Trace("Getting current city...")
 	city, err := svc.locations.CurrentCity(ctx)
 	if err != nil {
+		log.WithError(err).Error("Failed to get current city.")
 		return nil, errors.Wrap(err, "about: getting current city")
 	}
-	log.
-		WithField("current_city", city).
-		Trace("Got current city.")
+	log.WithField("city", city).Trace("Got current city.")
 
 	return &about.Masked{
 		Name:  static.Name,

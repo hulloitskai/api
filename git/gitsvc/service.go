@@ -47,12 +47,11 @@ func (svc service) RecentCommits(
 		"limit":           cfg.Limit,
 	}).WithContext(ctx)
 
+	log.Trace("Getting recent commits...")
 	cms, err := svc.src.RecentCommits(ctx, cfg.Limit)
 	if err != nil {
 		log.WithError(err).Error("Failed to get recent Git commits.")
 		return nil, err
 	}
-	log.Trace("Got recent Git commits.")
-
 	return cms, nil
 }

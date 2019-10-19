@@ -218,13 +218,10 @@ func run(*cli.Context) (err error) {
 	var musicService music.Service
 	{
 		var (
-			source        = spotify.NewSource(spotifyClient)
-			sourceService = musicsvc.NewSourceService(source, svcutil.WithLogger(log))
-		)
-		var (
-			currentSource  = spotify.NewCurrentSource(spotifyClient)
-			currentService = musicsvc.NewCurrentService(
-				currentSource,
+			source         = spotify.NewSource(spotifyClient)
+			sourceService  = musicsvc.NewSourceService(source, svcutil.WithLogger(log))
+			currentService = spotify.NewCurrentService(
+				spotifyClient,
 				svcutil.WithLogger(log),
 			)
 		)

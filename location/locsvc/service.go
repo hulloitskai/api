@@ -74,11 +74,13 @@ func (svc service) CurrentPosition(ctx context.Context) (*location.Coordinates, 
 		WithMethod(svc.log, service.CurrentPosition).
 		WithContext(ctx)
 
+	log.Trace("Getting recent location history...")
 	segs, err := svc.HistoryService.RecentHistory(ctx)
 	if err != nil {
 		return nil, errors.Wrap(err, "locsvc: getting recent history")
 	}
 	log = log.WithField("segments", segs)
+	log.Trace("Got location history segments.")
 
 	if len(segs) == 0 {
 		log.Error("No history segments found.")
@@ -91,8 +93,6 @@ func (svc service) CurrentPosition(ctx context.Context) (*location.Coordinates, 
 		log.Error("No coordinates in latest history segment0w.")
 		return nil, errors.New("locsvc: no coordinates in latest history segment")
 	}
-	log.WithField("position", coords).Trace("Got most recent position.")
-
 	return coords, nil
 }
 
@@ -101,6 +101,7 @@ func (svc service) CurrentCity(ctx context.Context) (string, error) {
 		WithMethod(svc.log, service.CurrentCity).
 		WithContext(ctx)
 
+	log.Trace("Getting current position...")
 	coords, err := svc.CurrentPosition(ctx)
 	if err != nil {
 		return "", errors.Wrap(err, "locsvc: getting current position")
@@ -109,6 +110,7 @@ func (svc service) CurrentCity(ctx context.Context) (string, error) {
 	log.Trace("Got current position.")
 
 	// Reverse-geocode coordinates.
+	log.Trace("Reverse-geocoding coordinates.")
 	res, err := svc.geo.ReverseGeocode(
 		ctx,
 		*coords,
@@ -122,12 +124,10 @@ func (svc service) CurrentCity(ctx context.Context) (string, error) {
 		log.Warn("Reverse-geocode query yielded no results.")
 		return "", errors.New("locsvc: reverse-geocde search yielded no results")
 	}
+	log.WithField("result", res).Trace("Got result from geocoder.")
 
 	// Return city name.
-	city := res[0].Place.Address.Label
-	log.WithField("city", city).Trace("Reverse-geocoded current city.")
-
-	return city, nil
+	return res[0].Place.Address.Label, nil
 }
 
 func (svc service) CurrentRegion(
@@ -145,13 +145,16 @@ func (svc service) CurrentRegion(
 	}).WithContext(ctx)
 
 	// Get current position.
+	log.Trace("Getting current position.")
 	coords, err := svc.CurrentPosition(ctx)
 	if err != nil {
 		return nil, errors.Wrap(err, "locsvc: getting current position")
 	}
-	log = log.WithField("coordinates", coords)
+	log = log.WithField("position", coords)
+	log.Trace("Got current position.")
 
 	// Reverse-geocode region information.
+	log.Trace("Reverse-geocoding coordinates.")
 	res, err := svc.geo.ReverseGeocode(
 		ctx,
 		*coords,
@@ -169,17 +172,22 @@ func (svc service) CurrentRegion(
 		log.Warn("Reverse-geocode query yielded no results.")
 		return nil, errors.New("locsvc: reverse-geocde search yielded no results")
 	}
-
-	region := &res[0].Place
-	log.WithField("region", region).Trace("Reverse-geocoded current region.")
-
-	return region, nil
+	log.WithField("results", res).Trace("Got results from geocoder.")
+	return &res[0].Place, nil
 }
 
 func (svc service) CurrentTimeZone(ctx context.Context) (*time.Location, error) {
+	log := logutil.
+		WithMethod(svc.log, service.CurrentTimeZone).
+		WithContext(ctx)
+
+	log.Trace("Getting current position...")
 	coords, err := svc.CurrentPosition(ctx)
 	if err != nil {
+		log.WithError(err).Error("Failed to get current position.")
 		return nil, err
 	}
+	log.WithField("position", coords).Trace("Got current position.")
+
 	return geoutil.TimeLocation(ctx, svc.geo, *coords)
 }

@@ -46,19 +46,22 @@ func (svc service) BusyPeriods(
 		"date":            date,
 	}).WithContext(ctx)
 
-	periods, err := svc.src.BusyPeriods(ctx, date)
+	log.Trace("Getting busy periods from source...")
+	periods, err := svc.src.RawBusyPeriods(ctx, date)
 	if err != nil {
-		log.WithError(err).Error("Failed to load busy periods.")
+		log.WithError(err).Error("Failed to load busy periods from source.")
 		return nil, err
 	}
-	log.WithField("periods", periods).Trace("Loaded busy periods.")
+	log.
+		WithField("periods", periods).
+		Trace("Loaded busy periods from source.")
 
 	// Sort periods.
 	sort.Slice(periods, func(i, j int) bool {
 		return periods[i].Before(&periods[j])
 	})
-
+	log.
+		WithField("periods", periods).
+		Trace("Sorted busy periods by time.")
 	return periods, nil
 }
-
-func (service) Service() {}

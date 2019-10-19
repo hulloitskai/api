@@ -29,14 +29,14 @@ func NewHistoryService(
 		opt(&cfg)
 	}
 	return &historyService{
-		SegmentSource: src,
-		geo:           geo,
-		log:           logutil.AddComponent(cfg.Logger, (*historyService)(nil)),
+		src: src,
+		geo: geo,
+		log: logutil.AddComponent(cfg.Logger, (*historyService)(nil)),
 	}
 }
 
 type historyService struct {
-	location.SegmentSource
+	src location.SegmentSource
 	geo geocode.Geocoder
 	log *logrus.Entry
 
@@ -45,6 +45,23 @@ type historyService struct {
 }
 
 var _ location.HistoryService = (*historyService)(nil)
+
+func (svc *historyService) GetHistory(
+	ctx context.Context,
+	date time.Time,
+) ([]location.HistorySegment, error) {
+	log := svc.log.WithFields(logrus.Fields{
+		logutil.MethodKey: name.OfMethod((*historyService).GetHistory),
+		"date":            date,
+	})
+
+	log.Trace("Getting history segments from source...")
+	segs, err := svc.src.GetHistory(ctx, date)
+	if err != nil {
+		log.WithError(err).Error("Failed to get history segments from source.")
+	}
+	return segs, nil
+}
 
 func (svc *historyService) RecentHistory(ctx context.Context) (
 	[]location.HistorySegment, error) {
@@ -62,19 +79,21 @@ func (svc *historyService) RecentHistory(ctx context.Context) (
 	log = log.WithField("current_time", now)
 
 	// Try loading today's segments.
-	segs, err := svc.SegmentSource.GetHistory(ctx, now)
+	log.Trace("Loading today's history segments...")
+	segs, err := svc.GetHistory(ctx, now)
 	if err != nil {
 		log.WithError(err).Error("Failed to load today's history segments.")
 		return nil, err
 	}
 	log = log.WithField("segments", segs)
+	log.Trace("Got history segments.")
 
 	if len(segs) != 0 {
 		log.Trace("Loaded today's history segments.")
 	} else {
 		// Try loading yesterday's segments.
 		log.Trace("No history yet for today, loading yesterday's...")
-		segs, err = svc.SegmentSource.GetHistory(ctx, now.Add(-24*time.Hour))
+		segs, err = svc.GetHistory(ctx, now.Add(-24*time.Hour))
 		if err != nil {
 			log.
 				WithError(err).
@@ -89,6 +108,7 @@ func (svc *historyService) RecentHistory(ctx context.Context) (
 		log.Warn("No history segments were found.")
 	} else {
 		// Derive time location for future queries.
+		log.Trace("Deriving time location for timezone-accurate future requests.")
 		go svc.deriveTimeLocation(ctx, &segs[0])
 	}
 	return segs, nil
@@ -110,6 +130,7 @@ func (svc *historyService) deriveTimeLocation(
 	}
 	log = log.WithField("coordinates", coords)
 
+	log.Trace("Getting time location.")
 	loc, err := geoutil.TimeLocation(ctx, svc.geo, *coords)
 	if err != nil {
 		log.
@@ -118,9 +139,10 @@ func (svc *historyService) deriveTimeLocation(
 		return
 	}
 	log = log.WithField("location", loc)
+	log.Trace("Got time location.")
 
 	svc.mux.Lock()
 	svc.loc = loc
 	svc.mux.Unlock()
-	log.Trace("Updated time location for future requests.")
+	log.Trace("Cached time location.")
 }

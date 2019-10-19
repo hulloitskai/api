@@ -55,7 +55,7 @@ func (tp *TimePeriod) MarshalJSON() ([]byte, error) {
 	return json.Marshal(&formatted)
 }
 
-// A BusySource can determine my busy time periods.
+// A BusySource can get my busy time periods.
 type BusySource interface {
-	BusyPeriods(ctx context.Context, date time.Time) ([]TimePeriod, error)
+	RawBusyPeriods(ctx context.Context, date time.Time) ([]TimePeriod, error)
 }

@@ -15,6 +15,7 @@ type (
 	// A PositionService can determine my current position.
 	PositionService interface {
 		TimeZoneService
+
 		CurrentPosition(ctx context.Context) (*Coordinates, error)
 		CurrentCity(ctx context.Context) (string, error)
 		CurrentRegion(

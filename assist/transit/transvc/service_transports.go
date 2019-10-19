@@ -2,6 +2,7 @@ package transvc
 
 import (
 	"context"
+	"sort"
 
 	"github.com/openlyinc/pointy"
 	"github.com/sirupsen/logrus"
@@ -42,6 +43,7 @@ func (svc service) NearbyTransports(
 		log = log.WithFields(fields)
 	}
 
+	log.Trace("Getting nearby departures...")
 	nds, err := svc.loc.NearbyDepartures(
 		ctx,
 		coords,
@@ -56,28 +58,52 @@ func (svc service) NearbyTransports(
 		},
 	)
 	if err != nil {
+		log.WithError(err).Trace("Failed to get nearby departures.")
 		return nil, err
 	}
 
-	// Build unique map of Transports.
-	uniq := make(map[uint32]*transit.Transport)
+	// Build unique map of Transports and their station distances.
+	var (
+		tpm = make(map[uint32]*transit.Transport) // transports map
+		ddm = make(map[uint32]int)                // departure distances map
+	)
 	for i := range nds {
 		tp := nds[i].Transport
 		hash := transutil.HashTransport(tp)
-		if _, ok := uniq[hash]; !ok {
-			uniq[hash] = tp
+		if _, ok := tpm[hash]; !ok {
+			tpm[hash] = tp
+			ddm[hash] = nds[i].Distance
 		}
 	}
+	log.WithFields(logrus.Fields{
+		"transports_map": tpm,
+		"distances_map":  ddm,
+	}).Trace("Built uniqueness maps.")
 
-	// Build list from uniq.
-	tps := make([]transit.Transport, 0, len(uniq))
-	for _, tp := range uniq {
-		tps = append(tps, *tp)
+	// Build and sort hash list from map.
+	hashes := make([]uint32, 0, len(ddm))
+	for h := range ddm {
+		hashes = append(hashes, h)
 	}
+	sort.Slice(hashes, func(i, j int) bool {
+		return ddm[hashes[i]] < ddm[hashes[j]]
+	})
+	log.WithField("hashes", hashes).Trace("Built sorted hash list.")
+
+	// Construct transports list.
+	tps := make([]transit.Transport, len(hashes))
+	for i, h := range hashes {
+		tps[i] = *tpm[h]
+	}
+	log.WithField("transports", tps).Trace("Built sorted transports list.")
 
 	// Apply limit.
 	if l := cfg.Limit; (l != nil) && (len(nds) > *l) {
 		nds = nds[:*l]
+		log.WithFields(logrus.Fields{
+			"limit":      l,
+			"transports": tps,
+		}).Trace("Applied transports limit.")
 	}
 
 	return tps, nil

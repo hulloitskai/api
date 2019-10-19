@@ -33,7 +33,7 @@ type busySource struct {
 
 var _ scheduling.BusySource = (*busySource)(nil)
 
-func (svc busySource) BusyPeriods(
+func (svc busySource) RawBusyPeriods(
 	ctx context.Context,
 	date time.Time,
 ) ([]scheduling.TimePeriod, error) {

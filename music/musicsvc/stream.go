@@ -54,7 +54,7 @@ func WithCurrentStreamerPollInterval(interval time.Duration) CurrentStreamerOpti
 type (
 	// A CurrentStreamer can stream information about my currently playing music.
 	CurrentStreamer struct {
-		curr music.CurrentSource
+		curr music.CurrentService
 		poll *poll.Poller
 		act  *currentStreamActor
 		log  *logrus.Entry

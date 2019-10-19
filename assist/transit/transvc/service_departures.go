@@ -11,6 +11,7 @@ import (
 	"github.com/lithammer/fuzzysearch/fuzzy"
 	"github.com/sirupsen/logrus"
 
+	"go.stevenxie.me/gopkg/logutil"
 	"go.stevenxie.me/gopkg/name"
 	"go.stevenxie.me/gopkg/zero"
 
@@ -26,9 +27,9 @@ func (svc service) FindDepartures(
 	opts ...transit.FindDeparturesOption,
 ) ([]transit.NearbyDeparture, error) {
 	log := svc.log.WithFields(logrus.Fields{
-		"method":      name.OfMethod(service.FindDepartures),
-		"route_query": routeQuery,
-		"coordinates": coords,
+		logutil.MethodKey: name.OfMethod(service.FindDepartures),
+		"route_query":     routeQuery,
+		"coordinates":     coords,
 	}).WithContext(ctx)
 
 	// Validate inputs.
@@ -47,6 +48,7 @@ func (svc service) FindDepartures(
 		log = log.WithField("operator_code", cfg.OperatorCode)
 	}
 
+	log.Trace("Getting nearby departures...")
 	nds, err := svc.loc.NearbyDepartures(
 		ctx,
 		coords,
@@ -61,12 +63,13 @@ func (svc service) FindDepartures(
 		},
 	)
 	if err != nil {
+		log.WithError(err).Error("Failed to get nearby departures.")
 		return nil, errors.Wrap(err, "transvc: get nearby departures")
 	}
+	log.WithField("departures", nds).Trace("Got nearby departures.")
 
 	// Filter based on operator, if applicable.
 	if code := cfg.OperatorCode; code != "" {
-		log.WithField("code", code).Trace("Filtering by code...")
 		var filtered []transit.NearbyDeparture
 		for i := range nds {
 			if nds[i].Transport.Operator.Code == code {
@@ -74,6 +77,10 @@ func (svc service) FindDepartures(
 			}
 		}
 		nds = filtered
+		log.WithFields(logrus.Fields{
+			"code":     code,
+			"filtered": filtered,
+		}).Trace("Filtered departures by operator code.")
 	}
 
 	// If fuzzy-matching, update route to the closest matching route.
@@ -103,17 +110,22 @@ func (svc service) FindDepartures(
 			routesWithContext[i] = rwc
 		}
 
+		log := log.WithField("route", route)
 		log.
 			WithField("targets", routesWithContext).
 			Trace("Performing fuzzy search against targets.")
 		matches := fuzzy.RankFindFold(route, routesWithContext)
 		if len(matches) == 0 {
+			log.Trace("No matching routes, aborting.")
 			return nil, errors.WithDetailf(
 				errors.New("transvc: no matching route"),
 				"No nearby routes matching '%s'.", routeQuery,
 			)
 		}
 		sort.Sort(matches)
+		log.
+			WithField("matches", matches).
+			Trace("Got fuzzy search matches, selecting first match.")
 		route = routes[matches[0].OriginalIndex]
 	} else {
 		route = routeQuery
@@ -123,7 +135,6 @@ func (svc service) FindDepartures(
 
 	// Filter based on route.
 	{
-		log.Trace("Filtering results by route...")
 		var filtered []transit.NearbyDeparture
 		for i := range nds {
 			if code := cfg.OperatorCode; code != "" {
@@ -142,14 +153,16 @@ func (svc service) FindDepartures(
 			)
 		}
 		nds = filtered
+		log.
+			WithField("filtered", filtered).
+			Trace("Filtered results by route.")
 	}
 
 	// Group by station, if enabled.
 	if cfg.GroupByStation {
-		log.Trace("Grouping results by station...")
 		var (
 			included = make(map[string]zero.Struct)
-			sorted   = make([]transit.NearbyDeparture, 0, len(nds))
+			grouped  = make([]transit.NearbyDeparture, 0, len(nds))
 		)
 		for i := range nds {
 			var (
@@ -157,34 +170,43 @@ func (svc service) FindDepartures(
 				sid = stn.ID
 			)
 			if _, ok := included[sid]; !ok {
-				sorted = append(sorted, nds[i])
+				grouped = append(grouped, nds[i])
 				included[sid] = zero.Empty()
 
 				// Find other matching stations by name.
 				for j := i + 1; j < len(nds); j++ {
 					otherStn := nds[j].Station
 					if otherStn.Name == stn.Name {
-						sorted = append(sorted, nds[j])
+						grouped = append(grouped, nds[j])
 						included[otherStn.ID] = zero.Empty()
 					}
 				}
 			}
 		}
-		nds = sorted
+		nds = grouped
+		log.
+			WithField("grouped", grouped).
+			Trace("Grouped results by station.")
 	}
 
 	// Apply limit if it exists.
 	if l := cfg.Limit; (l > 0) && (len(nds) > l) {
 		nds = nds[:l]
+		log.WithFields(logrus.Fields{
+			"limit":      l,
+			"departures": nds,
+		}).Trace("Applied departures limit.")
 	}
 
 	// Update with realtime departures times, if available.
 	if cfg.PreferRealtime {
-		log.Trace("Update results with realtime departures...")
+		log.Trace("Updating results with realtime data...")
+		var modified bool
 		for i := range nds {
 			if nds[i].Realtime {
 				continue // departure already is realtime
 			}
+			modified = true
 
 			var (
 				tp  = nds[i].Transport
@@ -194,8 +216,8 @@ func (svc service) FindDepartures(
 				"direction": tp.Direction,
 				"station":   stn.Name,
 			})
-			log.Trace("Getting realtime departure...")
 
+			log.Trace("Getting realtime departure...")
 			times, err := svc.rts.GetDepartureTimes(ctx, *tp, *stn)
 			if err != nil {
 				if errors.Is(err, transit.ErrOperatorNotSupported) {
@@ -207,10 +229,18 @@ func (svc service) FindDepartures(
 				log.Warn("No realtime departure times found, skipping.")
 				continue
 			}
+			log.WithField("times", times).Trace("Got realtime departures.")
 
 			nd := &nds[i]
 			nd.Times = times
 			nd.Realtime = true
+		}
+		if modified {
+			log.
+				WithField("departures", nds).
+				Trace("Results were updated with realtime data.")
+		} else {
+			log.Trace("All pre-existing results are realtime; no modifications made.")
 		}
 	}
 	return nds, nil

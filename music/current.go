@@ -13,17 +13,11 @@ type CurrentlyPlaying struct {
 	Playing   bool          `json:"playing"`
 }
 
-// A CurrentSource can get CurrentlyPlaying information.
-type CurrentSource interface {
-	GetCurrent(ctx context.Context) (*CurrentlyPlaying, error)
-}
-
 type (
 	// A CurrentService handles requests for a description of my currently
 	// playing music.
 	CurrentService interface {
-		Service()
-		CurrentSource
+		GetCurrent(ctx context.Context) (*CurrentlyPlaying, error)
 	}
 
 	// A CurrentStreamer can stream descriptions of my currently playing music.

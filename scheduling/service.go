@@ -8,6 +8,7 @@ import (
 // A Service provides scheduling information, derived from my calendar events
 // and current location.
 type Service interface {
-	Service()
+	// BusyPeriods gets my busy periods for date, sorted in ascending order by
+	// start time.
 	BusyPeriods(ctx context.Context, date time.Time) ([]TimePeriod, error)
 }

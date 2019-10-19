@@ -89,6 +89,7 @@ func (src *realtimeSource) GetDepartureTimes(
 	}
 
 	// Get stop IDs.
+	log.Trace("Getting corresponding stop IDs...")
 	stopIDs, err := src.getStopIDs(ctx, &stn, &tp)
 	if err != nil {
 		log.
@@ -97,9 +98,10 @@ func (src *realtimeSource) GetDepartureTimes(
 		return nil, errors.Wrap(err, "grt: get corresponding stop IDs")
 	}
 	log = log.WithField("stop_ids", stopIDs)
-	log.Trace("Got stop IDs.")
+	log.Trace("Got corresponding stop IDs.")
 
 	// Get times for the correct stop ID.
+	log.Trace("Getting departure times for stops...")
 	var times []time.Time
 	for _, id := range stopIDs {
 		if times, err = src.getDepartureTimes(ctx, &tp, id); err != nil {
@@ -116,6 +118,7 @@ func (src *realtimeSource) GetDepartureTimes(
 
 	// Break early if no times.
 	if len(times) == 0 {
+		log.Trace("No departure times found.")
 		return []time.Time{}, nil
 	}
 
@@ -143,8 +146,8 @@ func (src *realtimeSource) GetDepartureTimes(
 	}
 
 	// Sort times in ascending order.
-	log.Trace("Sorting departure times...")
 	sort.Slice(times, func(i, j int) bool { return times[i].Before(times[j]) })
+	log.WithField("times", times).Trace("Sorted departure times.")
 	return times, nil
 }
 
@@ -159,7 +162,14 @@ func (src *realtimeSource) getStopIDs(
 	stn *transit.Station,
 	tp *transit.Transport,
 ) ([]string, error) {
-	// Construct URL.
+	log := src.log.WithFields(logrus.Fields{
+		logutil.MethodKey: name.OfMethod((*realtimeSource).getStopIDs),
+		"station":         stn.Name,
+		"route":           tp.Route,
+		"direction":       tp.Direction,
+	}).WithContext(ctx)
+
+	// Build URL.
 	u, err := url.Parse(_stopURL)
 	if err != nil {
 		panic(err)
@@ -170,9 +180,11 @@ func (src *realtimeSource) getStopIDs(
 	)
 	qp.Set("routeId", id)
 	u.RawQuery = qp.Encode()
+	url := u.String()
 
 	// Perform request.
-	req, err := http.NewRequestWithContext(ctx, http.MethodGet, u.String(), nil)
+	log.WithField("url", url).Trace("Requesting stop data from GRT...")
+	req, err := http.NewRequestWithContext(ctx, http.MethodGet, url, nil)
 	if err != nil {
 		return nil, errors.Wrap(err, "create request")
 	}
@@ -193,6 +205,9 @@ func (src *realtimeSource) getStopIDs(
 	if err = res.Body.Close(); err != nil {
 		return nil, errors.Wrap(err, "closing response body")
 	}
+	log.
+		WithField("response", stops).
+		Trace("Decoded response data from GRT.")
 
 	// Collect stop IDs.
 	var ids []string
@@ -207,6 +222,10 @@ func (src *realtimeSource) getStopIDs(
 			"No GRT stops found with the name '%s'.", stn.Name,
 		)
 	}
+	log.
+		WithField("ids", ids).
+		Trace("Got IDs.")
+
 	return ids, nil
 }
 
@@ -215,7 +234,14 @@ func (src *realtimeSource) getDepartureTimes(
 	tp *transit.Transport,
 	stopID string,
 ) ([]time.Time, error) {
-	// Construct URL.
+	log := src.log.WithFields(logrus.Fields{
+		logutil.MethodKey: name.OfMethod((*realtimeSource).getDepartureTimes),
+		"route":           tp.Route,
+		"direction":       tp.Direction,
+		"stop_id":         stopID,
+	})
+
+	// Build URL.
 	u, err := url.Parse(_depsURL)
 	if err != nil {
 		panic(err)
@@ -227,43 +253,61 @@ func (src *realtimeSource) getDepartureTimes(
 	qp.Set("routeId", id)
 	qp.Set("stopId", stopID)
 	u.RawQuery = qp.Encode()
+	url := u.String()
 
 	// If the cache hasn't been cleaned in 30 seconds, clean it!
 	{
 		now := time.Now()
 		if src.depResCacheTimestamp.Before(now.Add(-30 * time.Second)) {
+			log.
+				WithField("cache_timestamp", src.depResCacheTimestamp).
+				Trace("Cache expired; cleaning...")
 			src.depResCache = make(map[string][]byte)
 			src.depResCacheTimestamp = now
 		}
 	}
 
 	// Get stop times either from cache or from source.
-	var (
-		body []byte
-		key  = stopID + tp.Route
-		ok   bool
-	)
-	if body, ok = src.depResCache[key]; !ok {
-		// Perform request.
-		req, err := http.NewRequestWithContext(ctx, http.MethodGet, u.String(), nil)
-		if err != nil {
-			return nil, errors.Wrap(err, "create request")
-		}
-		res, err := src.client.Do(req)
-		if err != nil {
-			return nil, err
-		}
-		defer res.Body.Close()
+	var body []byte
+	{
+		var (
+			key = stopID + tp.Route
+			log = log.WithField("key", key)
+			ok  bool
+		)
+		if body, ok = src.depResCache[key]; !ok {
+			log.Trace("Cache miss, making fresh request.")
 
-		// Read response body and cache it.
-		// TODO: Use a generic HTTP caching client.
-		if body, err = ioutil.ReadAll(res.Body); err != nil {
-			return nil, errors.Wrap(err, "read response body")
+			// Perform request.
+			log.WithField("url", url).Trace("Requesting stop info from GRT.")
+			req, err := http.NewRequestWithContext(ctx, http.MethodGet, url, nil)
+			if err != nil {
+				return nil, errors.Wrap(err, "create request")
+			}
+			res, err := src.client.Do(req)
+			if err != nil {
+				return nil, err
+			}
+			defer res.Body.Close()
+
+			// Read response body and cache it.
+			// TODO: Use a generic HTTP caching client.
+			if body, err = ioutil.ReadAll(res.Body); err != nil {
+				return nil, errors.Wrap(err, "read response body")
+			}
+			if err = res.Body.Close(); err != nil {
+				return nil, errors.Wrap(err, "close response body")
+			}
+			src.depResCache[key] = body
+
+			log.
+				WithField("body", string(body)).
+				Trace("Saved response data from GRT to cache.")
+		} else {
+			log.
+				WithField("body", string(body)).
+				Trace("Cache hit, using cached response data.")
 		}
-		if err = res.Body.Close(); err != nil {
-			return nil, errors.Wrap(err, "close response body")
-		}
-		src.depResCache[key] = body
 	}
 
 	// Decode response as JSON.
@@ -276,19 +320,29 @@ func (src *realtimeSource) getDepartureTimes(
 	if err = json.Unmarshal(body, &data); err != nil {
 		return nil, errors.Wrap(err, "decoding JSON body")
 	}
+	log.WithField("response", data).Trace("Decoded response data.")
 
-	// Marshal results to time.Time.
+	// Marshal results to []time.Time.
+	log.Trace("Marshalling response to []time.Time...")
 	times := make([]time.Time, 0, len(data.StopTimes))
 	for _, st := range data.StopTimes {
+		log := log.WithFields(logrus.Fields{
+			"arrival_date_time": st.ArrivalDateTime,
+			"head_sign":         st.HeadSign,
+		})
+
 		// Ensure matching direction.
 		dir := st.HeadSign
 		if dir[1] == '-' {
+			log.Trace("Head sign contains route component, parsing...")
 			if c := dir[0]; c != tp.Route[len(tp.Route)-1] {
+				log.Trace("Head sign route mismatch, skipping.")
 				continue
 			}
 			dir = dir[2:]
 		}
 		if dir != tp.Direction {
+			log.Trace("Wrong direction, skipping...")
 			continue
 		}
 
@@ -302,7 +356,10 @@ func (src *realtimeSource) getDepartureTimes(
 		if err != nil {
 			return nil, errors.Wrap(err, "converting datetime '%s' to int")
 		}
-		times = append(times, time.Unix(n/1000, n%1000))
+		t := time.Unix(n/1000, n%1000)
+
+		log.WithField("time", t).Trace("Parsed time from response date-time.")
+		times = append(times, t)
 	}
 	return times, nil
 }
