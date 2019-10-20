@@ -248,7 +248,7 @@ func (svc service) recordAccess(id string, p auth.Permission) {
 	// If no access selector, skip.
 	selector := svc.selectors.access
 	if selector == nil {
-		log.Warn("No access mapping; skipping.")
+		log.Info("No access selector set; skipping.")
 		return
 	}
 	log = log.WithField("selector", selector)

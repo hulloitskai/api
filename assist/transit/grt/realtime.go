@@ -150,20 +150,22 @@ func (src *realtimeSource) GetDepartureTimes(
 	// See: https://github.com/stevenxie/api/issues/3
 	{
 		var (
-			now     = time.Now()
-			alerted bool
+			now       = time.Now()
+			anomalies = make([]time.Time, 0, len(times))
+			filtered  = make([]time.Time, 0, len(times))
 		)
-		for i, t := range times {
+		for _, t := range times {
 			if t.Sub(now) > (12 * time.Hour) {
-				if !alerted {
-					log.Warn("Detected departure time anomaly from GRT. Removing " +
-						"affected results.")
-					alerted = true
-				}
-
-				// Remove this departure time.
-				times = append(times[:i], times[i+1:]...)
+				anomalies = append(anomalies, t)
+			} else {
+				filtered = append(filtered, t)
 			}
+		}
+		if len(anomalies) > 0 {
+			log.
+				WithField("anomalies", anomalies).
+				Warn("Detected GRT departure time anomaly; removing affected results.")
+			times = filtered
 		}
 	}
 

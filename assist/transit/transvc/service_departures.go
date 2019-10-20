@@ -226,7 +226,7 @@ func (svc service) FindDepartures(
 				return nil, errors.Wrap(err, "transvc: get realtime departure times")
 			}
 			if len(times) == 0 {
-				log.Warn("No realtime departure times found, skipping.")
+				log.Info("No realtime departure times found, skipping.")
 				continue
 			}
 			log.WithField("times", times).Trace("Got realtime departures.")
