@@ -163,7 +163,7 @@ func (l locator) NearbyDepartures(
 							Operator:  op,
 						}
 
-						// Modify tp based on well-known op codes.
+						// Modify transit.Transport based on well-known operator codes.
 						switch tp.Operator.Code {
 						case transit.OpCodeGoTransit:
 							if tp.Category == "Bus" {
@@ -178,6 +178,28 @@ func (l locator) NearbyDepartures(
 									tp.Route += tp.Direction[:1]
 									tp.Direction = tp.Direction[2:]
 								}
+							}
+						case transit.OpCodeTTC:
+							switch tp.Category {
+							case "Bus", "Light Rail":
+								if n := strings.IndexByte(tp.Direction, '-'); n != -1 {
+									var (
+										dir = tp.Direction
+										r   = dir[n+2:]
+										m   = strings.IndexByte(r, ' ')
+									)
+									tp.Route = r[:m]
+									tp.Direction = dir[:n+2] + dir[n+m+3:]
+								}
+							case "Train":
+								var (
+									dir      = tp.Direction
+									endIndex = 5 + strings.IndexByte(dir[5:], ' ')
+								)
+								tp.Route = dir[:endIndex]
+								tp.Direction = strings.
+									NewReplacer("(", "", ")", "").
+									Replace(dir[endIndex+1:])
 							}
 						}
 

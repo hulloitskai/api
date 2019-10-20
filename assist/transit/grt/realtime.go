@@ -106,7 +106,7 @@ func (src *realtimeSource) GetDepartureTimes(
 	if tp.Operator.Code != transit.OpCodeGRT {
 		log.
 			WithField("op_code", tp.Operator.Code).
-			Warn("Only GRT routes are supported.")
+			Debug("Only GRT routes are supported.")
 		return nil, transit.ErrOperatorNotSupported
 	}
 
