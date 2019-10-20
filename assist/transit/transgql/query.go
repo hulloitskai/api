@@ -23,22 +23,19 @@ func (q Query) FindDepartures(
 	route string,
 	coords locgql.CoordinatesInput,
 	radius *int,
-	limit *int,
+	stationsLimit *int,
 ) ([]transit.NearbyDeparture, error) {
-	// Marshal input parameters.
-	lim := 2
-	if limit != nil {
-		lim = *limit
-	}
 	return q.svc.FindDepartures(
 		ctx,
 		route, locgql.CoordinatesFromInput(coords),
 		func(cfg *transit.FindDeparturesConfig) {
-			cfg.GroupByStation = true
 			cfg.FuzzyMatch = true
-			cfg.Limit = lim
+			cfg.GroupByStation = true
+			if stationsLimit != nil {
+				cfg.StationsLimit = *stationsLimit
+			}
 			if radius != nil {
-				cfg.Radius = radius
+				cfg.Radius = *radius
 			}
 		},
 	)
@@ -56,10 +53,10 @@ func (q Query) NearbyTransports(
 		locgql.CoordinatesFromInput(coords),
 		func(cfg *transit.NearbyTransportsConfig) {
 			if radius != nil {
-				cfg.Radius = radius
+				cfg.Radius = *radius
 			}
 			if limit != nil {
-				cfg.Limit = limit
+				cfg.Limit = *limit
 			}
 		},
 	)

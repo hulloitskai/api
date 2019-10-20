@@ -41,10 +41,10 @@ type (
 	// A NearbyDeparturesConfig contains optional parameters for
 	// Locator.NearbyDepartures.
 	NearbyDeparturesConfig struct {
-		Radius          *int // the search radius, in meters
-		MaxStations     *int // max number of stations to look up
-		MaxPerStation   *int // max number of departures per station
-		MaxPerTransport *int // max departures per transport
+		Radius          int // the search radius, in meters
+		MaxStations     int // max number of stations to look up
+		MaxPerStation   int // max number of departures per station
+		MaxPerTransport int // max departures per transport
 	}
 
 	// A NearbyDeparturesOption modifies a NearbyDepartureConfig.
@@ -55,7 +55,7 @@ var _ validation.Validatable = (*NearbyDeparturesConfig)(nil)
 
 // Validate returns an error if the config is not valid.
 func (cfg *NearbyDeparturesConfig) Validate() error {
-	nonNegFields := []**int{&cfg.Radius, &cfg.MaxStations, &cfg.MaxPerStation}
+	nonNegFields := []*int{&cfg.Radius, &cfg.MaxStations, &cfg.MaxPerStation}
 	rules := make([]*validation.FieldRules, len(nonNegFields))
 	for i, f := range nonNegFields {
 		rules[i] = validation.Field(f, validation.Min(0))

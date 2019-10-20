@@ -8,7 +8,7 @@ type TransitQuery {
     route: String!
     coords: CoordinatesInput!
     radius: Int
-    limit: Int
+    stationsLimit: Int
   ): [NearbyTransitDeparture!]!
 
   nearbyTransports(coords: CoordinatesInput!, radius: Int, limit: Int): [Transport!]!

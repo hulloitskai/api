@@ -38,12 +38,12 @@ I really wanted to be able to get the next bus departures without taking my
 phone out of my pocket (using Siri-enabled earbuds) in the mornings, so I
 built some shortcuts that let me do that:
 
-- [**When's the next bus?**](https://www.icloud.com/shortcuts/7b295e943254491589e2ff974f956bef)
+- [**When's the next bus?**](https://www.icloud.com/shortcuts/748b955121af445091734ab24ec712f8)
 
   This shortcut asks for the transit route you want to take (i.e. "The 7", "The 19B", "The GO 25"), and computes the departure times for that route
   at the stop closest to you. Uses realtime transit data when available.
 
-- [**When's the next ION?**](https://www.icloud.com/shortcuts/a9f2778328cb44c59e3cb28f9f048ac7)
+- [**When's the next ION?**](https://www.icloud.com/shortcuts/0517c5aa1ddc4a32bcfc557866d991b6)
 
   Like the above shortcut, but hard-codes the route to the
   [GRT 301 ION](https://www.grt.ca/en/ion-light-rail.aspx).

@@ -4,7 +4,6 @@ import (
 	"context"
 	"sort"
 
-	"github.com/openlyinc/pointy"
 	"github.com/sirupsen/logrus"
 
 	"go.stevenxie.me/gopkg/logutil"
@@ -31,14 +30,14 @@ func (svc service) NearbyTransports(
 	}
 	{
 		fields := make(logrus.Fields)
-		if r := cfg.Radius; r != nil {
-			fields["radius"] = *r
+		if r := cfg.Radius; r > 0 {
+			fields["radius"] = r
 		}
-		if l := cfg.Limit; l != nil {
-			fields["limit"] = *l
+		if l := cfg.Limit; l > 0 {
+			fields["limit"] = l
 		}
-		if m := cfg.MaxStations; m != nil {
-			fields["max_stations"] = *m
+		if m := cfg.MaxStations; m > 0 {
+			fields["max_stations"] = m
 		}
 		log = log.WithFields(fields)
 	}
@@ -48,11 +47,11 @@ func (svc service) NearbyTransports(
 		ctx,
 		coords,
 		func(ndCfg *transit.NearbyDeparturesConfig) {
-			ndCfg.MaxPerTransport = pointy.Int(1)
-			if r := cfg.Radius; r != nil {
+			ndCfg.MaxPerTransport = 1
+			if r := cfg.Radius; r > 0 {
 				ndCfg.Radius = r
 			}
-			if m := cfg.MaxStations; m != nil {
+			if m := cfg.MaxStations; m > 0 {
 				ndCfg.MaxStations = m
 			}
 		},
@@ -98,12 +97,11 @@ func (svc service) NearbyTransports(
 	log.WithField("transports", tps).Trace("Built sorted transports list.")
 
 	// Apply limit.
-	if l := cfg.Limit; (l != nil) && (len(nds) > *l) {
-		nds = nds[:*l]
-		log.WithFields(logrus.Fields{
-			"limit":      l,
-			"transports": tps,
-		}).Trace("Applied transports limit.")
+	if l := cfg.Limit; len(nds) > l {
+		nds = nds[:l]
+		log.
+			WithField("transports", tps).
+			Trace("Applied transports limit.")
 	}
 
 	return tps, nil

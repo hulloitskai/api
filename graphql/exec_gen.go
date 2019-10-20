@@ -284,7 +284,7 @@ type ComplexityRoot struct {
 	}
 
 	TransitQuery struct {
-		FindDepartures   func(childComplexity int, route string, coords locgql.CoordinatesInput, radius *int, limit *int) int
+		FindDepartures   func(childComplexity int, route string, coords locgql.CoordinatesInput, radius *int, stationsLimit *int) int
 		NearbyTransports func(childComplexity int, coords locgql.CoordinatesInput, radius *int, limit *int) int
 	}
 
@@ -1242,7 +1242,7 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 			return 0, false
 		}
 
-		return e.complexity.TransitQuery.FindDepartures(childComplexity, args["route"].(string), args["coords"].(locgql.CoordinatesInput), args["radius"].(*int), args["limit"].(*int)), true
+		return e.complexity.TransitQuery.FindDepartures(childComplexity, args["route"].(string), args["coords"].(locgql.CoordinatesInput), args["radius"].(*int), args["stationsLimit"].(*int)), true
 
 	case "TransitQuery.nearbyTransports":
 		if e.complexity.TransitQuery.NearbyTransports == nil {
@@ -1734,7 +1734,7 @@ type SchedulingQuery {
     route: String!
     coords: CoordinatesInput!
     radius: Int
-    limit: Int
+    stationsLimit: Int
   ): [NearbyTransitDeparture!]!
 
   nearbyTransports(coords: CoordinatesInput!, radius: Int, limit: Int): [Transport!]!
@@ -1977,13 +1977,13 @@ func (ec *executionContext) field_TransitQuery_findDepartures_args(ctx context.C
 	}
 	args["radius"] = arg2
 	var arg3 *int
-	if tmp, ok := rawArgs["limit"]; ok {
+	if tmp, ok := rawArgs["stationsLimit"]; ok {
 		arg3, err = ec.unmarshalOInt2ᚖint(ctx, tmp)
 		if err != nil {
 			return nil, err
 		}
 	}
-	args["limit"] = arg3
+	args["stationsLimit"] = arg3
 	return args, nil
 }
 
@@ -6544,7 +6544,7 @@ func (ec *executionContext) _TransitQuery_findDepartures(ctx context.Context, fi
 	ctx = ec.Tracer.StartFieldResolverExecution(ctx, rctx)
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return obj.FindDepartures(ctx, args["route"].(string), args["coords"].(locgql.CoordinatesInput), args["radius"].(*int), args["limit"].(*int))
+		return obj.FindDepartures(ctx, args["route"].(string), args["coords"].(locgql.CoordinatesInput), args["radius"].(*int), args["stationsLimit"].(*int))
 	})
 	if err != nil {
 		ec.Error(ctx, err)

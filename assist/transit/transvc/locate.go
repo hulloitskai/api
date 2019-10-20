@@ -48,17 +48,17 @@ func (svc locatorService) NearbyDepartures(
 	}
 	{
 		fields := make(logrus.Fields)
-		if r := cfg.Radius; r != nil {
+		if r := cfg.Radius; r > 0 {
 			fields["radius"] = r
 		}
-		if m := cfg.MaxStations; m != nil {
-			fields["max_stations"] = *m
+		if m := cfg.MaxStations; m > 0 {
+			fields["max_stations"] = m
 		}
-		if m := cfg.MaxPerStation; m != nil {
-			fields["max_per_station"] = *m
+		if m := cfg.MaxPerStation; m > 0 {
+			fields["max_per_station"] = m
 		}
-		if m := cfg.MaxPerTransport; m != nil {
-			fields["max_per_transport"] = *m
+		if m := cfg.MaxPerTransport; m > 0 {
+			fields["max_per_transport"] = m
 		}
 		log = logrus.WithFields(fields)
 	}

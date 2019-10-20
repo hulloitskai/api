@@ -255,17 +255,17 @@ func buildNearbyDeparturesURL(
 	ps.Set("time", time.Now().Format(time.RFC3339))
 	ps.Set("center", fmt.Sprintf("%f,%f", pos.Y, pos.X))
 
-	if r := cfg.Radius; r != nil {
-		ps.Set("radius", formatInt(*r))
+	if r := cfg.Radius; r > 0 {
+		ps.Set("radius", formatInt(r))
 	}
-	if m := cfg.MaxPerStation; m != nil {
-		ps.Set("max", formatInt(*m))
+	if m := cfg.MaxPerStation; m > 0 {
+		ps.Set("max", formatInt(m))
 	}
-	if m := cfg.MaxStations; m != nil {
-		ps.Set("maxStn", formatInt(*m))
+	if m := cfg.MaxStations; m > 0 {
+		ps.Set("maxStn", formatInt(m))
 	}
-	if m := cfg.MaxPerTransport; m != nil {
-		ps.Set("maxPerTransport", formatInt(*m))
+	if m := cfg.MaxPerTransport; m > 0 {
+		ps.Set("maxPerTransport", formatInt(m))
 	}
 
 	// Encode query params and return URL.

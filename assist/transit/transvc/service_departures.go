@@ -39,7 +39,7 @@ func (svc service) FindDepartures(
 
 	cfg := transit.FindDeparturesConfig{
 		PreferRealtime: true,
-		MaxTimes:       3,
+		TimesLimit:     3,
 	}
 	for _, opt := range opts {
 		opt(&cfg)
@@ -53,12 +53,12 @@ func (svc service) FindDepartures(
 		ctx,
 		coords,
 		func(ndCfg *transit.NearbyDeparturesConfig) {
-			ndCfg.MaxPerTransport = &cfg.MaxTimes
-			if cfg.Radius != nil {
-				ndCfg.Radius = cfg.Radius
+			ndCfg.MaxPerTransport = cfg.TimesLimit
+			if r := cfg.Radius; r > 0 {
+				ndCfg.Radius = r
 			}
-			if max := cfg.MaxStations; max != nil {
-				ndCfg.MaxStations = max
+			if m := cfg.MaxStations; m > 0 {
+				ndCfg.MaxStations = m
 			}
 		},
 	)
@@ -161,7 +161,7 @@ func (svc service) FindDepartures(
 	// Group by station, if enabled.
 	if cfg.GroupByStation {
 		var (
-			included = make(map[string]zero.Struct)
+			stations = make(map[string]zero.Struct)
 			grouped  = make([]transit.NearbyDeparture, 0, len(nds))
 		)
 		for i := range nds {
@@ -169,17 +169,22 @@ func (svc service) FindDepartures(
 				stn = nds[i].Station
 				sid = stn.ID
 			)
-			if _, ok := included[sid]; !ok {
+			if _, ok := stations[sid]; !ok {
 				grouped = append(grouped, nds[i])
-				included[sid] = zero.Empty()
+				stations[sid] = zero.Empty()
 
 				// Find other matching stations by name.
 				for j := i + 1; j < len(nds); j++ {
 					otherStn := nds[j].Station
 					if otherStn.Name == stn.Name {
 						grouped = append(grouped, nds[j])
-						included[otherStn.ID] = zero.Empty()
+						stations[otherStn.ID] = zero.Empty()
 					}
+				}
+
+				// Check against stations limit.
+				if len(stations) == cfg.StationsLimit {
+					break
 				}
 			}
 		}
@@ -189,7 +194,7 @@ func (svc service) FindDepartures(
 			Trace("Grouped results by station.")
 	}
 
-	// Apply limit if it exists.
+	// Apply limit.
 	if l := cfg.Limit; (l > 0) && (len(nds) > l) {
 		nds = nds[:l]
 		log.WithFields(logrus.Fields{
