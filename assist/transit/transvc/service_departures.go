@@ -44,8 +44,20 @@ func (svc service) FindDepartures(
 	for _, opt := range opts {
 		opt(&cfg)
 	}
-	if cfg.OperatorCode != "" {
-		log = log.WithField("operator_code", cfg.OperatorCode)
+	if err := cfg.Validate(); err != nil {
+		return nil, errors.Wrap(err, "transvc: validating config")
+	}
+	{
+		fields := logrus.Fields{
+			"prefer_realtime":  cfg.PreferRealtime,
+			"fuzzy_match":      cfg.FuzzyMatch,
+			"group_by_station": cfg.GroupByStation,
+			"limit":            cfg.Limit,
+		}
+		if c := cfg.OperatorCode; c != "" {
+			fields["operator_code"] = c
+		}
+		log = log.WithFields(fields)
 	}
 
 	log.Trace("Getting nearby departures...")
@@ -161,30 +173,25 @@ func (svc service) FindDepartures(
 	// Group by station, if enabled.
 	if cfg.GroupByStation {
 		var (
-			stations = make(map[string]zero.Struct)
-			grouped  = make([]transit.NearbyDeparture, 0, len(nds))
+			sids    = make(map[string]zero.Struct)
+			grouped = make([]transit.NearbyDeparture, 0, len(nds))
 		)
 		for i := range nds {
 			var (
 				stn = nds[i].Station
 				sid = stn.ID
 			)
-			if _, ok := stations[sid]; !ok {
+			if _, ok := sids[sid]; !ok {
 				grouped = append(grouped, nds[i])
-				stations[sid] = zero.Empty()
+				sids[sid] = zero.Empty()
 
 				// Find other matching stations by name.
 				for j := i + 1; j < len(nds); j++ {
 					otherStn := nds[j].Station
 					if otherStn.Name == stn.Name {
 						grouped = append(grouped, nds[j])
-						stations[otherStn.ID] = zero.Empty()
+						sids[otherStn.ID] = zero.Empty()
 					}
-				}
-
-				// Check against stations limit.
-				if len(stations) == cfg.StationsLimit {
-					break
 				}
 			}
 		}
@@ -192,6 +199,26 @@ func (svc service) FindDepartures(
 		log.
 			WithField("grouped", grouped).
 			Trace("Grouped results by station.")
+	}
+
+	// Filter to a single set that is unique by direction.
+	if cfg.SingleSet {
+		var (
+			dirs     = make(map[string]zero.Struct)
+			filtered = make([]transit.NearbyDeparture, 0, len(nds))
+		)
+		for i := range nds {
+			dir := nds[i].Transport.Direction
+			if _, ok := dirs[dir]; ok {
+				continue
+			}
+			dirs[dir] = zero.Empty()
+			filtered = append(filtered, nds[i])
+		}
+		nds = filtered
+		log.
+			WithField("filtered", filtered).
+			Trace("Filtered results to a single set by direction.")
 	}
 
 	// Apply limit.

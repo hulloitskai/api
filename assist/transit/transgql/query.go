@@ -23,7 +23,7 @@ func (q Query) FindDepartures(
 	route string,
 	coords locgql.CoordinatesInput,
 	radius *int,
-	stationsLimit *int,
+	singleSet *bool,
 ) ([]transit.NearbyDeparture, error) {
 	return q.svc.FindDepartures(
 		ctx,
@@ -31,8 +31,8 @@ func (q Query) FindDepartures(
 		func(cfg *transit.FindDeparturesConfig) {
 			cfg.FuzzyMatch = true
 			cfg.GroupByStation = true
-			if stationsLimit != nil {
-				cfg.StationsLimit = *stationsLimit
+			if singleSet != nil {
+				cfg.SingleSet = *singleSet
 			}
 			if radius != nil {
 				cfg.Radius = *radius

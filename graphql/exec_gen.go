@@ -284,7 +284,7 @@ type ComplexityRoot struct {
 	}
 
 	TransitQuery struct {
-		FindDepartures   func(childComplexity int, route string, coords locgql.CoordinatesInput, radius *int, stationsLimit *int) int
+		FindDepartures   func(childComplexity int, route string, coords locgql.CoordinatesInput, radius *int, singleSet *bool) int
 		NearbyTransports func(childComplexity int, coords locgql.CoordinatesInput, radius *int, limit *int) int
 	}
 
@@ -1242,7 +1242,7 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 			return 0, false
 		}
 
-		return e.complexity.TransitQuery.FindDepartures(childComplexity, args["route"].(string), args["coords"].(locgql.CoordinatesInput), args["radius"].(*int), args["stationsLimit"].(*int)), true
+		return e.complexity.TransitQuery.FindDepartures(childComplexity, args["route"].(string), args["coords"].(locgql.CoordinatesInput), args["radius"].(*int), args["singleSet"].(*bool)), true
 
 	case "TransitQuery.nearbyTransports":
 		if e.complexity.TransitQuery.NearbyTransports == nil {
@@ -1728,13 +1728,14 @@ type SchedulingQuery {
   """
   Find nearby transit departures.
 
-  Optionally specify a radius (in meters) and limit to restrict results to.
+  Optionally specify a radius (in meters), and whether or not you want to
+  restrict results to a single set that is unique by Transport direction.
   """
   findDepartures(
     route: String!
     coords: CoordinatesInput!
     radius: Int
-    stationsLimit: Int
+    singleSet: Boolean
   ): [NearbyTransitDeparture!]!
 
   nearbyTransports(coords: CoordinatesInput!, radius: Int, limit: Int): [Transport!]!
@@ -1976,14 +1977,14 @@ func (ec *executionContext) field_TransitQuery_findDepartures_args(ctx context.C
 		}
 	}
 	args["radius"] = arg2
-	var arg3 *int
-	if tmp, ok := rawArgs["stationsLimit"]; ok {
-		arg3, err = ec.unmarshalOInt2ᚖint(ctx, tmp)
+	var arg3 *bool
+	if tmp, ok := rawArgs["singleSet"]; ok {
+		arg3, err = ec.unmarshalOBoolean2ᚖbool(ctx, tmp)
 		if err != nil {
 			return nil, err
 		}
 	}
-	args["stationsLimit"] = arg3
+	args["singleSet"] = arg3
 	return args, nil
 }
 
@@ -6544,7 +6545,7 @@ func (ec *executionContext) _TransitQuery_findDepartures(ctx context.Context, fi
 	ctx = ec.Tracer.StartFieldResolverExecution(ctx, rctx)
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return obj.FindDepartures(ctx, args["route"].(string), args["coords"].(locgql.CoordinatesInput), args["radius"].(*int), args["stationsLimit"].(*int))
+		return obj.FindDepartures(ctx, args["route"].(string), args["coords"].(locgql.CoordinatesInput), args["radius"].(*int), args["singleSet"].(*bool))
 	})
 	if err != nil {
 		ec.Error(ctx, err)

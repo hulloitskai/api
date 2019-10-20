@@ -3,6 +3,8 @@ package transit // import "go.stevenxie.me/api/assist/transit"
 import (
 	"context"
 
+	"github.com/cockroachdb/errors"
+	validation "github.com/go-ozzo/ozzo-validation"
 	"go.stevenxie.me/api/location"
 )
 
@@ -44,14 +46,10 @@ func FindWithLimit(l int) FindDeparturesOption {
 	}
 }
 
-// FindWithLimitStations limits the number of stations to include when
-// grouping results by station.
-func FindWithLimitStations(l int) FindDeparturesOption {
-	return func(cfg *FindDeparturesConfig) {
-		if l > 0 {
-			cfg.StationsLimit = l
-		}
-	}
+// FindSingleSet instructs a Service.FindDepartures call to only include
+// a single set of results that are unique by direction.
+func FindSingleSet(enable bool) FindDeparturesOption {
+	return func(cfg *FindDeparturesConfig) { cfg.SingleSet = enable }
 }
 
 type (
@@ -79,12 +77,13 @@ type (
 		OperatorCode string // filter by operator code
 
 		PreferRealtime bool // make extra queries for realtime data
-		GroupByStation bool // group results by station
 		FuzzyMatch     bool // use fuzzy match algorithm for route
 
-		Limit         int // limit number of results
-		TimesLimit    int // limit number of departure times to include
-		StationsLimit int // limit number of stations (when used w/ GroupByStation)
+		GroupByStation bool // group results by station
+		SingleSet      bool // get one result per direction, overrides Limit
+
+		Limit      int // limit number of results
+		TimesLimit int // limit number of departure times to include
 
 		Radius      int // the search radius, in meters
 		MaxStations int // max number of stations to search
@@ -103,3 +102,23 @@ type (
 	// A NearbyTransportsOption modifies a NearbyTransportsConfig.
 	NearbyTransportsOption func(*NearbyTransportsConfig)
 )
+
+// Validate returns an error if the FindDeparrturesConfig is not valid.
+func (cfg *FindDeparturesConfig) Validate() error {
+	minZeroFields := []*int{
+		&cfg.Limit, &cfg.TimesLimit,
+		&cfg.Radius, &cfg.MaxStations,
+	}
+	rules := make([]*validation.FieldRules, len(minZeroFields))
+	for i, f := range minZeroFields {
+		rules[i] = validation.Field(f, validation.Min(0))
+	}
+	if err := validation.ValidateStruct(cfg, rules...); err != nil {
+		return err
+	}
+
+	if l := cfg.Limit; cfg.SingleSet && l > 0 {
+		return errors.Newf("Limit (%d) cannot be set when SingleSet is true", l)
+	}
+	return nil
+}
