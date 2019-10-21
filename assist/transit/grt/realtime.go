@@ -10,8 +10,6 @@ import (
 	"strings"
 	"time"
 
-	"go.stevenxie.me/api/pkg/httputil"
-
 	"github.com/cockroachdb/errors"
 	"github.com/sirupsen/logrus"
 
@@ -20,6 +18,7 @@ import (
 
 	"go.stevenxie.me/api/assist/transit"
 	"go.stevenxie.me/api/assist/transit/transutil"
+	"go.stevenxie.me/api/pkg/httputil"
 )
 
 const _cacheMaxAge = 30 * time.Second
@@ -28,7 +27,7 @@ const _cacheMaxAge = 30 * time.Second
 // using GRT.
 //
 // If c == nil, a zero-value http.Client will be used.
-func NewRealtimeSource(opts ...RealtimeSourceOption) transit.RealtimeSource {
+func NewRealtimeSource(opts ...RealtimeSourceOption) (transit.RealtimeSource, error) {
 	cfg := RealtimeSourceConfig{
 		HTTPClient: new(http.Client),
 		Logger:     logutil.NoopEntry(),
@@ -41,21 +40,22 @@ func NewRealtimeSource(opts ...RealtimeSourceOption) transit.RealtimeSource {
 	log := logutil.AddComponent(cfg.Logger, (*realtimeSource)(nil))
 
 	// Use custom caching round-tripper.
-	var (
-		client = cfg.HTTPClient
-		cache  = httputil.NewCachingTripper(
-			client.Transport,
-			httputil.WithCachingTripperLogger(log),
-			httputil.WithCachingTripperMaxAge(_cacheMaxAge),
-		)
+	client := cfg.HTTPClient
+	cache, err := httputil.NewCachingTripper(
+		client.Transport,
+		httputil.WithCachingTripperLogger(log),
+		httputil.WithCachingTripperMaxAge(_cacheMaxAge),
 	)
+	if err != nil {
+		return nil, errors.Wrap(err, "grt: creating CachingTripper")
+	}
 	client.Transport = cache
 
 	return &realtimeSource{
 		client: client,
 		log:    log,
 		cache:  cache,
-	}
+	}, nil
 }
 
 // WithRealtimeLogger configures a transit.RealtimeService to write logs with

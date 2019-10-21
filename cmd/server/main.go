@@ -100,8 +100,8 @@ var flags struct {
 func run(*cli.Context) (err error) {
 	// Init logger, and Raven client.
 	var (
-		raven = buildRaven()
-		log   = buildLogger(raven)
+		raven = cmdutil.NewRaven(cmdutil.WithRavenRelease(internal.Version))
+		log   = cmdutil.NewLogger(cmdutil.WithLogrusSentryHook(raven))
 	)
 
 	// Load and validate config.
@@ -322,8 +322,11 @@ func run(*cli.Context) (err error) {
 				locator,
 				basic.WithLogger(log),
 			)
-			realtimeService = grt.NewRealtimeSource(grt.WithRealtimeLogger(log))
 		)
+		realtimeService, err := grt.NewRealtimeSource(grt.WithRealtimeLogger(log))
+		if err != nil {
+			return errors.Wrap(err, "create grt.RealTimeSource")
+		}
 		transitService = transvc.NewService(
 			locatorService, realtimeService,
 			basic.WithLogger(log),

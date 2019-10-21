@@ -28,7 +28,7 @@ func main() {
 	if err := configutil.LoadEnv(); err != nil {
 		cmdutil.Fatalf("Failed to load dotenv file: %v\n", err)
 	}
-	log := buildLogger()
+	log := cmdutil.NewLogger()
 
 	if len(os.Args) != 3 ||
 		funk.ContainsString([]string{"-h", "--help"}, os.Args[1]) {
@@ -52,7 +52,10 @@ func main() {
 		var err error
 		for _, c := range convs {
 			if *c.Dst, err = strconv.ParseFloat(c.Src, 64); err != nil {
-				cmdutil.Fatalf("Parsing position component '%s' as float.\n", c.Src)
+				cmdutil.Fatalf(
+					"Failed to parse position component '%s' as float.\n",
+					c.Src,
+				)
 			}
 		}
 	}
@@ -61,7 +64,7 @@ func main() {
 	{
 		client, err := here.NewClient(_appID)
 		if err != nil {
-			log.WithError(err).Fatal("Creating Here client.")
+			log.WithError(err).Fatal("Failed to create Here client.")
 		}
 		locator := heretrans.NewLocator(client)
 		loc = transvc.NewLocatorService(locator, basic.WithLogger(log))
@@ -69,7 +72,11 @@ func main() {
 
 	var rts transit.RealtimeSource
 	{
-		rts = grt.NewRealtimeSource(grt.WithRealtimeLogger(log))
+		var err error
+		rts, err = grt.NewRealtimeSource(grt.WithRealtimeLogger(log))
+		if err != nil {
+			log.WithError(err).Fatal("Failed to create RealTimeSource.")
+		}
 	}
 
 	svc := transvc.NewService(loc, rts, basic.WithLogger(log))
