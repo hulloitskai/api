@@ -83,7 +83,6 @@ func (root resolverRoot) Mutation() graphql.MutationResolver {
 func (root resolverRoot) Subscription() graphql.SubscriptionResolver {
 	return root.subscription
 }
-
 func (root resolverRoot) FullAbout() graphql.FullAboutResolver {
 	return root.fullAbout
 }

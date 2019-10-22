@@ -53,13 +53,13 @@ models:
   LocationQuery:
     model: locgql.Query
   LocationHistorySegment:
-    model: location.HistorySegment
+    model: locgql.HistorySegment
   Place:
     model: locgql.Place
   Coordinates:
     model: location.Coordinates
   Address:
-    model: location.Address
+    model: locgql.Address
   TimeZone:
     model: locgql.TimeZone
 

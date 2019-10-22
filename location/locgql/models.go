@@ -5,9 +5,25 @@ import (
 	"go.stevenxie.me/api/pkg/timeutil"
 )
 
+// A HistorySegment represents a segment of location history.
+type HistorySegment struct {
+	*location.HistorySegment
+	Address  *string `json:"address,omitempty"`
+	Distance *int    `json:"distance,omitempty"`
+}
+
+// An Address describes the position of a Place.
+type Address struct {
+	*location.Address
+	District *string `json:"district,omitempty"`
+	Street   *string `json:"street,omitempty"`
+	Number   *string `json:"number,omitempty"`
+}
+
 // A Place is a location.Place that can represents its time zone as a string.
 type Place struct {
 	*location.Place
+	Address Address
 }
 
 // A TimeZone represents a time zone.

@@ -104,19 +104,16 @@ func (svc *historyService) RecentHistory(ctx context.Context) (
 	} else {
 		// Derive time location for future queries.
 		log.Trace("Deriving time location for timezone-accurate future requests.")
-		go svc.deriveTimeLocation(ctx, &segs[0])
+		go svc.deriveTimeLocation(&segs[0])
 	}
 	return segs, nil
 }
 
-func (svc *historyService) deriveTimeLocation(
-	ctx context.Context,
-	seg *location.HistorySegment,
-) {
+func (svc *historyService) deriveTimeLocation(seg *location.HistorySegment) {
 	log := svc.log.WithFields(logrus.Fields{
 		logutil.MethodKey: name.OfMethod((*historyService).deriveTimeLocation),
 		"segment":         seg,
-	}).WithContext(ctx)
+	})
 
 	coords := latestCoordinates(seg)
 	if coords == nil {
@@ -126,7 +123,7 @@ func (svc *historyService) deriveTimeLocation(
 	log = log.WithField("coordinates", coords)
 
 	log.Trace("Getting time location.")
-	loc, err := geoutil.TimeLocation(ctx, svc.geo, *coords)
+	loc, err := geoutil.TimeLocation(context.Background(), svc.geo, *coords)
 	if err != nil {
 		log.
 			WithError(err).

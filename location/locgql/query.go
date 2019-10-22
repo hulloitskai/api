@@ -43,7 +43,8 @@ func (q Query) Region(ctx context.Context) (*Place, error) {
 	if err != nil {
 		return nil, err
 	}
-	return &Place{p}, nil
+	place := convertPlace(p)
+	return &place, nil
 }
 
 // History resolves queries for my location history.
@@ -51,7 +52,7 @@ func (q Query) History(
 	ctx context.Context,
 	code string,
 	date *time.Time,
-) ([]location.HistorySegment, error) {
+) ([]HistorySegment, error) {
 	ok, err := q.auth.HasPermission(
 		ctx,
 		strings.TrimSpace(code), location.PermHistory,
@@ -62,8 +63,18 @@ func (q Query) History(
 	if !ok {
 		return nil, authutil.ErrAccessDenied
 	}
+
 	if date != nil {
-		return q.svc.GetHistory(ctx, *date)
+		segs, err := q.svc.GetHistory(ctx, *date)
+		if err != nil {
+			return nil, err
+		}
+		return convertHistorySegments(segs), nil
 	}
-	return q.svc.RecentHistory(ctx)
+
+	segs, err := q.svc.RecentHistory(ctx)
+	if err != nil {
+		return nil, err
+	}
+	return convertHistorySegments(segs), nil
 }
