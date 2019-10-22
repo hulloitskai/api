@@ -2,6 +2,7 @@ package rescuetime
 
 import (
 	"net/http"
+	"net/url"
 	"os"
 
 	"github.com/cockroachdb/errors"
@@ -61,5 +62,13 @@ func (c client) Do(req *http.Request) (*http.Response, error) {
 	req.URL.RawQuery = params.Encode()
 
 	// Perform request.
-	return c.httpc.Do(req)
+	res, err := c.httpc.Do(req)
+	if err != nil {
+		var urlErr url.Error
+		if errors.As(err, &urlErr) {
+			return nil, urlErr.Unwrap()
+		}
+		return nil, err
+	}
+	return res, err
 }
