@@ -18,11 +18,17 @@ func ServeGraphiQL(endpoint string) http.HandlerFunc {
 				return errors.Wrap(err, "parsing template")
 			}
 
+			// Parse query params.
 			ps := r.URL.Query()
+			query := ps.Get("query")
+			if query == "" {
+				query = defaultQuery
+			}
+
 			d := giqlData{
 				Version:         _giqlVersion,
 				Endpoint:        endpoint,
-				QueryString:     ps.Get("query"),
+				QueryString:     query,
 				VariablesString: ps.Get("variables"),
 				OperationName:   ps.Get("operationName"),
 			}
@@ -163,4 +169,33 @@ const giqlTemplate = `
   </script>
 </body>
 </html>
+`
+
+const defaultQuery = `# Welcome to GraphiQL
+#
+# GraphiQL is an in-browser tool for writing, validating, and
+# testing GraphQL queries.
+#
+# Type queries into this side of the screen, and you will see intelligent
+# typeaheads aware of the current GraphQL type schema and live syntax and
+# validation errors highlighted within the text.
+#
+# GraphQL queries typically start with a "{" character. Lines that starts
+# with a # are ignored.
+#
+# An example GraphQL query might look like:
+#
+#     {
+#       field(arg: "value") {
+#         subField
+#       }
+#     }
+#
+# Keyboard shortcuts:
+#
+#       Run Query:  Ctrl-Enter (or press the play button above)
+#
+#   Auto Complete:  Ctrl-Space (or just start typing)
+#
+
 `
