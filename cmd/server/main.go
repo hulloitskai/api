@@ -166,10 +166,10 @@ func run(*cli.Context) (err error) {
 	var locationService location.Service
 	{
 		var (
-			source         = gmaps.NewSegmentSource(timelineClient)
 			geocoder       = heregeo.NewGeocoder(hereClient)
+			historian      = gmaps.NewHistorian(timelineClient)
 			historyService = locsvc.NewHistoryService(
-				source, geocoder,
+				historian, geocoder,
 				basic.WithLogger(log),
 			)
 		)
@@ -261,7 +261,7 @@ func run(*cli.Context) (err error) {
 		if err != nil {
 			return errors.Wrap(err, "create Google calendar service")
 		}
-		source := gcal.NewBusySource(calsvc, cfg.Scheduling.GCal.CalendarIDs)
+		source := gcal.NewCalendar(calsvc, cfg.Scheduling.GCal.CalendarIDs)
 		schedulingService = schedsvc.NewService(source, basic.WithLogger(log))
 	}
 

@@ -16,6 +16,7 @@ type LocationHistorySegment {
   description: String!
   category: String!
   distance: Int
+  timeSpan: TimeSpan!
   coordinates: [Coordinates!]!
 }
 

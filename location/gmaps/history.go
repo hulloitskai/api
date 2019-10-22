@@ -11,25 +11,26 @@ import (
 
 	"github.com/cockroachdb/errors"
 	"go.stevenxie.me/api/location"
+	"go.stevenxie.me/api/scheduling"
 )
 
-// NewSegmentSource creates a new location.SegmentSource that can load
+// NewHistorian creates a new location.Historian that can load
 // location history from Google Maps.
-func NewSegmentSource(client TimelineClient) location.SegmentSource {
-	return segmentSource{
+func NewHistorian(client TimelineClient) location.Historian {
+	return historian{
 		client: client,
 	}
 }
 
-type segmentSource struct {
+type historian struct {
 	client TimelineClient
 }
 
-var _ location.SegmentSource = (*segmentSource)(nil)
+var _ location.Historian = (*historian)(nil)
 
 const _kmlURL = "https://www.google.com/maps/timeline/kml"
 
-func (svc segmentSource) GetHistory(
+func (svc historian) GetHistory(
 	ctx context.Context,
 	date time.Time,
 ) ([]location.HistorySegment, error) {
@@ -91,8 +92,8 @@ func (svc segmentSource) GetHistory(
 			Place:       pm.Name,
 			Address:     pm.Address,
 			Description: strings.TrimSpace(pm.Description),
-			TimeSpan: location.TimeSpan{
-				Begin: span.Begin,
+			TimeSpan: scheduling.TimeSpan{
+				Start: span.Begin,
 				End:   span.End,
 			},
 		}

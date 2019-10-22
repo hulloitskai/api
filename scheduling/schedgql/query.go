@@ -17,14 +17,14 @@ type Query struct {
 	svc scheduling.Service
 }
 
-// BusyPeriods looks up the time periods when I'm busy.
-func (q Query) BusyPeriods(
+// BusyTimes looks up the times when I'm busy.
+func (q Query) BusyTimes(
 	ctx context.Context,
 	date *time.Time,
-) ([]scheduling.TimePeriod, error) {
+) ([]scheduling.TimeSpan, error) {
 	d := time.Now()
 	if date != nil {
 		d = (*date)
 	}
-	return q.svc.BusyPeriods(ctx, d)
+	return q.svc.BusyTimes(ctx, d)
 }

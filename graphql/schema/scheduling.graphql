@@ -1,11 +1,11 @@
 """
-A `TimePeriod` represents a span of time.
+A `TimeSpan` represents a span of time.
 """
-type TimePeriod {
+type TimeSpan {
   start: Time!
   end: Time!
 }
 
 type SchedulingQuery {
-  busyPeriods(date: Time): [TimePeriod!]!
+  busyTimes(date: Time): [TimeSpan!]!
 }

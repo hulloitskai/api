@@ -15,34 +15,34 @@ import (
 
 // NewService creates a new Service.
 func NewService(
-	src scheduling.BusySource,
+	cal scheduling.Calendar,
 	opts ...basic.Option,
 ) scheduling.Service {
 	cfg := basic.BuildConfig(opts...)
 	return service{
-		src: src,
+		cal: cal,
 		log: logutil.AddComponent(cfg.Logger, (*service)(nil)),
 	}
 }
 
 type service struct {
-	src scheduling.BusySource
+	cal scheduling.Calendar
 	log *logrus.Entry
 }
 
 var _ scheduling.Service = (*service)(nil)
 
-func (svc service) BusyPeriods(
+func (svc service) BusyTimes(
 	ctx context.Context,
 	date time.Time,
-) ([]scheduling.TimePeriod, error) {
+) ([]scheduling.TimeSpan, error) {
 	log := svc.log.WithFields(logrus.Fields{
-		logutil.MethodKey: name.OfMethod(service.BusyPeriods),
+		logutil.MethodKey: name.OfMethod(service.BusyTimes),
 		"date":            date,
 	}).WithContext(ctx)
 
 	log.Trace("Getting busy periods from source...")
-	periods, err := svc.src.RawBusyPeriods(ctx, date)
+	periods, err := svc.cal.RawBusyTimes(ctx, date)
 	if err != nil {
 		log.WithError(err).Error("Failed to load busy periods from source.")
 		return nil, err

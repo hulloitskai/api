@@ -146,6 +146,7 @@ type ComplexityRoot struct {
 		Description func(childComplexity int) int
 		Distance    func(childComplexity int) int
 		Place       func(childComplexity int) int
+		TimeSpan    func(childComplexity int) int
 	}
 
 	LocationQuery struct {
@@ -253,14 +254,14 @@ type ComplexityRoot struct {
 	}
 
 	SchedulingQuery struct {
-		BusyPeriods func(childComplexity int, date *time.Time) int
+		BusyTimes func(childComplexity int, date *time.Time) int
 	}
 
 	Subscription struct {
 		Music func(childComplexity int) int
 	}
 
-	TimePeriod struct {
+	TimeSpan struct {
 		End   func(childComplexity int) int
 		Start func(childComplexity int) int
 	}
@@ -692,6 +693,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.LocationHistorySegment.Place(childComplexity), true
+
+	case "LocationHistorySegment.timeSpan":
+		if e.complexity.LocationHistorySegment.TimeSpan == nil {
+			break
+		}
+
+		return e.complexity.LocationHistorySegment.TimeSpan(childComplexity), true
 
 	case "LocationQuery.history":
 		if e.complexity.LocationQuery.History == nil {
@@ -1136,17 +1144,17 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.Query.Scheduling(childComplexity), true
 
-	case "SchedulingQuery.busyPeriods":
-		if e.complexity.SchedulingQuery.BusyPeriods == nil {
+	case "SchedulingQuery.busyTimes":
+		if e.complexity.SchedulingQuery.BusyTimes == nil {
 			break
 		}
 
-		args, err := ec.field_SchedulingQuery_busyPeriods_args(context.TODO(), rawArgs)
+		args, err := ec.field_SchedulingQuery_busyTimes_args(context.TODO(), rawArgs)
 		if err != nil {
 			return 0, false
 		}
 
-		return e.complexity.SchedulingQuery.BusyPeriods(childComplexity, args["date"].(*time.Time)), true
+		return e.complexity.SchedulingQuery.BusyTimes(childComplexity, args["date"].(*time.Time)), true
 
 	case "Subscription.music":
 		if e.complexity.Subscription.Music == nil {
@@ -1155,19 +1163,19 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.Subscription.Music(childComplexity), true
 
-	case "TimePeriod.end":
-		if e.complexity.TimePeriod.End == nil {
+	case "TimeSpan.end":
+		if e.complexity.TimeSpan.End == nil {
 			break
 		}
 
-		return e.complexity.TimePeriod.End(childComplexity), true
+		return e.complexity.TimeSpan.End(childComplexity), true
 
-	case "TimePeriod.start":
-		if e.complexity.TimePeriod.Start == nil {
+	case "TimeSpan.start":
+		if e.complexity.TimeSpan.Start == nil {
 			break
 		}
 
-		return e.complexity.TimePeriod.Start(childComplexity), true
+		return e.complexity.TimeSpan.Start(childComplexity), true
 
 	case "TimeZone.name":
 		if e.complexity.TimeZone.Name == nil {
@@ -1500,6 +1508,7 @@ type LocationHistorySegment {
   description: String!
   category: String!
   distance: Int
+  timeSpan: TimeSpan!
   coordinates: [Coordinates!]!
 }
 
@@ -1713,15 +1722,15 @@ type Subscription {
 }
 `},
 	&ast.Source{Name: "schema/scheduling.graphql", Input: `"""
-A ` + "`" + `TimePeriod` + "`" + ` represents a span of time.
+A ` + "`" + `TimeSpan` + "`" + ` represents a span of time.
 """
-type TimePeriod {
+type TimeSpan {
   start: Time!
   end: Time!
 }
 
 type SchedulingQuery {
-  busyPeriods(date: Time): [TimePeriod!]!
+  busyTimes(date: Time): [TimeSpan!]!
 }
 `},
 	&ast.Source{Name: "schema/transit.graphql", Input: `type TransitQuery {
@@ -1936,7 +1945,7 @@ func (ec *executionContext) field_Query_about_args(ctx context.Context, rawArgs 
 	return args, nil
 }
 
-func (ec *executionContext) field_SchedulingQuery_busyPeriods_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+func (ec *executionContext) field_SchedulingQuery_busyTimes_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
 	var err error
 	args := map[string]interface{}{}
 	var arg0 *time.Time
@@ -3701,6 +3710,43 @@ func (ec *executionContext) _LocationHistorySegment_distance(ctx context.Context
 	rctx.Result = res
 	ctx = ec.Tracer.StartFieldChildExecution(ctx)
 	return ec.marshalOInt2ᚖint(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _LocationHistorySegment_timeSpan(ctx context.Context, field graphql.CollectedField, obj *locgql.HistorySegment) (ret graphql.Marshaler) {
+	ctx = ec.Tracer.StartFieldExecution(ctx, field)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+		ec.Tracer.EndFieldExecution(ctx)
+	}()
+	rctx := &graphql.ResolverContext{
+		Object:   "LocationHistorySegment",
+		Field:    field,
+		Args:     nil,
+		IsMethod: false,
+	}
+	ctx = graphql.WithResolverContext(ctx, rctx)
+	ctx = ec.Tracer.StartFieldResolverExecution(ctx, rctx)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.TimeSpan, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !ec.HasError(rctx) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(scheduling.TimeSpan)
+	rctx.Result = res
+	ctx = ec.Tracer.StartFieldChildExecution(ctx)
+	return ec.marshalNTimeSpan2goᚗstevenxieᚗmeᚋapiᚋschedulingᚐTimeSpan(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _LocationHistorySegment_coordinates(ctx context.Context, field graphql.CollectedField, obj *locgql.HistorySegment) (ret graphql.Marshaler) {
@@ -6025,7 +6071,7 @@ func (ec *executionContext) _Query___schema(ctx context.Context, field graphql.C
 	return ec.marshalO__Schema2ᚖgithubᚗcomᚋ99designsᚋgqlgenᚋgraphqlᚋintrospectionᚐSchema(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) _SchedulingQuery_busyPeriods(ctx context.Context, field graphql.CollectedField, obj *schedgql.Query) (ret graphql.Marshaler) {
+func (ec *executionContext) _SchedulingQuery_busyTimes(ctx context.Context, field graphql.CollectedField, obj *schedgql.Query) (ret graphql.Marshaler) {
 	ctx = ec.Tracer.StartFieldExecution(ctx, field)
 	defer func() {
 		if r := recover(); r != nil {
@@ -6042,7 +6088,7 @@ func (ec *executionContext) _SchedulingQuery_busyPeriods(ctx context.Context, fi
 	}
 	ctx = graphql.WithResolverContext(ctx, rctx)
 	rawArgs := field.ArgumentMap(ec.Variables)
-	args, err := ec.field_SchedulingQuery_busyPeriods_args(ctx, rawArgs)
+	args, err := ec.field_SchedulingQuery_busyTimes_args(ctx, rawArgs)
 	if err != nil {
 		ec.Error(ctx, err)
 		return graphql.Null
@@ -6051,7 +6097,7 @@ func (ec *executionContext) _SchedulingQuery_busyPeriods(ctx context.Context, fi
 	ctx = ec.Tracer.StartFieldResolverExecution(ctx, rctx)
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return obj.BusyPeriods(ctx, args["date"].(*time.Time))
+		return obj.BusyTimes(ctx, args["date"].(*time.Time))
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -6063,10 +6109,10 @@ func (ec *executionContext) _SchedulingQuery_busyPeriods(ctx context.Context, fi
 		}
 		return graphql.Null
 	}
-	res := resTmp.([]scheduling.TimePeriod)
+	res := resTmp.([]scheduling.TimeSpan)
 	rctx.Result = res
 	ctx = ec.Tracer.StartFieldChildExecution(ctx)
-	return ec.marshalNTimePeriod2ᚕgoᚗstevenxieᚗmeᚋapiᚋschedulingᚐTimePeriod(ctx, field.Selections, res)
+	return ec.marshalNTimeSpan2ᚕgoᚗstevenxieᚗmeᚋapiᚋschedulingᚐTimeSpan(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _Subscription_music(ctx context.Context, field graphql.CollectedField) (ret func() graphql.Marshaler) {
@@ -6112,7 +6158,7 @@ func (ec *executionContext) _Subscription_music(ctx context.Context, field graph
 	}
 }
 
-func (ec *executionContext) _TimePeriod_start(ctx context.Context, field graphql.CollectedField, obj *scheduling.TimePeriod) (ret graphql.Marshaler) {
+func (ec *executionContext) _TimeSpan_start(ctx context.Context, field graphql.CollectedField, obj *scheduling.TimeSpan) (ret graphql.Marshaler) {
 	ctx = ec.Tracer.StartFieldExecution(ctx, field)
 	defer func() {
 		if r := recover(); r != nil {
@@ -6122,7 +6168,7 @@ func (ec *executionContext) _TimePeriod_start(ctx context.Context, field graphql
 		ec.Tracer.EndFieldExecution(ctx)
 	}()
 	rctx := &graphql.ResolverContext{
-		Object:   "TimePeriod",
+		Object:   "TimeSpan",
 		Field:    field,
 		Args:     nil,
 		IsMethod: false,
@@ -6149,7 +6195,7 @@ func (ec *executionContext) _TimePeriod_start(ctx context.Context, field graphql
 	return ec.marshalNTime2timeᚐTime(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) _TimePeriod_end(ctx context.Context, field graphql.CollectedField, obj *scheduling.TimePeriod) (ret graphql.Marshaler) {
+func (ec *executionContext) _TimeSpan_end(ctx context.Context, field graphql.CollectedField, obj *scheduling.TimeSpan) (ret graphql.Marshaler) {
 	ctx = ec.Tracer.StartFieldExecution(ctx, field)
 	defer func() {
 		if r := recover(); r != nil {
@@ -6159,7 +6205,7 @@ func (ec *executionContext) _TimePeriod_end(ctx context.Context, field graphql.C
 		ec.Tracer.EndFieldExecution(ctx)
 	}()
 	rctx := &graphql.ResolverContext{
-		Object:   "TimePeriod",
+		Object:   "TimeSpan",
 		Field:    field,
 		Args:     nil,
 		IsMethod: false,
@@ -8539,6 +8585,11 @@ func (ec *executionContext) _LocationHistorySegment(ctx context.Context, sel ast
 			}
 		case "distance":
 			out.Values[i] = ec._LocationHistorySegment_distance(ctx, field, obj)
+		case "timeSpan":
+			out.Values[i] = ec._LocationHistorySegment_timeSpan(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
 		case "coordinates":
 			out.Values[i] = ec._LocationHistorySegment_coordinates(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
@@ -9368,7 +9419,7 @@ func (ec *executionContext) _SchedulingQuery(ctx context.Context, sel ast.Select
 		switch field.Name {
 		case "__typename":
 			out.Values[i] = graphql.MarshalString("SchedulingQuery")
-		case "busyPeriods":
+		case "busyTimes":
 			field := field
 			out.Concurrently(i, func() (res graphql.Marshaler) {
 				defer func() {
@@ -9376,7 +9427,7 @@ func (ec *executionContext) _SchedulingQuery(ctx context.Context, sel ast.Select
 						ec.Error(ctx, ec.Recover(ctx, r))
 					}
 				}()
-				res = ec._SchedulingQuery_busyPeriods(ctx, field, obj)
+				res = ec._SchedulingQuery_busyTimes(ctx, field, obj)
 				if res == graphql.Null {
 					atomic.AddUint32(&invalids, 1)
 				}
@@ -9413,24 +9464,24 @@ func (ec *executionContext) _Subscription(ctx context.Context, sel ast.Selection
 	}
 }
 
-var timePeriodImplementors = []string{"TimePeriod"}
+var timeSpanImplementors = []string{"TimeSpan"}
 
-func (ec *executionContext) _TimePeriod(ctx context.Context, sel ast.SelectionSet, obj *scheduling.TimePeriod) graphql.Marshaler {
-	fields := graphql.CollectFields(ec.RequestContext, sel, timePeriodImplementors)
+func (ec *executionContext) _TimeSpan(ctx context.Context, sel ast.SelectionSet, obj *scheduling.TimeSpan) graphql.Marshaler {
+	fields := graphql.CollectFields(ec.RequestContext, sel, timeSpanImplementors)
 
 	out := graphql.NewFieldSet(fields)
 	var invalids uint32
 	for i, field := range fields {
 		switch field.Name {
 		case "__typename":
-			out.Values[i] = graphql.MarshalString("TimePeriod")
+			out.Values[i] = graphql.MarshalString("TimeSpan")
 		case "start":
-			out.Values[i] = ec._TimePeriod_start(ctx, field, obj)
+			out.Values[i] = ec._TimeSpan_start(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
 				invalids++
 			}
 		case "end":
-			out.Values[i] = ec._TimePeriod_end(ctx, field, obj)
+			out.Values[i] = ec._TimeSpan_end(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
 				invalids++
 			}
@@ -10603,11 +10654,11 @@ func (ec *executionContext) marshalNTime2ᚕtimeᚐTime(ctx context.Context, sel
 	return ret
 }
 
-func (ec *executionContext) marshalNTimePeriod2goᚗstevenxieᚗmeᚋapiᚋschedulingᚐTimePeriod(ctx context.Context, sel ast.SelectionSet, v scheduling.TimePeriod) graphql.Marshaler {
-	return ec._TimePeriod(ctx, sel, &v)
+func (ec *executionContext) marshalNTimeSpan2goᚗstevenxieᚗmeᚋapiᚋschedulingᚐTimeSpan(ctx context.Context, sel ast.SelectionSet, v scheduling.TimeSpan) graphql.Marshaler {
+	return ec._TimeSpan(ctx, sel, &v)
 }
 
-func (ec *executionContext) marshalNTimePeriod2ᚕgoᚗstevenxieᚗmeᚋapiᚋschedulingᚐTimePeriod(ctx context.Context, sel ast.SelectionSet, v []scheduling.TimePeriod) graphql.Marshaler {
+func (ec *executionContext) marshalNTimeSpan2ᚕgoᚗstevenxieᚗmeᚋapiᚋschedulingᚐTimeSpan(ctx context.Context, sel ast.SelectionSet, v []scheduling.TimeSpan) graphql.Marshaler {
 	ret := make(graphql.Array, len(v))
 	var wg sync.WaitGroup
 	isLen1 := len(v) == 1
@@ -10631,7 +10682,7 @@ func (ec *executionContext) marshalNTimePeriod2ᚕgoᚗstevenxieᚗmeᚋapiᚋsc
 			if !isLen1 {
 				defer wg.Done()
 			}
-			ret[i] = ec.marshalNTimePeriod2goᚗstevenxieᚗmeᚋapiᚋschedulingᚐTimePeriod(ctx, sel, v[i])
+			ret[i] = ec.marshalNTimeSpan2goᚗstevenxieᚗmeᚋapiᚋschedulingᚐTimeSpan(ctx, sel, v[i])
 		}
 		if isLen1 {
 			f(i)

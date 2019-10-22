@@ -15,25 +15,25 @@ import (
 	"go.stevenxie.me/api/pkg/basic"
 )
 
-// NewHistoryService creates a HistoryService from a location.SegmentSource and
+// NewHistoryService creates a HistoryService from a location.Historian and
 // a geocode.Geocoder.
 func NewHistoryService(
-	src location.SegmentSource,
+	hist location.Historian,
 	geo geocode.Geocoder,
 	opts ...basic.Option,
 ) location.HistoryService {
 	cfg := basic.BuildConfig(opts...)
 	return &historyService{
-		src: src,
-		geo: geo,
-		log: logutil.AddComponent(cfg.Logger, (*historyService)(nil)),
+		hist: hist,
+		geo:  geo,
+		log:  logutil.AddComponent(cfg.Logger, (*historyService)(nil)),
 	}
 }
 
 type historyService struct {
-	src location.SegmentSource
-	geo geocode.Geocoder
-	log *logrus.Entry
+	hist location.Historian
+	geo  geocode.Geocoder
+	log  *logrus.Entry
 
 	mux sync.Mutex
 	loc *time.Location
@@ -51,7 +51,7 @@ func (svc *historyService) GetHistory(
 	})
 
 	log.Trace("Getting history segments from source...")
-	segs, err := svc.src.GetHistory(ctx, date)
+	segs, err := svc.hist.GetHistory(ctx, date)
 	if err != nil {
 		log.WithError(err).Error("Failed to get history segments from source.")
 	}

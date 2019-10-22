@@ -5,7 +5,7 @@ import (
 	"time"
 
 	"github.com/cockroachdb/errors"
-	calendar "google.golang.org/api/calendar/v3"
+	gcal "google.golang.org/api/calendar/v3"
 
 	"go.stevenxie.me/api/pkg/timeutil"
 	"go.stevenxie.me/api/scheduling"
@@ -13,39 +13,42 @@ import (
 
 const _timeLayout = time.RFC3339
 
-// NewBusySource creates a new scheduling.BusySource using a calendar.Service,
-// which determines availability information using the calendars specified by
-// calIDs.
-func NewBusySource(
-	calsvc *calendar.Service,
-	calIDs []string,
-) scheduling.BusySource {
-	return busySource{
-		calsvc: calsvc,
-		cids:   calIDs,
+// NewCalendar creates a new scheduling.Calendar using a calendar.Service,
+// which determines availability information using the Google calendars
+// specified by ids.
+func NewCalendar(
+	svc *gcal.Service,
+	ids []CalendarID,
+) scheduling.Calendar {
+	return calendar{
+		svc: svc,
+		ids: ids,
 	}
 }
 
-type busySource struct {
-	calsvc *calendar.Service
-	cids   []string
+// A CalendarID is a string.
+type CalendarID = string
+
+type calendar struct {
+	svc *gcal.Service
+	ids []CalendarID
 }
 
-var _ scheduling.BusySource = (*busySource)(nil)
+var _ scheduling.Calendar = (*calendar)(nil)
 
-func (svc busySource) RawBusyPeriods(
+func (cal calendar) RawBusyTimes(
 	ctx context.Context,
 	date time.Time,
-) ([]scheduling.TimePeriod, error) {
+) ([]scheduling.TimeSpan, error) {
 	// Determine request time zone.
 	tz := date.Location()
 
 	// Build Busy request.
-	var req calendar.FreeBusyRequest
+	var req gcal.FreeBusyRequest
 	{
-		req.Items = make([]*calendar.FreeBusyRequestItem, len(svc.cids))
-		for i, id := range svc.cids {
-			req.Items[i] = &calendar.FreeBusyRequestItem{Id: id}
+		req.Items = make([]*gcal.FreeBusyRequestItem, len(cal.ids))
+		for i, id := range cal.ids {
+			req.Items[i] = &gcal.FreeBusyRequestItem{Id: string(id)}
 		}
 
 		var (
@@ -58,13 +61,13 @@ func (svc busySource) RawBusyPeriods(
 	}
 
 	// Perform request.
-	res, err := svc.calsvc.Freebusy.Query(&req).Context(ctx).Do()
+	res, err := cal.svc.Freebusy.Query(&req).Context(ctx).Do()
 	if err != nil {
 		return nil, err
 	}
 
 	// Parse availabilities.
-	var periods []scheduling.TimePeriod
+	var periods []scheduling.TimeSpan
 	for _, cal := range res.Calendars {
 		// Catch errors in calendars response.
 		if len(cal.Errors) > 0 {
@@ -84,7 +87,7 @@ func (svc busySource) RawBusyPeriods(
 			if err != nil {
 				return nil, errors.Wrap(err, "gcal: parsing end time")
 			}
-			periods = append(periods, scheduling.TimePeriod{
+			periods = append(periods, scheduling.TimeSpan{
 				Start: start,
 				End:   end,
 			})
