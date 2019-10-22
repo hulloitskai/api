@@ -6,8 +6,11 @@ import (
 
 func convertHistorySegments(segs []location.HistorySegment) []HistorySegment {
 	segments := make([]HistorySegment, len(segs))
-	for i, seg := range segs {
-		s := HistorySegment{HistorySegment: &seg}
+	for i := range segs {
+		var (
+			seg = &segs[i]
+			s   = HistorySegment{HistorySegment: &segs[i]}
+		)
 		if a := seg.Address; a != "" {
 			s.Address = &a
 		}

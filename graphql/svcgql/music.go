@@ -108,5 +108,5 @@ func (res currentlyPlayingResolver) Progress(
 	_ context.Context,
 	cp *music.CurrentlyPlaying,
 ) (int, error) {
-	return int(cp.Progress.Microseconds()), nil
+	return int(cp.Progress.Milliseconds()), nil
 }

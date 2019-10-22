@@ -82,16 +82,22 @@ func (svc historian) GetHistory(
 		return nil, errors.Wrap(err, "gmaps: close response body")
 	}
 
-	results := make([]location.HistorySegment, len(data.Placemarks))
-	for i, pm := range data.Placemarks {
+	var (
+		pms  = data.Placemarks
+		segs = make([]location.HistorySegment, len(pms))
+	)
+	for i := range data.Placemarks {
 		var (
-			span = &pm.TimeSpan
-			seg  = &results[i]
+			pm   = &pms[i]
+			span = pm.TimeSpan
+			seg  = &segs[i]
 		)
+
+		// Create segment.
 		*seg = location.HistorySegment{
 			Place:       pm.Name,
 			Address:     pm.Address,
-			Description: strings.TrimSpace(pm.Description),
+			Description: strings.TrimSpace(pms[i].Description),
 			TimeSpan: scheduling.TimeSpan{
 				Start: span.Begin,
 				End:   span.End,
@@ -142,5 +148,5 @@ func (svc historian) GetHistory(
 		}
 	}
 
-	return results, nil
+	return segs, nil
 }

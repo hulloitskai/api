@@ -50,10 +50,10 @@ func (svc *historyService) GetHistory(
 		"date":            date,
 	})
 
-	log.Trace("Getting history segments from source...")
+	log.Trace("Getting history segments from historian...")
 	segs, err := svc.hist.GetHistory(ctx, date)
 	if err != nil {
-		log.WithError(err).Error("Failed to get history segments from source.")
+		log.WithError(err).Error("Failed to get history segments from historian.")
 	}
 	return segs, nil
 }

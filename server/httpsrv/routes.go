@@ -24,7 +24,10 @@ func (srv *Server) registerRoutes() error {
 	)
 
 	// Register metadata route.
-	e.GET("/", httputil.InfoHandler(FQN, internal.Version))
+	e.Match(
+		[]string{http.MethodGet, http.MethodHead},
+		"/", httputil.InfoHandler(FQN, internal.Version),
+	)
 
 	// Register GraphQL routes.
 	{

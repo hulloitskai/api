@@ -3,6 +3,8 @@ package svcgql
 import (
 	"context"
 
+	"go.stevenxie.me/api/music/musicgql"
+
 	gengql "github.com/99designs/gqlgen/graphql"
 
 	"go.stevenxie.me/api/graphql"
@@ -42,37 +44,17 @@ func (res subscriptionResolver) Music(ctx context.Context) (
 		src <-chan music.CurrentlyPlayingResult,
 		dst chan<- *music.CurrentlyPlaying,
 	) {
-		var prevState currentlyPlayingState
+		var prev *music.CurrentlyPlaying
 		for res := range src {
 			if res.HasError() {
 				gengql.AddError(ctx, res.Error)
 				continue
 			}
-
-			if curr := res.Current; curr != nil {
-				// Don't update if currently paused and previously paused.
-				if (curr.Playing == false) && (prevState == pausedState) {
-					goto State
-				}
-			} else if prevState == stoppedState {
-				// Don't update if currently nil and previously stopped.
-				goto State
+			curr := res.Current
+			if !musicgql.IsEqualsCurrentlyPlaying(prev, curr) {
+				dst <- curr
 			}
-
-			// Send update.
-			dst <- res.Current
-
-			// Update prevState.
-		State:
-			if curr := res.Current; curr != nil {
-				if curr.Playing {
-					prevState = playingState
-				} else {
-					prevState = pausedState
-				}
-			} else {
-				prevState = stoppedState
-			}
+			prev = curr
 		}
 		close(dst)
 	}(src, dst)

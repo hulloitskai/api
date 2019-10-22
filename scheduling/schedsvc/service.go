@@ -41,15 +41,15 @@ func (svc service) BusyTimes(
 		"date":            date,
 	}).WithContext(ctx)
 
-	log.Trace("Getting busy periods from source...")
+	log.Trace("Getting busy times from calendar...")
 	periods, err := svc.cal.RawBusyTimes(ctx, date)
 	if err != nil {
-		log.WithError(err).Error("Failed to load busy periods from source.")
+		log.WithError(err).Error("Failed to load busy times from calendar.")
 		return nil, err
 	}
 	log.
 		WithField("periods", periods).
-		Trace("Loaded busy periods from source.")
+		Trace("Loaded busy times from calendar.")
 
 	// Sort periods.
 	sort.Slice(periods, func(i, j int) bool {
@@ -57,6 +57,6 @@ func (svc service) BusyTimes(
 	})
 	log.
 		WithField("periods", periods).
-		Trace("Sorted busy periods by time.")
+		Trace("Sorted busy times by time.")
 	return periods, nil
 }
