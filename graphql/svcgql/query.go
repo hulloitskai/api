@@ -29,7 +29,7 @@ func newQueryResolver(svcs Services) graphql.QueryResolver {
 		locq:   locgql.NewQuery(svcs.Location, svcs.Auth),
 		authq:  authgql.NewQuery(svcs.Auth),
 		musicq: musicgql.NewQuery(svcs.Music),
-		schedq: schedgql.NewQuery(svcs.Scheduling),
+		schedq: schedgql.NewQuery(svcs.Scheduling, svcs.Auth),
 		assistq: assistgql.NewQuery(assistgql.QueryServices{
 			Transit: svcs.Transit,
 		}),

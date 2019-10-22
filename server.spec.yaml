@@ -36,7 +36,7 @@ scheduling:
 git:
   precacher:
     enabled: Bool      # default: "True"
-    interval: Duration # default: 1m
+    interval: Duration # default: 10m
     limit: Int?
 
 auth:

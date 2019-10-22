@@ -7,5 +7,5 @@ type TimeSpan {
 }
 
 type SchedulingQuery {
-  busyTimes(date: Time): [TimeSpan!]!
+  busyTimes(code: String, date: Time): [TimeSpan!]!
 }

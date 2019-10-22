@@ -254,7 +254,7 @@ type ComplexityRoot struct {
 	}
 
 	SchedulingQuery struct {
-		BusyTimes func(childComplexity int, date *time.Time) int
+		BusyTimes func(childComplexity int, code *string, date *time.Time) int
 	}
 
 	Subscription struct {
@@ -1154,7 +1154,7 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 			return 0, false
 		}
 
-		return e.complexity.SchedulingQuery.BusyTimes(childComplexity, args["date"].(*time.Time)), true
+		return e.complexity.SchedulingQuery.BusyTimes(childComplexity, args["code"].(*string), args["date"].(*time.Time)), true
 
 	case "Subscription.music":
 		if e.complexity.Subscription.Music == nil {
@@ -1730,7 +1730,7 @@ type TimeSpan {
 }
 
 type SchedulingQuery {
-  busyTimes(date: Time): [TimeSpan!]!
+  busyTimes(code: String, date: Time): [TimeSpan!]!
 }
 `},
 	&ast.Source{Name: "schema/transit.graphql", Input: `type TransitQuery {
@@ -1948,14 +1948,22 @@ func (ec *executionContext) field_Query_about_args(ctx context.Context, rawArgs 
 func (ec *executionContext) field_SchedulingQuery_busyTimes_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
 	var err error
 	args := map[string]interface{}{}
-	var arg0 *time.Time
-	if tmp, ok := rawArgs["date"]; ok {
-		arg0, err = ec.unmarshalOTime2ᚖtimeᚐTime(ctx, tmp)
+	var arg0 *string
+	if tmp, ok := rawArgs["code"]; ok {
+		arg0, err = ec.unmarshalOString2ᚖstring(ctx, tmp)
 		if err != nil {
 			return nil, err
 		}
 	}
-	args["date"] = arg0
+	args["code"] = arg0
+	var arg1 *time.Time
+	if tmp, ok := rawArgs["date"]; ok {
+		arg1, err = ec.unmarshalOTime2ᚖtimeᚐTime(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["date"] = arg1
 	return args, nil
 }
 
@@ -6097,7 +6105,7 @@ func (ec *executionContext) _SchedulingQuery_busyTimes(ctx context.Context, fiel
 	ctx = ec.Tracer.StartFieldResolverExecution(ctx, rctx)
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return obj.BusyTimes(ctx, args["date"].(*time.Time))
+		return obj.BusyTimes(ctx, args["code"].(*string), args["date"].(*time.Time))
 	})
 	if err != nil {
 		ec.Error(ctx, err)
