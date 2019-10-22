@@ -262,7 +262,11 @@ func run(*cli.Context) (err error) {
 			return errors.Wrap(err, "create Google calendar service")
 		}
 		source := gcal.NewCalendar(calsvc, cfg.Scheduling.GCal.CalendarIDs)
-		schedulingService = schedsvc.NewService(source, basic.WithLogger(log))
+		schedulingService = schedsvc.NewService(
+			source,
+			locationService,
+			basic.WithLogger(log),
+		)
 	}
 
 	var gitService git.Service

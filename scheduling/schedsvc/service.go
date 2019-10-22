@@ -5,6 +5,10 @@ import (
 	"sort"
 	"time"
 
+	"github.com/cockroachdb/errors"
+
+	"go.stevenxie.me/api/location"
+
 	"github.com/sirupsen/logrus"
 
 	"go.stevenxie.me/api/pkg/basic"
@@ -16,18 +20,21 @@ import (
 // NewService creates a new Service.
 func NewService(
 	cal scheduling.Calendar,
+	zones location.TimeZoneService,
 	opts ...basic.Option,
 ) scheduling.Service {
 	cfg := basic.BuildConfig(opts...)
 	return service{
-		cal: cal,
-		log: logutil.AddComponent(cfg.Logger, (*service)(nil)),
+		cal:   cal,
+		zones: zones,
+		log:   logutil.AddComponent(cfg.Logger, (*service)(nil)),
 	}
 }
 
 type service struct {
-	cal scheduling.Calendar
-	log *logrus.Entry
+	cal   scheduling.Calendar
+	zones location.TimeZoneService
+	log   *logrus.Entry
 }
 
 var _ scheduling.Service = (*service)(nil)
@@ -59,4 +66,18 @@ func (svc service) BusyTimes(
 		WithField("periods", periods).
 		Trace("Sorted busy times by time.")
 	return periods, nil
+}
+
+func (svc service) BusyTimesToday(ctx context.Context) ([]scheduling.TimeSpan, error) {
+	log := logutil.
+		WithMethod(svc.log, service.BusyTimesToday).
+		WithContext(ctx)
+
+	log.Trace("Getting current time zone...")
+	tz, err := svc.zones.CurrentTimeZone(ctx)
+	if err != nil {
+		log.WithError(err).Error("Failed to get current time zone.")
+		return nil, errors.Wrap(err, "schedsvc: get current time zone")
+	}
+	return svc.BusyTimes(ctx, time.Now().In(tz))
 }

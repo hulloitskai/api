@@ -22,9 +22,8 @@ func (q Query) BusyTimes(
 	ctx context.Context,
 	date *time.Time,
 ) ([]scheduling.TimeSpan, error) {
-	d := time.Now()
 	if date != nil {
-		d = (*date)
+		return q.svc.BusyTimes(ctx, *date)
 	}
-	return q.svc.BusyTimes(ctx, d)
+	return q.svc.BusyTimesToday(ctx)
 }

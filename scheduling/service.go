@@ -11,4 +11,6 @@ type Service interface {
 	// BusyTimes gets my busy times for the given date, sorted in ascending order
 	// by start time.
 	BusyTimes(ctx context.Context, date time.Time) ([]TimeSpan, error)
+
+	BusyTimesToday(ctx context.Context) ([]TimeSpan, error)
 }
