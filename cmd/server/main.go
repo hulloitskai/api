@@ -7,6 +7,8 @@ import (
 	"os"
 
 	"github.com/cockroachdb/errors"
+	"github.com/getsentry/sentry-go"
+	"github.com/sirupsen/logrus"
 	"github.com/urfave/cli"
 
 	"go.stevenxie.me/gopkg/cmdutil"
@@ -98,11 +100,19 @@ var flags struct {
 }
 
 func run(*cli.Context) (err error) {
-	// Init logger, and Raven client.
+	// Init logger, and Sentry client.
+	//
+	// TODO: Use Logrus hook that uses the sentry-go client.
 	var (
-		raven = cmdutil.NewRaven(cmdutil.WithRavenRelease(internal.Version))
-		log   = cmdutil.NewLogger(cmdutil.WithLogrusSentryHook(raven))
+		log    *logrus.Entry
+		sentry *sentry.Client
 	)
+	{
+		opt := cmdutil.WithSentryRelease(internal.Version)
+		raven := cmdutil.NewRaven(opt)
+		sentry = cmdutil.NewSentry(opt)
+		log = cmdutil.NewLogger(cmdutil.WithLogrusSentryHook(raven))
+	}
 
 	// Load and validate config.
 	cfg, err := config.Load()
@@ -354,6 +364,7 @@ func run(*cli.Context) (err error) {
 			Music: musicStreamer,
 		},
 		httpsrv.WithLogger(log),
+		httpsrv.WithSentry(sentry),
 	)
 	guillo.AddFinalizer(func() error {
 		var (

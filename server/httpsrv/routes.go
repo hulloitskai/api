@@ -49,18 +49,26 @@ func (srv *Server) registerRoutes() error {
 			),
 		})
 
-		e.Any("/graphql", echo.WrapHandler(handler.GraphQL(
-			exec,
+		// Configure GraphQL handler.
+		handlerOpts := []handler.Option{
 			handler.ErrorPresenter(gqlutil.PresentError),
-			handler.WebsocketKeepAliveDuration(10*time.Second),
+			handler.WebsocketKeepAliveDuration(10 * time.Second),
 			handler.WebsocketUpgrader(websocket.Upgrader{
 				// Allow access from all origins.
 				CheckOrigin:     func(*http.Request) bool { return true },
 				ReadBufferSize:  1024,
 				WriteBufferSize: 1024,
 			}),
-			// handler.ComplexityLimit(srv.complexityLimit),
-		)))
+		}
+		if s := srv.sentry; s != nil {
+			handlerOpts = append(
+				handlerOpts,
+				handler.RecoverFunc(gqlutil.SentryRecoverFunc(s, srv.log)),
+			)
+		}
+
+		// Add GraphQL and GraphiQL endpoints.
+		e.Any("/graphql", echo.WrapHandler(handler.GraphQL(exec, handlerOpts...)))
 		e.GET(
 			"/graphiql",
 			echo.WrapHandler(http.HandlerFunc(gqlutil.ServeGraphiQL("./graphql"))),

@@ -7,9 +7,12 @@ import (
 	"os"
 
 	"github.com/cockroachdb/errors"
+	sentry "github.com/getsentry/sentry-go"
 	echo "github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"
 	"github.com/sirupsen/logrus"
+
+	"go.stevenxie.me/gopkg/logutil"
 
 	"go.stevenxie.me/api/about"
 	"go.stevenxie.me/api/assist/transit"
@@ -19,7 +22,6 @@ import (
 	"go.stevenxie.me/api/music"
 	"go.stevenxie.me/api/productivity"
 	"go.stevenxie.me/api/scheduling"
-	"go.stevenxie.me/gopkg/logutil"
 )
 
 // NewServer creates a new Server.
@@ -31,6 +33,9 @@ func NewServer(svcs Services, strms Streamers, opts ...ServerOption) *Server {
 	for _, opt := range opts {
 		opt(&cfg)
 	}
+
+	// Configure logger.
+	log := logutil.AddComponent(cfg.Logger, (*Server)(nil))
 
 	// Configure Echo.
 	echo := echo.New()
@@ -50,8 +55,10 @@ func NewServer(svcs Services, strms Streamers, opts ...ServerOption) *Server {
 
 	// Create and configure server.
 	return &Server{
-		echo:            echo,
-		log:             logutil.AddComponent(cfg.Logger, (*Server)(nil)),
+		echo:   echo,
+		log:    log,
+		sentry: cfg.Sentry,
+
 		svcs:            svcs,
 		strms:           strms,
 		complexityLimit: cfg.ComplexityLimit,
@@ -63,6 +70,11 @@ func WithLogger(log *logrus.Entry) ServerOption {
 	return func(cfg *ServerConfig) { cfg.Logger = log }
 }
 
+// WithSentry configures a server to capture handler panics with rc.
+func WithSentry(c *sentry.Client) ServerOption {
+	return func(cfg *ServerConfig) { cfg.Sentry = c }
+}
+
 // WithComplexityLimit configures a Server to limit GraphQL queries by
 // complexity.
 func WithComplexityLimit(limit int) ServerOption {
@@ -72,8 +84,9 @@ func WithComplexityLimit(limit int) ServerOption {
 type (
 	// Server serves the accounts REST API.
 	Server struct {
-		echo *echo.Echo
-		log  *logrus.Entry
+		echo   *echo.Echo
+		log    *logrus.Entry
+		sentry *sentry.Client
 
 		svcs  Services
 		strms Streamers
@@ -101,6 +114,7 @@ type (
 	// An ServerConfig configures a Server.
 	ServerConfig struct {
 		Logger *logrus.Entry
+		Sentry *sentry.Client
 
 		// Complexity limit for GraphQL queries.
 		ComplexityLimit int

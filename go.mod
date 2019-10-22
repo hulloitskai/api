@@ -11,6 +11,7 @@ require (
 	github.com/cockroachdb/errors v1.2.3
 	github.com/cpuguy83/go-md2man/v2 v2.0.0 // indirect
 	github.com/dgraph-io/ristretto v0.0.0-20191010170704-2ba187ef9534
+	github.com/getsentry/sentry-go v0.3.0
 	github.com/go-ozzo/ozzo-validation v3.6.0+incompatible
 	github.com/gogo/protobuf v1.3.1 // indirect
 	github.com/golang/groupcache v0.0.0-20191002201903-404acd9df4cc // indirect
@@ -18,7 +19,6 @@ require (
 	github.com/google/go-github/v25 v25.1.3
 	github.com/gorilla/websocket v1.4.1
 	github.com/hashicorp/golang-lru v0.5.3 // indirect
-	github.com/k0kubun/colorstring v0.0.0-20150214042306-9440f1994b88 // indirect
 	github.com/k0kubun/pp v3.0.1+incompatible
 	github.com/kelseyhightower/envconfig v1.4.0
 	github.com/labstack/echo/v4 v4.1.11
@@ -35,7 +35,7 @@ require (
 	github.com/vektah/gqlparser v1.1.2
 	github.com/zmb3/spotify v0.0.0-20191010212056-e12fb981aacb
 	go.opencensus.io v0.22.1 // indirect
-	go.stevenxie.me/gopkg v0.4.0-b
+	go.stevenxie.me/gopkg v0.4.1-c
 	go.stevenxie.me/guillotine v0.1.5
 	golang.org/x/crypto v0.0.0-20191011191535-87dc89f01550 // indirect
 	golang.org/x/net v0.0.0-20191021144547-ec77196f6094 // indirect
