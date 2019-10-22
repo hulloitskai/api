@@ -145,7 +145,7 @@ func (ct *CachingTripper) RoundTrip(r *http.Request) (*http.Response, error) {
 
 			// Item is expired; remove it from cache.
 			log.Trace("Cache item expired; removing...")
-			ct.cache.Del(item)
+			ct.cache.Del(url)
 		}
 	}
 
