@@ -188,6 +188,18 @@ proto-lint:
 	 echo done && exit $$EXIT
 
 
+# Apollo:
+.PHONY: apollo-push
+
+GRAPHQL_URL ?= http://localhost:3000/graphql
+
+apollo-push: SHELL := /usr/bin/env bash
+apollo-push:
+	@echo "Pushing GraphQL schema to Apollo..." && \
+	 GLOBIGNORE=*.secret; source <(cat .env*) && \
+	 npx apollo service:push --endpoint="${GRAPHQL_URL}"
+
+
 # HACKS:
 # These targets are hacks that allow for Make targets to receive
 # pseudo-arguments.
