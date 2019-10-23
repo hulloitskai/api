@@ -1,112 +1,30 @@
 package svcgql
 
 import (
-	"context"
-
 	"go.stevenxie.me/api/graphql"
 	"go.stevenxie.me/api/music"
-	"go.stevenxie.me/gopkg/zero"
+	"go.stevenxie.me/api/music/musicgql"
 )
 
-func newMusicAlbumResolver(svc music.SourceService) graphql.MusicAlbumResolver {
-	return musicAlbumResolver{svc: svc}
-}
-
-type musicAlbumResolver struct {
-	svc music.SourceService
-}
-
-var _ graphql.MusicAlbumResolver = (*musicAlbumResolver)(nil)
-
-func (res musicAlbumResolver) Tracks(
-	ctx context.Context,
-	a *music.Album,
-	limit, offset *int,
-) ([]music.Track, error) {
-	return res.svc.GetAlbumTracks(
-		ctx,
-		a.ID,
-		func(cfg *music.PaginationConfig) {
-			if limit != nil {
-				cfg.Limit = *limit
-			}
-			if offset != nil {
-				cfg.Offset = *offset
-			}
-		},
-	)
-}
-
-func newMusicTrackResolver(svc music.SourceService) graphql.MusicTrackResolver {
-	return musicTrackResolver{svc: svc}
-}
-
-type musicTrackResolver struct {
-	svc music.SourceService
-}
-
-var _ graphql.MusicTrackResolver = (*musicTrackResolver)(nil)
-
-func (res musicTrackResolver) Album(
-	ctx context.Context,
-	t *music.Track,
-) (*music.Album, error) {
-	if t.Album == nil {
-		var err error
-		if t, err = res.svc.GetTrack(ctx, t.ID); err != nil {
-			return nil, err
-		}
+func newMusicResolvers(svc music.Service) *musicResolvers {
+	return &musicResolvers{
+		track:   musicgql.NewTrackResolver(svc),
+		album:   musicgql.NewAlbumResolver(svc),
+		artist:  musicgql.NewArtistResolver(svc),
+		current: musicgql.CurrentlyPlayingResolver{},
 	}
-	return t.Album, nil
 }
 
-func (res musicTrackResolver) Duration(
-	_ context.Context,
-	t *music.Track,
-) (int, error) {
-	return int(t.Duration.Milliseconds()), nil
+type musicResolvers struct {
+	track   musicgql.TrackResolver
+	album   musicgql.AlbumResolver
+	artist  musicgql.ArtistResolver
+	current musicgql.CurrentlyPlayingResolver
 }
 
-func newMusicArtistResolver(svc music.SourceService) graphql.MusicArtistResolver {
-	return musicArtistResolver{svc: svc}
-}
-
-type musicArtistResolver struct {
-	svc music.SourceService
-}
-
-var _ graphql.MusicArtistResolver = (*musicArtistResolver)(nil)
-
-func (res musicArtistResolver) Albums(
-	ctx context.Context,
-	t *music.Artist,
-	limit, offset *int,
-) ([]music.Album, error) {
-	return res.svc.GetArtistAlbums(
-		ctx,
-		t.ID,
-		func(cfg *music.PaginationConfig) {
-			if limit != nil {
-				cfg.Limit = *limit
-			}
-			if offset != nil {
-				cfg.Offset = *offset
-			}
-		},
-	)
-}
-
-func newCurrentlyPlayingMusicResolver() graphql.CurrentlyPlayingMusicResolver {
-	return currentlyPlayingResolver{}
-}
-
-type currentlyPlayingResolver zero.Struct
-
-var _ graphql.CurrentlyPlayingMusicResolver = (*currentlyPlayingResolver)(nil)
-
-func (res currentlyPlayingResolver) Progress(
-	_ context.Context,
-	cp *music.CurrentlyPlaying,
-) (int, error) {
-	return int(cp.Progress.Milliseconds()), nil
+func (res *musicResolvers) MusicTrack() graphql.MusicTrackResolver   { return res.track }
+func (res *musicResolvers) MusicAlbum() graphql.MusicAlbumResolver   { return res.album }
+func (res *musicResolvers) MusicArtist() graphql.MusicArtistResolver { return res.artist }
+func (res *musicResolvers) CurrentlyPlayingMusic() graphql.CurrentlyPlayingMusicResolver {
+	return res.current
 }

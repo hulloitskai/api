@@ -2,29 +2,24 @@ package svcgql
 
 import (
 	"context"
-	"strings"
-
-	"github.com/cockroachdb/errors"
 
 	"go.stevenxie.me/api/about"
+	"go.stevenxie.me/api/about/aboutgql"
 	"go.stevenxie.me/api/assist/assistgql"
-	"go.stevenxie.me/api/auth"
 	"go.stevenxie.me/api/auth/authgql"
-	"go.stevenxie.me/api/auth/authutil"
 	"go.stevenxie.me/api/git/gitgql"
 	"go.stevenxie.me/api/graphql"
 	"go.stevenxie.me/api/location/locgql"
 	"go.stevenxie.me/api/music/musicgql"
 	"go.stevenxie.me/api/productivity"
+	"go.stevenxie.me/api/productivity/prodgql"
 	"go.stevenxie.me/api/scheduling/schedgql"
 )
 
 func newQueryResolver(svcs Services) graphql.QueryResolver {
 	return queryResolver{
-		about: svcs.About,
-		prod:  svcs.Productivity,
-		auth:  svcs.Auth,
-
+		about:  aboutgql.NewQuery(svcs.About, svcs.Auth),
+		prod:   prodgql.NewQuery(svcs.Productivity),
 		gitq:   gitgql.NewQuery(svcs.Git),
 		locq:   locgql.NewQuery(svcs.Location, svcs.Auth),
 		authq:  authgql.NewQuery(svcs.Auth),
@@ -37,9 +32,8 @@ func newQueryResolver(svcs Services) graphql.QueryResolver {
 }
 
 type queryResolver struct {
-	about about.Service
-	prod  productivity.Service
-	auth  auth.Service
+	about aboutgql.Query
+	prod  prodgql.Query
 
 	gitq    gitgql.Query
 	locq    locgql.Query
@@ -55,25 +49,12 @@ func (qr queryResolver) About(
 	ctx context.Context,
 	code *string,
 ) (about.ContactInfo, error) {
-	if code != nil {
-		ok, err := qr.auth.HasPermission(
-			ctx,
-			strings.TrimSpace(*code), about.PermFull,
-		)
-		if err != nil {
-			return nil, errors.Wrap(err, "svcgql: checking permissions")
-		}
-		if !ok {
-			return nil, authutil.ErrAccessDenied
-		}
-		return qr.about.GetAbout(ctx)
-	}
-	return qr.about.GetMasked(ctx)
+	return qr.about.About(ctx, code)
 }
 
 func (qr queryResolver) Productivity(ctx context.Context) (
 	*productivity.Productivity, error) {
-	return qr.prod.CurrentProductivity(ctx)
+	return qr.prod.Productivity(ctx)
 }
 
 func (qr queryResolver) Git(context.Context) (*gitgql.Query, error) {

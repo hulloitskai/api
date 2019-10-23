@@ -1,23 +1,18 @@
-package svcgql
+package transgql
 
 import (
 	"context"
 	"fmt"
 
 	"go.stevenxie.me/api/assist/transit"
-	"go.stevenxie.me/api/graphql"
 	"go.stevenxie.me/gopkg/zero"
 )
 
-func newTransitDepartureResolver() graphql.TransitDepartureResolver {
-	return transitDepartureResolver{}
-}
+// A DepartureResolver resolves fields for a transit.Departure.
+type DepartureResolver zero.Struct
 
-type transitDepartureResolver zero.Struct
-
-var _ graphql.TransitDepartureResolver = (*transitDepartureResolver)(nil)
-
-func (res transitDepartureResolver) RelativeTimes(
+//revive:disable-line:exported
+func (DepartureResolver) RelativeTimes(
 	_ context.Context,
 	d *transit.Departure,
 ) ([]string, error) {

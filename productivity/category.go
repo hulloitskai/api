@@ -10,6 +10,11 @@ import (
 // A Category represents a degree of productivity.
 type Category uint8
 
+var (
+	_ json.Unmarshaler = (*Category)(nil)
+	_ json.Marshaler   = (*Category)(nil)
+)
+
 // The set of valid Categories.
 const (
 	_ Category = iota
@@ -49,7 +54,7 @@ func (c Category) String() string {
 // calculations.
 func (c Category) Weight() uint { return uint(c) - 1 }
 
-// MarshalJSON implements json.Marshaller for a Category.
+//revive:disable-line:exported
 func (c Category) MarshalJSON() ([]byte, error) {
 	return json.Marshal(struct {
 		ID     uint8  `json:"id"`
@@ -58,7 +63,7 @@ func (c Category) MarshalJSON() ([]byte, error) {
 	}{uint8(c), c.Name(), c.Weight()})
 }
 
-// UnmarshalJSON implements json.Unmarshaller for a Category.
+//revive:disable-line:exported
 func (c *Category) UnmarshalJSON(b []byte) error {
 	var data struct {
 		ID uint8 `json:"id"`

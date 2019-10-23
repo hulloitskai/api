@@ -1,8 +1,12 @@
 package svcgql
 
 import (
-	"go.stevenxie.me/api/about"
 	"go.stevenxie.me/api/assist/transit"
+	"go.stevenxie.me/api/assist/transit/transgql"
+
+	"go.stevenxie.me/api/about"
+	"go.stevenxie.me/api/about/aboutgql"
+
 	"go.stevenxie.me/api/auth"
 	"go.stevenxie.me/api/git"
 	"go.stevenxie.me/api/graphql"
@@ -19,17 +23,11 @@ func NewResolverRoot(svcs Services, strms Streamers) graphql.ResolverRoot {
 		mutation:     newMutationResolver(svcs),
 		subscription: newSubscriptionResolver(strms),
 
-		fullAbout: newFullAboutResolver(),
+		musicResolvers:        newMusicResolvers(svcs.Music),
+		productivityResolvers: productivityResolvers{},
 
-		currentlyPlayingMusic: newCurrentlyPlayingMusicResolver(),
-		musicAlbum:            newMusicAlbumResolver(svcs.Music),
-		musicTrack:            newMusicTrackResolver(svcs.Music),
-		musicArtist:           newMusicArtistResolver(svcs.Music),
-
-		productivity:       newProductivityResolver(),
-		productivityRecord: newProductivityRecordResolver(),
-
-		transitDeparture: newTransitDepartureResolver(),
+		fullAbout:        aboutgql.Resolver{},
+		transitDeparture: transgql.DepartureResolver{},
 	}
 }
 
@@ -39,16 +37,10 @@ type (
 		mutation     graphql.MutationResolver
 		subscription graphql.SubscriptionResolver
 
-		fullAbout graphql.FullAboutResolver
+		*musicResolvers
+		productivityResolvers
 
-		currentlyPlayingMusic graphql.CurrentlyPlayingMusicResolver
-		musicAlbum            graphql.MusicAlbumResolver
-		musicTrack            graphql.MusicTrackResolver
-		musicArtist           graphql.MusicArtistResolver
-
-		productivity       graphql.ProductivityResolver
-		productivityRecord graphql.ProductivityRecordResolver
-
+		fullAbout        graphql.FullAboutResolver
 		transitDeparture graphql.TransitDepartureResolver
 	}
 
@@ -85,30 +77,6 @@ func (root resolverRoot) Subscription() graphql.SubscriptionResolver {
 }
 func (root resolverRoot) FullAbout() graphql.FullAboutResolver {
 	return root.fullAbout
-}
-
-func (root resolverRoot) CurrentlyPlayingMusic() graphql.CurrentlyPlayingMusicResolver {
-	return root.currentlyPlayingMusic
-}
-
-func (root resolverRoot) MusicAlbum() graphql.MusicAlbumResolver {
-	return root.musicAlbum
-}
-
-func (root resolverRoot) MusicTrack() graphql.MusicTrackResolver {
-	return root.musicTrack
-}
-
-func (root resolverRoot) MusicArtist() graphql.MusicArtistResolver {
-	return root.musicArtist
-}
-
-func (root resolverRoot) Productivity() graphql.ProductivityResolver {
-	return root.productivity
-}
-
-func (root resolverRoot) ProductivityRecord() graphql.ProductivityRecordResolver {
-	return root.productivityRecord
 }
 
 func (root resolverRoot) TransitDeparture() graphql.TransitDepartureResolver {

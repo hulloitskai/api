@@ -43,7 +43,7 @@ func (ts *TimeSpan) After(up *TimeSpan) bool {
 	return false
 }
 
-// MarshalJSON implements a json.Marshaller for a Period.
+//revive:disable-line:exported
 func (ts *TimeSpan) MarshalJSON() ([]byte, error) {
 	var formatted = struct {
 		Start string `json:"start"`
