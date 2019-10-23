@@ -33,11 +33,11 @@ func (q Query) BusyTimes(
 	date *time.Time,
 ) ([]scheduling.TimeSpan, error) {
 	if date != nil {
-		// If date is before or after today, only allow access to users with
+		// Only allow access to busy times beyond ~today to users with
 		// scheduling.PermBusyAll.
 		var (
-			start = timeutil.DayStart(time.Now())
-			end   = start.AddDate(0, 0, 1)
+			start = timeutil.DayStart(time.Now()).AddDate(0, 0, -1)
+			end   = start.AddDate(0, 0, 2)
 		)
 		if date.Before(start) || date.After(end) {
 			if code == nil {
