@@ -20,14 +20,15 @@ import (
 	"go.stevenxie.me/api/location"
 )
 
-func (svc service) FindDepartures(
+// FindDepartures implements transit.Service.FindDepartures.
+func (svc *service) FindDepartures(
 	ctx context.Context,
 	routeQuery string,
 	coords location.Coordinates,
 	opts ...transit.FindDeparturesOption,
 ) ([]transit.NearbyDeparture, error) {
 	log := svc.log.WithFields(logrus.Fields{
-		logutil.MethodKey: name.OfMethod(service.FindDepartures),
+		logutil.MethodKey: name.OfMethod((*service).FindDepartures),
 		"route_query":     routeQuery,
 		"coordinates":     coords,
 	}).WithContext(ctx)
@@ -232,29 +233,41 @@ func (svc service) FindDepartures(
 
 	// Update with realtime departures times, if available.
 	if cfg.PreferRealtime {
-		log.Trace("Updating results with realtime data...")
+		log.
+			WithField("realtime_sources", svc.rts).
+			Trace("Updating results with realtime data...")
 		var modified bool
 		for i := range nds {
-			if nds[i].Realtime {
+			nd := &nds[i]
+			if nd.Realtime {
 				continue // departure already is realtime
 			}
-			modified = true
-
 			var (
-				tp  = nds[i].Transport
-				stn = nds[i].Station
+				tp = nd.Transport
+				op = tp.Operator
 			)
-			log := log.WithFields(logrus.Fields{
+			log := log.WithField("operator", op)
+			rts, ok := svc.rts[op.Code]
+			if !ok {
+				log.Debug("No registered transit.RealtimeSource for this operator.")
+				continue // operator not supported
+			}
+
+			stn := nd.Station
+			log = log.WithFields(logrus.Fields{
 				"direction": tp.Direction,
 				"station":   stn.Name,
 			})
 
 			log.Trace("Getting realtime departure...")
-			times, err := svc.rts.GetDepartureTimes(ctx, *tp, *stn)
+			times, err := rts.GetDepartureTimes(ctx, *tp, *stn)
 			if err != nil {
+				log := log.WithError(err)
 				if errors.Is(err, transit.ErrOperatorNotSupported) {
+					log.Warn("Incorrect transit.RealtimeSource for this operator.")
 					continue
 				}
+				log.Error("Failed to get realtime departure times.")
 				return nil, errors.Wrap(err, "transvc: get realtime departure times")
 			}
 			if len(times) == 0 {
@@ -263,9 +276,10 @@ func (svc service) FindDepartures(
 			}
 			log.WithField("times", times).Trace("Got realtime departures.")
 
-			nd := &nds[i]
+			// Modify transit.NearbyDeparture.
 			nd.Times = times
 			nd.Realtime = true
+			modified = true
 		}
 		if modified {
 			log.

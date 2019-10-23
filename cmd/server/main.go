@@ -176,17 +176,17 @@ func run(*cli.Context) (err error) {
 	var locationService location.Service
 	{
 		var (
-			geocoder       = heregeo.NewGeocoder(hereClient)
-			historian      = gmaps.NewHistorian(timelineClient)
-			historyService = locsvc.NewHistoryService(
-				historian, geocoder,
+			geoc    = heregeo.NewGeocoder(hereClient)
+			hist    = gmaps.NewHistorian(timelineClient)
+			histsvc = locsvc.NewHistoryService(
+				hist, geoc,
 				basic.WithLogger(log),
 			)
 		)
 
 		if cfg := cfg.Location.Precacher; cfg.Enabled {
 			historyPrecacher := locsvc.NewHistoryServicePrecacher(
-				historyService,
+				histsvc,
 				cfg.Interval,
 				basic.WithLogger(log),
 			)
@@ -194,7 +194,7 @@ func run(*cli.Context) (err error) {
 				historyPrecacher.Stop,
 				guillotine.WithPrefix("stopping location history service precacher"),
 			)
-			historyService = historyPrecacher
+			histsvc = historyPrecacher
 		}
 
 		geocodeLevel, err := geocode.ParseLevel(
@@ -204,7 +204,7 @@ func run(*cli.Context) (err error) {
 			return errors.Wrap(err, "parsing geocode level")
 		}
 		locationService = locsvc.NewService(
-			historyService, geocoder,
+			histsvc, geoc,
 			locsvc.WithLogger(log),
 			locsvc.WithRegionGeocodeLevel(geocodeLevel),
 		)
@@ -213,14 +213,14 @@ func run(*cli.Context) (err error) {
 	var aboutService about.Service
 	{
 		var (
-			gist   = cfg.About.Gist
-			source = aboutgh.NewStaticSource(
+			gist = cfg.About.Gist
+			src  = aboutgh.NewStaticSource(
 				githubClient.GitHub().Gists,
 				gist.ID, gist.File,
 			)
 		)
 		aboutService = aboutsvc.NewService(
-			source, locationService,
+			src, locationService,
 			basic.WithLogger(log),
 		)
 	}
@@ -228,24 +228,24 @@ func run(*cli.Context) (err error) {
 	var musicService music.Service
 	{
 		var (
-			source         = spotify.NewSource(spotifyClient)
-			sourceService  = musicsvc.NewSourceService(source, basic.WithLogger(log))
+			src            = spotify.NewSource(spotifyClient)
+			srcsvc         = musicsvc.NewSourceService(src, basic.WithLogger(log))
 			currentService = spotify.NewCurrentService(
 				spotifyClient,
 				basic.WithLogger(log),
 			)
 		)
 		var (
-			controller     = spotify.NewController(spotifyClient)
-			controlService = musicsvc.NewControlService(
-				controller,
+			ctrl    = spotify.NewController(spotifyClient)
+			ctrlsvc = musicsvc.NewControlService(
+				ctrl,
 				basic.WithLogger(log),
 			)
 		)
 		musicService = musicsvc.NewService(
-			sourceService,
+			srcsvc,
 			currentService,
-			controlService,
+			ctrlsvc,
 		)
 	}
 
@@ -271,9 +271,9 @@ func run(*cli.Context) (err error) {
 		if err != nil {
 			return errors.Wrap(err, "create Google calendar service")
 		}
-		source := gcal.NewCalendar(calsvc, cfg.Scheduling.GCal.CalendarIDs)
+		src := gcal.NewCalendar(calsvc, cfg.Scheduling.GCal.CalendarIDs)
 		schedulingService = schedsvc.NewService(
-			source,
+			src,
 			locationService,
 			basic.WithLogger(log),
 		)
@@ -281,8 +281,8 @@ func run(*cli.Context) (err error) {
 
 	var gitService git.Service
 	{
-		source := gitgh.NewSource(githubClient)
-		gitService = gitsvc.NewService(source, basic.WithLogger(log))
+		src := gitgh.NewSource(githubClient)
+		gitService = gitsvc.NewService(src, basic.WithLogger(log))
 
 		if cfg := cfg.Git.Precacher; cfg.Enabled {
 			precacher := gitsvc.NewServicePrecacher(
@@ -305,9 +305,9 @@ func run(*cli.Context) (err error) {
 
 	var productivityService productivity.Service
 	{
-		source := rescuetime.NewRecordSource(rtimeClient)
+		src := rescuetime.NewRecordSource(rtimeClient)
 		productivityService = prodsvc.NewService(
-			source,
+			src,
 			locationService,
 			basic.WithLogger(log),
 		)
@@ -331,19 +331,20 @@ func run(*cli.Context) (err error) {
 	var transitService transit.Service
 	{
 		var (
-			locator        = heretrans.NewLocator(hereClient)
-			locatorService = transvc.NewLocatorService(
-				locator,
+			loc    = heretrans.NewLocator(hereClient)
+			locsvc = transvc.NewLocatorService(
+				loc,
 				basic.WithLogger(log),
 			)
 		)
-		realtimeService, err := grt.NewRealtimeSource(grt.WithRealtimeLogger(log))
+		grt, err := grt.NewRealtimeSource(grt.WithRealtimeLogger(log))
 		if err != nil {
 			return errors.Wrap(err, "create grt.RealTimeSource")
 		}
 		transitService = transvc.NewService(
-			locatorService, realtimeService,
-			basic.WithLogger(log),
+			locsvc,
+			transvc.WithLogger(log),
+			transvc.WithRealtimeSource(grt, transit.OpCodeGRT),
 		)
 	}
 

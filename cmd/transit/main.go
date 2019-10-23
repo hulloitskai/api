@@ -70,16 +70,20 @@ func main() {
 		loc = transvc.NewLocatorService(locator, basic.WithLogger(log))
 	}
 
-	var rts transit.RealtimeSource
+	// Create service.
+	var svc transit.Service
 	{
-		var err error
-		rts, err = grt.NewRealtimeSource(grt.WithRealtimeLogger(log))
+		grt, err := grt.NewRealtimeSource(grt.WithRealtimeLogger(log))
 		if err != nil {
 			log.WithError(err).Fatal("Failed to create RealTimeSource.")
 		}
+		svc = transvc.NewService(
+			loc,
+			transvc.WithLogger(log),
+			transvc.WithRealtimeSource(grt, transit.OpCodeGRT),
+		)
 	}
 
-	svc := transvc.NewService(loc, rts, basic.WithLogger(log))
 	deps, err := svc.FindDepartures(
 		context.Background(),
 		os.Args[2],

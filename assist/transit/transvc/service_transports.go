@@ -14,13 +14,14 @@ import (
 	"go.stevenxie.me/api/location"
 )
 
-func (svc service) NearbyTransports(
+// NearbyTransports implements transit.Service.NearbyTransports.
+func (svc *service) NearbyTransports(
 	ctx context.Context,
 	coords location.Coordinates,
 	opts ...transit.NearbyTransportsOption,
 ) ([]transit.Transport, error) {
 	log := svc.log.WithFields(logrus.Fields{
-		logutil.MethodKey: name.OfMethod(service.NearbyTransports),
+		logutil.MethodKey: name.OfMethod((*service).NearbyTransports),
 		"coordinates":     coords,
 	}).WithContext(ctx)
 

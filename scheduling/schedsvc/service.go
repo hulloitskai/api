@@ -6,15 +6,14 @@ import (
 	"time"
 
 	"github.com/cockroachdb/errors"
-
-	"go.stevenxie.me/api/location"
-
 	"github.com/sirupsen/logrus"
 
-	"go.stevenxie.me/api/pkg/basic"
-	"go.stevenxie.me/api/scheduling"
 	"go.stevenxie.me/gopkg/logutil"
 	"go.stevenxie.me/gopkg/name"
+
+	"go.stevenxie.me/api/location"
+	"go.stevenxie.me/api/pkg/basic"
+	"go.stevenxie.me/api/scheduling"
 )
 
 // NewService creates a new Service.
