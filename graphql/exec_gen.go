@@ -52,12 +52,15 @@ type Config struct {
 }
 
 type ResolverRoot interface {
+	Address() AddressResolver
 	CurrentlyPlayingMusic() CurrentlyPlayingMusicResolver
 	FullAbout() FullAboutResolver
+	LocationHistorySegment() LocationHistorySegmentResolver
 	MusicAlbum() MusicAlbumResolver
 	MusicArtist() MusicArtistResolver
 	MusicTrack() MusicTrackResolver
 	Mutation() MutationResolver
+	Place() PlaceResolver
 	Productivity() ProductivityResolver
 	ProductivityRecord() ProductivityRecordResolver
 	Query() QueryResolver
@@ -303,12 +306,23 @@ type ComplexityRoot struct {
 	}
 }
 
+type AddressResolver interface {
+	District(ctx context.Context, obj *location.Address) (*string, error)
+
+	Street(ctx context.Context, obj *location.Address) (*string, error)
+	Number(ctx context.Context, obj *location.Address) (*string, error)
+}
 type CurrentlyPlayingMusicResolver interface {
 	Progress(ctx context.Context, obj *music.CurrentlyPlaying) (int, error)
 }
 type FullAboutResolver interface {
 	Birthday(ctx context.Context, obj *about.About) (string, error)
 	Age(ctx context.Context, obj *about.About) (string, error)
+}
+type LocationHistorySegmentResolver interface {
+	Address(ctx context.Context, obj *location.HistorySegment) (*string, error)
+
+	Distance(ctx context.Context, obj *location.HistorySegment) (*int, error)
 }
 type MusicAlbumResolver interface {
 	Tracks(ctx context.Context, obj *music.Album, limit *int, offset *int) ([]music.Track, error)
@@ -322,6 +336,9 @@ type MusicTrackResolver interface {
 }
 type MutationResolver interface {
 	Music(ctx context.Context, code string) (*musicgql.Mutation, error)
+}
+type PlaceResolver interface {
+	TimeZone(ctx context.Context, obj *location.Place) (*locgql.TimeZone, error)
 }
 type ProductivityResolver interface {
 	Score(ctx context.Context, obj *productivity.Productivity) (*int, error)
@@ -2071,7 +2088,7 @@ func (ec *executionContext) field___Type_fields_args(ctx context.Context, rawArg
 
 // region    **************************** field.gotpl *****************************
 
-func (ec *executionContext) _Address_label(ctx context.Context, field graphql.CollectedField, obj *locgql.Address) (ret graphql.Marshaler) {
+func (ec *executionContext) _Address_label(ctx context.Context, field graphql.CollectedField, obj *location.Address) (ret graphql.Marshaler) {
 	ctx = ec.Tracer.StartFieldExecution(ctx, field)
 	defer func() {
 		if r := recover(); r != nil {
@@ -2108,7 +2125,7 @@ func (ec *executionContext) _Address_label(ctx context.Context, field graphql.Co
 	return ec.marshalNString2string(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) _Address_country(ctx context.Context, field graphql.CollectedField, obj *locgql.Address) (ret graphql.Marshaler) {
+func (ec *executionContext) _Address_country(ctx context.Context, field graphql.CollectedField, obj *location.Address) (ret graphql.Marshaler) {
 	ctx = ec.Tracer.StartFieldExecution(ctx, field)
 	defer func() {
 		if r := recover(); r != nil {
@@ -2145,7 +2162,7 @@ func (ec *executionContext) _Address_country(ctx context.Context, field graphql.
 	return ec.marshalNString2string(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) _Address_state(ctx context.Context, field graphql.CollectedField, obj *locgql.Address) (ret graphql.Marshaler) {
+func (ec *executionContext) _Address_state(ctx context.Context, field graphql.CollectedField, obj *location.Address) (ret graphql.Marshaler) {
 	ctx = ec.Tracer.StartFieldExecution(ctx, field)
 	defer func() {
 		if r := recover(); r != nil {
@@ -2182,7 +2199,7 @@ func (ec *executionContext) _Address_state(ctx context.Context, field graphql.Co
 	return ec.marshalNString2string(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) _Address_county(ctx context.Context, field graphql.CollectedField, obj *locgql.Address) (ret graphql.Marshaler) {
+func (ec *executionContext) _Address_county(ctx context.Context, field graphql.CollectedField, obj *location.Address) (ret graphql.Marshaler) {
 	ctx = ec.Tracer.StartFieldExecution(ctx, field)
 	defer func() {
 		if r := recover(); r != nil {
@@ -2219,7 +2236,7 @@ func (ec *executionContext) _Address_county(ctx context.Context, field graphql.C
 	return ec.marshalNString2string(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) _Address_city(ctx context.Context, field graphql.CollectedField, obj *locgql.Address) (ret graphql.Marshaler) {
+func (ec *executionContext) _Address_city(ctx context.Context, field graphql.CollectedField, obj *location.Address) (ret graphql.Marshaler) {
 	ctx = ec.Tracer.StartFieldExecution(ctx, field)
 	defer func() {
 		if r := recover(); r != nil {
@@ -2256,7 +2273,7 @@ func (ec *executionContext) _Address_city(ctx context.Context, field graphql.Col
 	return ec.marshalNString2string(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) _Address_district(ctx context.Context, field graphql.CollectedField, obj *locgql.Address) (ret graphql.Marshaler) {
+func (ec *executionContext) _Address_district(ctx context.Context, field graphql.CollectedField, obj *location.Address) (ret graphql.Marshaler) {
 	ctx = ec.Tracer.StartFieldExecution(ctx, field)
 	defer func() {
 		if r := recover(); r != nil {
@@ -2269,13 +2286,13 @@ func (ec *executionContext) _Address_district(ctx context.Context, field graphql
 		Object:   "Address",
 		Field:    field,
 		Args:     nil,
-		IsMethod: false,
+		IsMethod: true,
 	}
 	ctx = graphql.WithResolverContext(ctx, rctx)
 	ctx = ec.Tracer.StartFieldResolverExecution(ctx, rctx)
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return obj.District, nil
+		return ec.resolvers.Address().District(rctx, obj)
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -2290,7 +2307,7 @@ func (ec *executionContext) _Address_district(ctx context.Context, field graphql
 	return ec.marshalOString2ᚖstring(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) _Address_postcode(ctx context.Context, field graphql.CollectedField, obj *locgql.Address) (ret graphql.Marshaler) {
+func (ec *executionContext) _Address_postcode(ctx context.Context, field graphql.CollectedField, obj *location.Address) (ret graphql.Marshaler) {
 	ctx = ec.Tracer.StartFieldExecution(ctx, field)
 	defer func() {
 		if r := recover(); r != nil {
@@ -2327,7 +2344,7 @@ func (ec *executionContext) _Address_postcode(ctx context.Context, field graphql
 	return ec.marshalNString2string(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) _Address_street(ctx context.Context, field graphql.CollectedField, obj *locgql.Address) (ret graphql.Marshaler) {
+func (ec *executionContext) _Address_street(ctx context.Context, field graphql.CollectedField, obj *location.Address) (ret graphql.Marshaler) {
 	ctx = ec.Tracer.StartFieldExecution(ctx, field)
 	defer func() {
 		if r := recover(); r != nil {
@@ -2340,13 +2357,13 @@ func (ec *executionContext) _Address_street(ctx context.Context, field graphql.C
 		Object:   "Address",
 		Field:    field,
 		Args:     nil,
-		IsMethod: false,
+		IsMethod: true,
 	}
 	ctx = graphql.WithResolverContext(ctx, rctx)
 	ctx = ec.Tracer.StartFieldResolverExecution(ctx, rctx)
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return obj.Street, nil
+		return ec.resolvers.Address().Street(rctx, obj)
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -2361,7 +2378,7 @@ func (ec *executionContext) _Address_street(ctx context.Context, field graphql.C
 	return ec.marshalOString2ᚖstring(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) _Address_number(ctx context.Context, field graphql.CollectedField, obj *locgql.Address) (ret graphql.Marshaler) {
+func (ec *executionContext) _Address_number(ctx context.Context, field graphql.CollectedField, obj *location.Address) (ret graphql.Marshaler) {
 	ctx = ec.Tracer.StartFieldExecution(ctx, field)
 	defer func() {
 		if r := recover(); r != nil {
@@ -2374,13 +2391,13 @@ func (ec *executionContext) _Address_number(ctx context.Context, field graphql.C
 		Object:   "Address",
 		Field:    field,
 		Args:     nil,
-		IsMethod: false,
+		IsMethod: true,
 	}
 	ctx = graphql.WithResolverContext(ctx, rctx)
 	ctx = ec.Tracer.StartFieldResolverExecution(ctx, rctx)
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return obj.Number, nil
+		return ec.resolvers.Address().Number(rctx, obj)
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -3541,7 +3558,7 @@ func (ec *executionContext) _GitRepo_url(ctx context.Context, field graphql.Coll
 	return ec.marshalNString2string(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) _LocationHistorySegment_place(ctx context.Context, field graphql.CollectedField, obj *locgql.HistorySegment) (ret graphql.Marshaler) {
+func (ec *executionContext) _LocationHistorySegment_place(ctx context.Context, field graphql.CollectedField, obj *location.HistorySegment) (ret graphql.Marshaler) {
 	ctx = ec.Tracer.StartFieldExecution(ctx, field)
 	defer func() {
 		if r := recover(); r != nil {
@@ -3578,7 +3595,7 @@ func (ec *executionContext) _LocationHistorySegment_place(ctx context.Context, f
 	return ec.marshalNString2string(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) _LocationHistorySegment_address(ctx context.Context, field graphql.CollectedField, obj *locgql.HistorySegment) (ret graphql.Marshaler) {
+func (ec *executionContext) _LocationHistorySegment_address(ctx context.Context, field graphql.CollectedField, obj *location.HistorySegment) (ret graphql.Marshaler) {
 	ctx = ec.Tracer.StartFieldExecution(ctx, field)
 	defer func() {
 		if r := recover(); r != nil {
@@ -3591,13 +3608,13 @@ func (ec *executionContext) _LocationHistorySegment_address(ctx context.Context,
 		Object:   "LocationHistorySegment",
 		Field:    field,
 		Args:     nil,
-		IsMethod: false,
+		IsMethod: true,
 	}
 	ctx = graphql.WithResolverContext(ctx, rctx)
 	ctx = ec.Tracer.StartFieldResolverExecution(ctx, rctx)
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return obj.Address, nil
+		return ec.resolvers.LocationHistorySegment().Address(rctx, obj)
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -3612,7 +3629,7 @@ func (ec *executionContext) _LocationHistorySegment_address(ctx context.Context,
 	return ec.marshalOString2ᚖstring(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) _LocationHistorySegment_description(ctx context.Context, field graphql.CollectedField, obj *locgql.HistorySegment) (ret graphql.Marshaler) {
+func (ec *executionContext) _LocationHistorySegment_description(ctx context.Context, field graphql.CollectedField, obj *location.HistorySegment) (ret graphql.Marshaler) {
 	ctx = ec.Tracer.StartFieldExecution(ctx, field)
 	defer func() {
 		if r := recover(); r != nil {
@@ -3649,7 +3666,7 @@ func (ec *executionContext) _LocationHistorySegment_description(ctx context.Cont
 	return ec.marshalNString2string(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) _LocationHistorySegment_category(ctx context.Context, field graphql.CollectedField, obj *locgql.HistorySegment) (ret graphql.Marshaler) {
+func (ec *executionContext) _LocationHistorySegment_category(ctx context.Context, field graphql.CollectedField, obj *location.HistorySegment) (ret graphql.Marshaler) {
 	ctx = ec.Tracer.StartFieldExecution(ctx, field)
 	defer func() {
 		if r := recover(); r != nil {
@@ -3686,7 +3703,7 @@ func (ec *executionContext) _LocationHistorySegment_category(ctx context.Context
 	return ec.marshalNString2string(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) _LocationHistorySegment_distance(ctx context.Context, field graphql.CollectedField, obj *locgql.HistorySegment) (ret graphql.Marshaler) {
+func (ec *executionContext) _LocationHistorySegment_distance(ctx context.Context, field graphql.CollectedField, obj *location.HistorySegment) (ret graphql.Marshaler) {
 	ctx = ec.Tracer.StartFieldExecution(ctx, field)
 	defer func() {
 		if r := recover(); r != nil {
@@ -3699,13 +3716,13 @@ func (ec *executionContext) _LocationHistorySegment_distance(ctx context.Context
 		Object:   "LocationHistorySegment",
 		Field:    field,
 		Args:     nil,
-		IsMethod: false,
+		IsMethod: true,
 	}
 	ctx = graphql.WithResolverContext(ctx, rctx)
 	ctx = ec.Tracer.StartFieldResolverExecution(ctx, rctx)
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return obj.Distance, nil
+		return ec.resolvers.LocationHistorySegment().Distance(rctx, obj)
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -3720,7 +3737,7 @@ func (ec *executionContext) _LocationHistorySegment_distance(ctx context.Context
 	return ec.marshalOInt2ᚖint(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) _LocationHistorySegment_timeSpan(ctx context.Context, field graphql.CollectedField, obj *locgql.HistorySegment) (ret graphql.Marshaler) {
+func (ec *executionContext) _LocationHistorySegment_timeSpan(ctx context.Context, field graphql.CollectedField, obj *location.HistorySegment) (ret graphql.Marshaler) {
 	ctx = ec.Tracer.StartFieldExecution(ctx, field)
 	defer func() {
 		if r := recover(); r != nil {
@@ -3757,7 +3774,7 @@ func (ec *executionContext) _LocationHistorySegment_timeSpan(ctx context.Context
 	return ec.marshalNTimeSpan2goᚗstevenxieᚗmeᚋapiᚋschedulingᚐTimeSpan(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) _LocationHistorySegment_coordinates(ctx context.Context, field graphql.CollectedField, obj *locgql.HistorySegment) (ret graphql.Marshaler) {
+func (ec *executionContext) _LocationHistorySegment_coordinates(ctx context.Context, field graphql.CollectedField, obj *location.HistorySegment) (ret graphql.Marshaler) {
 	ctx = ec.Tracer.StartFieldExecution(ctx, field)
 	defer func() {
 		if r := recover(); r != nil {
@@ -3825,10 +3842,10 @@ func (ec *executionContext) _LocationQuery_region(ctx context.Context, field gra
 		}
 		return graphql.Null
 	}
-	res := resTmp.(*locgql.Place)
+	res := resTmp.(*location.Place)
 	rctx.Result = res
 	ctx = ec.Tracer.StartFieldChildExecution(ctx)
-	return ec.marshalNPlace2ᚖgoᚗstevenxieᚗmeᚋapiᚋlocationᚋlocgqlᚐPlace(ctx, field.Selections, res)
+	return ec.marshalNPlace2ᚖgoᚗstevenxieᚗmeᚋapiᚋlocationᚐPlace(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _LocationQuery_history(ctx context.Context, field graphql.CollectedField, obj *locgql.Query) (ret graphql.Marshaler) {
@@ -3869,10 +3886,10 @@ func (ec *executionContext) _LocationQuery_history(ctx context.Context, field gr
 		}
 		return graphql.Null
 	}
-	res := resTmp.([]locgql.HistorySegment)
+	res := resTmp.([]location.HistorySegment)
 	rctx.Result = res
 	ctx = ec.Tracer.StartFieldChildExecution(ctx)
-	return ec.marshalNLocationHistorySegment2ᚕgoᚗstevenxieᚗmeᚋapiᚋlocationᚋlocgqlᚐHistorySegment(ctx, field.Selections, res)
+	return ec.marshalNLocationHistorySegment2ᚕgoᚗstevenxieᚗmeᚋapiᚋlocationᚐHistorySegment(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _MaskedAbout_name(ctx context.Context, field graphql.CollectedField, obj *about.Masked) (ret graphql.Marshaler) {
@@ -5192,7 +5209,7 @@ func (ec *executionContext) _NearbyTransitDeparture_distance(ctx context.Context
 	return ec.marshalNInt2int(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) _Place_id(ctx context.Context, field graphql.CollectedField, obj *locgql.Place) (ret graphql.Marshaler) {
+func (ec *executionContext) _Place_id(ctx context.Context, field graphql.CollectedField, obj *location.Place) (ret graphql.Marshaler) {
 	ctx = ec.Tracer.StartFieldExecution(ctx, field)
 	defer func() {
 		if r := recover(); r != nil {
@@ -5229,7 +5246,7 @@ func (ec *executionContext) _Place_id(ctx context.Context, field graphql.Collect
 	return ec.marshalNID2string(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) _Place_level(ctx context.Context, field graphql.CollectedField, obj *locgql.Place) (ret graphql.Marshaler) {
+func (ec *executionContext) _Place_level(ctx context.Context, field graphql.CollectedField, obj *location.Place) (ret graphql.Marshaler) {
 	ctx = ec.Tracer.StartFieldExecution(ctx, field)
 	defer func() {
 		if r := recover(); r != nil {
@@ -5266,7 +5283,7 @@ func (ec *executionContext) _Place_level(ctx context.Context, field graphql.Coll
 	return ec.marshalNString2string(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) _Place_type(ctx context.Context, field graphql.CollectedField, obj *locgql.Place) (ret graphql.Marshaler) {
+func (ec *executionContext) _Place_type(ctx context.Context, field graphql.CollectedField, obj *location.Place) (ret graphql.Marshaler) {
 	ctx = ec.Tracer.StartFieldExecution(ctx, field)
 	defer func() {
 		if r := recover(); r != nil {
@@ -5303,7 +5320,7 @@ func (ec *executionContext) _Place_type(ctx context.Context, field graphql.Colle
 	return ec.marshalNString2string(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) _Place_position(ctx context.Context, field graphql.CollectedField, obj *locgql.Place) (ret graphql.Marshaler) {
+func (ec *executionContext) _Place_position(ctx context.Context, field graphql.CollectedField, obj *location.Place) (ret graphql.Marshaler) {
 	ctx = ec.Tracer.StartFieldExecution(ctx, field)
 	defer func() {
 		if r := recover(); r != nil {
@@ -5340,7 +5357,7 @@ func (ec *executionContext) _Place_position(ctx context.Context, field graphql.C
 	return ec.marshalNCoordinates2goᚗstevenxieᚗmeᚋapiᚋlocationᚐCoordinates(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) _Place_timeZone(ctx context.Context, field graphql.CollectedField, obj *locgql.Place) (ret graphql.Marshaler) {
+func (ec *executionContext) _Place_timeZone(ctx context.Context, field graphql.CollectedField, obj *location.Place) (ret graphql.Marshaler) {
 	ctx = ec.Tracer.StartFieldExecution(ctx, field)
 	defer func() {
 		if r := recover(); r != nil {
@@ -5359,7 +5376,7 @@ func (ec *executionContext) _Place_timeZone(ctx context.Context, field graphql.C
 	ctx = ec.Tracer.StartFieldResolverExecution(ctx, rctx)
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return obj.TimeZone(), nil
+		return ec.resolvers.Place().TimeZone(rctx, obj)
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -5374,7 +5391,7 @@ func (ec *executionContext) _Place_timeZone(ctx context.Context, field graphql.C
 	return ec.marshalOTimeZone2ᚖgoᚗstevenxieᚗmeᚋapiᚋlocationᚋlocgqlᚐTimeZone(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) _Place_address(ctx context.Context, field graphql.CollectedField, obj *locgql.Place) (ret graphql.Marshaler) {
+func (ec *executionContext) _Place_address(ctx context.Context, field graphql.CollectedField, obj *location.Place) (ret graphql.Marshaler) {
 	ctx = ec.Tracer.StartFieldExecution(ctx, field)
 	defer func() {
 		if r := recover(); r != nil {
@@ -5405,13 +5422,13 @@ func (ec *executionContext) _Place_address(ctx context.Context, field graphql.Co
 		}
 		return graphql.Null
 	}
-	res := resTmp.(locgql.Address)
+	res := resTmp.(location.Address)
 	rctx.Result = res
 	ctx = ec.Tracer.StartFieldChildExecution(ctx)
-	return ec.marshalNAddress2goᚗstevenxieᚗmeᚋapiᚋlocationᚋlocgqlᚐAddress(ctx, field.Selections, res)
+	return ec.marshalNAddress2goᚗstevenxieᚗmeᚋapiᚋlocationᚐAddress(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) _Place_shape(ctx context.Context, field graphql.CollectedField, obj *locgql.Place) (ret graphql.Marshaler) {
+func (ec *executionContext) _Place_shape(ctx context.Context, field graphql.CollectedField, obj *location.Place) (ret graphql.Marshaler) {
 	ctx = ec.Tracer.StartFieldExecution(ctx, field)
 	defer func() {
 		if r := recover(); r != nil {
@@ -8124,7 +8141,7 @@ func (ec *executionContext) _PartialAbout(ctx context.Context, sel ast.Selection
 
 var addressImplementors = []string{"Address"}
 
-func (ec *executionContext) _Address(ctx context.Context, sel ast.SelectionSet, obj *locgql.Address) graphql.Marshaler {
+func (ec *executionContext) _Address(ctx context.Context, sel ast.SelectionSet, obj *location.Address) graphql.Marshaler {
 	fields := graphql.CollectFields(ec.RequestContext, sel, addressImplementors)
 
 	out := graphql.NewFieldSet(fields)
@@ -8136,39 +8153,66 @@ func (ec *executionContext) _Address(ctx context.Context, sel ast.SelectionSet, 
 		case "label":
 			out.Values[i] = ec._Address_label(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
-				invalids++
+				atomic.AddUint32(&invalids, 1)
 			}
 		case "country":
 			out.Values[i] = ec._Address_country(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
-				invalids++
+				atomic.AddUint32(&invalids, 1)
 			}
 		case "state":
 			out.Values[i] = ec._Address_state(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
-				invalids++
+				atomic.AddUint32(&invalids, 1)
 			}
 		case "county":
 			out.Values[i] = ec._Address_county(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
-				invalids++
+				atomic.AddUint32(&invalids, 1)
 			}
 		case "city":
 			out.Values[i] = ec._Address_city(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
-				invalids++
+				atomic.AddUint32(&invalids, 1)
 			}
 		case "district":
-			out.Values[i] = ec._Address_district(ctx, field, obj)
+			field := field
+			out.Concurrently(i, func() (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Address_district(ctx, field, obj)
+				return res
+			})
 		case "postcode":
 			out.Values[i] = ec._Address_postcode(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
-				invalids++
+				atomic.AddUint32(&invalids, 1)
 			}
 		case "street":
-			out.Values[i] = ec._Address_street(ctx, field, obj)
+			field := field
+			out.Concurrently(i, func() (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Address_street(ctx, field, obj)
+				return res
+			})
 		case "number":
-			out.Values[i] = ec._Address_number(ctx, field, obj)
+			field := field
+			out.Concurrently(i, func() (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Address_number(ctx, field, obj)
+				return res
+			})
 		default:
 			panic("unknown field " + strconv.Quote(field.Name))
 		}
@@ -8565,7 +8609,7 @@ func (ec *executionContext) _GitRepo(ctx context.Context, sel ast.SelectionSet, 
 
 var locationHistorySegmentImplementors = []string{"LocationHistorySegment"}
 
-func (ec *executionContext) _LocationHistorySegment(ctx context.Context, sel ast.SelectionSet, obj *locgql.HistorySegment) graphql.Marshaler {
+func (ec *executionContext) _LocationHistorySegment(ctx context.Context, sel ast.SelectionSet, obj *location.HistorySegment) graphql.Marshaler {
 	fields := graphql.CollectFields(ec.RequestContext, sel, locationHistorySegmentImplementors)
 
 	out := graphql.NewFieldSet(fields)
@@ -8577,31 +8621,49 @@ func (ec *executionContext) _LocationHistorySegment(ctx context.Context, sel ast
 		case "place":
 			out.Values[i] = ec._LocationHistorySegment_place(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
-				invalids++
+				atomic.AddUint32(&invalids, 1)
 			}
 		case "address":
-			out.Values[i] = ec._LocationHistorySegment_address(ctx, field, obj)
+			field := field
+			out.Concurrently(i, func() (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._LocationHistorySegment_address(ctx, field, obj)
+				return res
+			})
 		case "description":
 			out.Values[i] = ec._LocationHistorySegment_description(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
-				invalids++
+				atomic.AddUint32(&invalids, 1)
 			}
 		case "category":
 			out.Values[i] = ec._LocationHistorySegment_category(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
-				invalids++
+				atomic.AddUint32(&invalids, 1)
 			}
 		case "distance":
-			out.Values[i] = ec._LocationHistorySegment_distance(ctx, field, obj)
+			field := field
+			out.Concurrently(i, func() (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._LocationHistorySegment_distance(ctx, field, obj)
+				return res
+			})
 		case "timeSpan":
 			out.Values[i] = ec._LocationHistorySegment_timeSpan(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
-				invalids++
+				atomic.AddUint32(&invalids, 1)
 			}
 		case "coordinates":
 			out.Values[i] = ec._LocationHistorySegment_coordinates(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
-				invalids++
+				atomic.AddUint32(&invalids, 1)
 			}
 		default:
 			panic("unknown field " + strconv.Quote(field.Name))
@@ -9100,7 +9162,7 @@ func (ec *executionContext) _NearbyTransitDeparture(ctx context.Context, sel ast
 
 var placeImplementors = []string{"Place"}
 
-func (ec *executionContext) _Place(ctx context.Context, sel ast.SelectionSet, obj *locgql.Place) graphql.Marshaler {
+func (ec *executionContext) _Place(ctx context.Context, sel ast.SelectionSet, obj *location.Place) graphql.Marshaler {
 	fields := graphql.CollectFields(ec.RequestContext, sel, placeImplementors)
 
 	out := graphql.NewFieldSet(fields)
@@ -9112,29 +9174,38 @@ func (ec *executionContext) _Place(ctx context.Context, sel ast.SelectionSet, ob
 		case "id":
 			out.Values[i] = ec._Place_id(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
-				invalids++
+				atomic.AddUint32(&invalids, 1)
 			}
 		case "level":
 			out.Values[i] = ec._Place_level(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
-				invalids++
+				atomic.AddUint32(&invalids, 1)
 			}
 		case "type":
 			out.Values[i] = ec._Place_type(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
-				invalids++
+				atomic.AddUint32(&invalids, 1)
 			}
 		case "position":
 			out.Values[i] = ec._Place_position(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
-				invalids++
+				atomic.AddUint32(&invalids, 1)
 			}
 		case "timeZone":
-			out.Values[i] = ec._Place_timeZone(ctx, field, obj)
+			field := field
+			out.Concurrently(i, func() (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Place_timeZone(ctx, field, obj)
+				return res
+			})
 		case "address":
 			out.Values[i] = ec._Place_address(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
-				invalids++
+				atomic.AddUint32(&invalids, 1)
 			}
 		case "shape":
 			out.Values[i] = ec._Place_shape(ctx, field, obj)
@@ -9998,7 +10069,7 @@ func (ec *executionContext) ___Type(ctx context.Context, sel ast.SelectionSet, o
 
 // region    ***************************** type.gotpl *****************************
 
-func (ec *executionContext) marshalNAddress2goᚗstevenxieᚗmeᚋapiᚋlocationᚋlocgqlᚐAddress(ctx context.Context, sel ast.SelectionSet, v locgql.Address) graphql.Marshaler {
+func (ec *executionContext) marshalNAddress2goᚗstevenxieᚗmeᚋapiᚋlocationᚐAddress(ctx context.Context, sel ast.SelectionSet, v location.Address) graphql.Marshaler {
 	return ec._Address(ctx, sel, &v)
 }
 
@@ -10208,11 +10279,11 @@ func (ec *executionContext) marshalNInt2int(ctx context.Context, sel ast.Selecti
 	return res
 }
 
-func (ec *executionContext) marshalNLocationHistorySegment2goᚗstevenxieᚗmeᚋapiᚋlocationᚋlocgqlᚐHistorySegment(ctx context.Context, sel ast.SelectionSet, v locgql.HistorySegment) graphql.Marshaler {
+func (ec *executionContext) marshalNLocationHistorySegment2goᚗstevenxieᚗmeᚋapiᚋlocationᚐHistorySegment(ctx context.Context, sel ast.SelectionSet, v location.HistorySegment) graphql.Marshaler {
 	return ec._LocationHistorySegment(ctx, sel, &v)
 }
 
-func (ec *executionContext) marshalNLocationHistorySegment2ᚕgoᚗstevenxieᚗmeᚋapiᚋlocationᚋlocgqlᚐHistorySegment(ctx context.Context, sel ast.SelectionSet, v []locgql.HistorySegment) graphql.Marshaler {
+func (ec *executionContext) marshalNLocationHistorySegment2ᚕgoᚗstevenxieᚗmeᚋapiᚋlocationᚐHistorySegment(ctx context.Context, sel ast.SelectionSet, v []location.HistorySegment) graphql.Marshaler {
 	ret := make(graphql.Array, len(v))
 	var wg sync.WaitGroup
 	isLen1 := len(v) == 1
@@ -10236,7 +10307,7 @@ func (ec *executionContext) marshalNLocationHistorySegment2ᚕgoᚗstevenxieᚗm
 			if !isLen1 {
 				defer wg.Done()
 			}
-			ret[i] = ec.marshalNLocationHistorySegment2goᚗstevenxieᚗmeᚋapiᚋlocationᚋlocgqlᚐHistorySegment(ctx, sel, v[i])
+			ret[i] = ec.marshalNLocationHistorySegment2goᚗstevenxieᚗmeᚋapiᚋlocationᚐHistorySegment(ctx, sel, v[i])
 		}
 		if isLen1 {
 			f(i)
@@ -10479,11 +10550,11 @@ func (ec *executionContext) marshalNPartialAbout2goᚗstevenxieᚗmeᚋapiᚋabo
 	return ec._PartialAbout(ctx, sel, v)
 }
 
-func (ec *executionContext) marshalNPlace2goᚗstevenxieᚗmeᚋapiᚋlocationᚋlocgqlᚐPlace(ctx context.Context, sel ast.SelectionSet, v locgql.Place) graphql.Marshaler {
+func (ec *executionContext) marshalNPlace2goᚗstevenxieᚗmeᚋapiᚋlocationᚐPlace(ctx context.Context, sel ast.SelectionSet, v location.Place) graphql.Marshaler {
 	return ec._Place(ctx, sel, &v)
 }
 
-func (ec *executionContext) marshalNPlace2ᚖgoᚗstevenxieᚗmeᚋapiᚋlocationᚋlocgqlᚐPlace(ctx context.Context, sel ast.SelectionSet, v *locgql.Place) graphql.Marshaler {
+func (ec *executionContext) marshalNPlace2ᚖgoᚗstevenxieᚗmeᚋapiᚋlocationᚐPlace(ctx context.Context, sel ast.SelectionSet, v *location.Place) graphql.Marshaler {
 	if v == nil {
 		if !ec.HasError(graphql.GetResolverContext(ctx)) {
 			ec.Errorf(ctx, "must not be null")

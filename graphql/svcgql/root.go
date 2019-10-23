@@ -24,6 +24,7 @@ func NewResolverRoot(svcs Services, strms Streamers) graphql.ResolverRoot {
 		subscription: newSubscriptionResolver(strms),
 
 		musicResolvers:        newMusicResolvers(svcs.Music),
+		locationResolvers:     locationResolvers{},
 		productivityResolvers: productivityResolvers{},
 
 		fullAbout:        aboutgql.Resolver{},
@@ -38,6 +39,7 @@ type (
 		subscription graphql.SubscriptionResolver
 
 		*musicResolvers
+		locationResolvers
 		productivityResolvers
 
 		fullAbout        graphql.FullAboutResolver

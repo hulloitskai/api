@@ -53,13 +53,28 @@ models:
   LocationQuery:
     model: locgql.Query
   LocationHistorySegment:
-    model: locgql.HistorySegment
+    model: location.HistorySegment
+    fields:
+      address:
+        resolver: true
+      distance:
+        resolver: true
   Place:
-    model: locgql.Place
+    model: location.Place
+    fields:
+      timeZone:
+        resolver: true
   Coordinates:
     model: location.Coordinates
   Address:
-    model: locgql.Address
+    model: location.Address
+    fields:
+      district:
+        resolver: true
+      street:
+        resolver: true
+      number:
+        resolver: true
   TimeZone:
     model: locgql.TimeZone
 
