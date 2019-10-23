@@ -1,6 +1,7 @@
 package poll
 
 import (
+	"sync"
 	"time"
 
 	"github.com/sirupsen/logrus"
@@ -43,6 +44,8 @@ type (
 		ticker *time.Ticker
 		stop   chan zero.Struct
 		recv   chan result
+
+		destructor sync.Once
 	}
 
 	// PollerConfig configures a Poller.
@@ -62,8 +65,10 @@ type (
 // Stop stops the Poller; any values that have yet to be passed to the Actor
 // will be dropped.
 func (p *Poller) Stop() {
-	close(p.stop)
-	p.ticker.Stop()
+	p.destructor.Do(func() {
+		close(p.stop)
+		p.ticker.Stop()
+	})
 }
 
 func (p *Poller) run() {
