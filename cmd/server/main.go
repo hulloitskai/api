@@ -111,10 +111,10 @@ func run(*cli.Context) (err error) {
 		sentry *sentry.Client
 	)
 	{
-		opt := cmdutil.WithSentryRelease(internal.Version)
+		opt := cmdutil.WithRelease(internal.Version)
 		raven := cmdutil.NewRaven(opt)
 		sentry = cmdutil.NewSentry(opt)
-		log = cmdutil.NewLogger(cmdutil.WithLogrusSentryHook(raven))
+		log = cmdutil.NewLogger(cmdutil.WithSentryHook(raven))
 	}
 
 	// Load and validate config.
@@ -149,6 +149,8 @@ func run(*cli.Context) (err error) {
 			return errors.Wrap(err, "creating Jaeger tracer")
 		}
 		guillo.AddCloser(closer, guillotine.WithPrefix("closing Jaeger tracer"))
+	} else {
+		tracer = new(opentracing.NoopTracer)
 	}
 
 	// Connect to data sources.
@@ -195,8 +197,8 @@ func run(*cli.Context) (err error) {
 	var locationService location.Service
 	{
 		var (
-			geoc    = heregeo.NewGeocoder(hereClient)
-			hist    = gmaps.NewHistorian(timelineClient)
+			geoc    = heregeo.NewGeocoder(hereClient, basic.WithTracer(tracer))
+			hist    = gmaps.NewHistorian(timelineClient, basic.WithTracer(tracer))
 			histsvc = locsvc.NewHistoryService(
 				hist, geoc,
 				basic.WithLogger(log),
@@ -255,6 +257,7 @@ func run(*cli.Context) (err error) {
 			currentService = spotify.NewCurrentService(
 				spotifyClient,
 				basic.WithLogger(log),
+				basic.WithTracer(tracer),
 			)
 		)
 		var (
@@ -262,6 +265,7 @@ func run(*cli.Context) (err error) {
 			ctrlsvc = musicsvc.NewControlService(
 				ctrl,
 				basic.WithLogger(log),
+				basic.WithTracer(tracer),
 			)
 		)
 		musicService = musicsvc.NewService(
@@ -298,22 +302,27 @@ func run(*cli.Context) (err error) {
 			src,
 			locationService,
 			basic.WithLogger(log),
+			basic.WithTracer(tracer),
 		)
 	}
 
 	var gitService git.Service
 	{
 		src := gitgh.NewSource(githubClient)
-		gitService = gitsvc.NewService(src, basic.WithLogger(log))
+		gitService = gitsvc.NewService(
+			src,
+			basic.WithLogger(log),
+			basic.WithTracer(tracer),
+		)
 
-		if cfg := cfg.Git.Precacher; cfg.Enabled {
+		if pc := cfg.Git.Precacher; pc.Enabled {
 			precacher := gitsvc.NewServicePrecacher(
 				gitService,
-				cfg.Interval,
-				func(spCfg *gitsvc.ServicePrecacherConfig) {
-					spCfg.Logger = log
-					if l := cfg.Limit; l != nil {
-						spCfg.Limit = l
+				pc.Interval,
+				func(cfg *gitsvc.ServicePrecacherConfig) {
+					cfg.Logger = log
+					if l := pc.Limit; l != nil {
+						cfg.Limit = l
 					}
 				},
 			)
@@ -332,19 +341,21 @@ func run(*cli.Context) (err error) {
 			src,
 			locationService,
 			basic.WithLogger(log),
+			basic.WithTracer(tracer),
 		)
 	}
 
 	var authService auth.Service
 	{
-		atCfg := cfg.Auth.Airtable
+		at := cfg.Auth.Airtable
 		authService = airtable.NewService(
 			airtableClient,
-			atCfg.Codes.Selector,
-			func(svcCfg *airtable.ServiceConfig) {
-				if access := atCfg.AccessRecords; access.Enabled {
-					svcCfg.AccessSelector = &access.Selector
-					svcCfg.Logger = log
+			at.Codes.Selector,
+			airtable.WithLogger(log),
+			airtable.WithTracer(tracer),
+			func(cfg *airtable.ServiceConfig) {
+				if access := at.AccessRecords; access.Enabled {
+					cfg.AccessSelector = &access.Selector
 				}
 			},
 		)

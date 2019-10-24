@@ -10,20 +10,26 @@ import (
 	"time"
 
 	"github.com/cockroachdb/errors"
+	"github.com/opentracing/opentracing-go"
 	"go.stevenxie.me/api/location"
+	"go.stevenxie.me/api/pkg/basic"
 	"go.stevenxie.me/api/scheduling"
+	"go.stevenxie.me/gopkg/name"
 )
 
 // NewHistorian creates a new location.Historian that can load
 // location history from Google Maps.
-func NewHistorian(client TimelineClient) location.Historian {
+func NewHistorian(client TimelineClient, opts ...basic.Option) location.Historian {
+	cfg := basic.BuildConfig(opts...)
 	return historian{
 		client: client,
+		tracer: cfg.Tracer,
 	}
 }
 
 type historian struct {
 	client TimelineClient
+	tracer opentracing.Tracer
 }
 
 var _ location.Historian = (*historian)(nil)
@@ -34,6 +40,12 @@ func (svc historian) GetHistory(
 	ctx context.Context,
 	date time.Time,
 ) ([]location.HistorySegment, error) {
+	span, ctx := opentracing.StartSpanFromContextWithTracer(
+		ctx, svc.tracer,
+		name.OfFunc(historian.GetHistory),
+	)
+	defer span.Finish()
+
 	// Derive URL.
 	year, month, day := date.Date()
 	month--

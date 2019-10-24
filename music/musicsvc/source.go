@@ -3,6 +3,7 @@ package musicsvc
 import (
 	"context"
 
+	"github.com/opentracing/opentracing-go"
 	"github.com/sirupsen/logrus"
 	"go.stevenxie.me/api/music"
 	"go.stevenxie.me/api/pkg/basic"
@@ -17,14 +18,16 @@ func NewSourceService(
 ) music.SourceService {
 	cfg := basic.BuildConfig(opts...)
 	return sourceService{
-		src: src,
-		log: logutil.AddComponent(cfg.Logger, (*sourceService)(nil)),
+		src:    src,
+		log:    logutil.AddComponent(cfg.Logger, (*sourceService)(nil)),
+		tracer: cfg.Tracer,
 	}
 }
 
 type sourceService struct {
-	src music.Source
-	log *logrus.Entry
+	src    music.Source
+	log    *logrus.Entry
+	tracer opentracing.Tracer
 }
 
 var _ music.SourceService = (*sourceService)(nil)
@@ -35,6 +38,12 @@ func (svc sourceService) GetTrack(
 	ctx context.Context,
 	id string,
 ) (*music.Track, error) {
+	span, ctx := opentracing.StartSpanFromContextWithTracer(
+		ctx, svc.tracer,
+		name.OfFunc(sourceService.GetTrack),
+	)
+	defer span.Finish()
+
 	log := svc.log.WithFields(logrus.Fields{
 		logutil.MethodKey: name.OfMethod(sourceService.GetTrack),
 		"id":              id,
@@ -56,6 +65,12 @@ func (svc sourceService) GetAlbumTracks(
 	id string,
 	opts ...music.PaginationOption,
 ) ([]music.Track, error) {
+	span, ctx := opentracing.StartSpanFromContextWithTracer(
+		ctx, svc.tracer,
+		name.OfFunc(sourceService.GetAlbumTracks),
+	)
+	defer span.Finish()
+
 	cfg := music.PaginationConfig{
 		Limit:  _defaultLimit,
 		Offset: 0,
@@ -87,6 +102,12 @@ func (svc sourceService) GetArtistAlbums(
 	id string,
 	opts ...music.PaginationOption,
 ) ([]music.Album, error) {
+	span, ctx := opentracing.StartSpanFromContextWithTracer(
+		ctx, svc.tracer,
+		name.OfFunc(sourceService.GetArtistAlbums),
+	)
+	defer span.Finish()
+
 	cfg := music.PaginationConfig{
 		Limit:  _defaultLimit,
 		Offset: 0,

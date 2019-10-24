@@ -124,7 +124,7 @@ go-run:
 go-build:
 	@$(__GOENV) && \
 	 echo "Building with 'go build'..." && \
-	 go build $(GOBUILDFLAGS) -o $(GOBUILDDIR)/$(__GOCMDNAME) \
+	 go build $(GOBUILDFLAGS) -o "$(GOBUILDDIR)/$(__GOCMDNAME)" \
 	   $(__GOCMD) $(__GOARGS) && \
 	 echo done
 go-clean:

@@ -1,6 +1,8 @@
 package transvc
 
 import (
+	"time"
+
 	"github.com/opentracing/opentracing-go"
 	"github.com/sirupsen/logrus"
 
@@ -14,16 +16,20 @@ func NewService(
 	opts ...ServiceOption,
 ) transit.Service {
 	cfg := ServiceConfig{
-		Logger:          logutil.NoopEntry(),
-		Tracer:          new(opentracing.NoopTracer),
-		RealtimeSources: make(map[string]transit.RealtimeSource),
+		Logger:                  logutil.NoopEntry(),
+		Tracer:                  new(opentracing.NoopTracer),
+		RealtimeSources:         make(map[string]transit.RealtimeSource),
+		MaxRealtimeDepartureGap: 3 * time.Hour,
 	}
 	for _, opt := range opts {
 		opt(&cfg)
 	}
 	return &service{
-		loc:    loc,
-		rts:    cfg.RealtimeSources,
+		loc: loc,
+		rts: cfg.RealtimeSources,
+
+		maxRTDepGap: cfg.MaxRealtimeDepartureGap,
+
 		log:    logutil.AddComponent(cfg.Logger, (*service)(nil)),
 		tracer: cfg.Tracer,
 	}
@@ -57,6 +63,8 @@ type (
 		loc transit.LocatorService
 		rts map[string]transit.RealtimeSource // map of op codes to sources
 
+		maxRTDepGap time.Duration
+
 		log    *logrus.Entry
 		tracer opentracing.Tracer
 	}
@@ -66,8 +74,12 @@ type (
 		Logger *logrus.Entry
 		Tracer opentracing.Tracer
 
-		// RealtimeSources is a map of operator codes to real-time data sources.
+		// A map of operator codes to real-time data sources.
 		RealtimeSources map[string]transit.RealtimeSource
+
+		// The largest departure time for which real-time data will be requested
+		// for.
+		MaxRealtimeDepartureGap time.Duration
 	}
 
 	// A ServiceOption modifies a ServiceConfig.

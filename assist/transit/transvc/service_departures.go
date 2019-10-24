@@ -6,6 +6,7 @@ import (
 	"regexp"
 	"sort"
 	"strings"
+	"time"
 
 	"github.com/cockroachdb/errors"
 	"github.com/lithammer/fuzzysearch/fuzzy"
@@ -243,11 +244,22 @@ func (svc *service) FindDepartures(
 		log.
 			WithField("realtime_sources", svc.rts).
 			Trace("Updating results with realtime data...")
-		var modified bool
+		var (
+			now      = time.Now()
+			modified bool
+		)
 		for i := range nds {
 			nd := &nds[i]
 			if nd.Realtime {
 				continue // departure already is realtime
+			}
+			if len(nd.Times) > 0 {
+				if nd.Times[0].Sub(now) < svc.maxRTDepGap {
+					log.WithFields(logrus.Fields{
+						"departure_times":   nd.Times,
+						"max_departure_gap": svc.maxRTDepGap,
+					}).Debug("Departure times too distanct; skipping realtime update.")
+				}
 			}
 			var (
 				tp = nd.Transport

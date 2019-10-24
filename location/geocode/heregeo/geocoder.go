@@ -11,20 +11,26 @@ import (
 	"time"
 
 	"github.com/cockroachdb/errors"
+	"github.com/opentracing/opentracing-go"
 	"go.stevenxie.me/api/location"
 	"go.stevenxie.me/api/location/geocode"
+	"go.stevenxie.me/api/pkg/basic"
 	"go.stevenxie.me/api/pkg/here"
+	"go.stevenxie.me/gopkg/name"
 )
 
 // NewGeocoder creates a new geocode.Geocoder.
-func NewGeocoder(c here.Client) geocode.Geocoder {
+func NewGeocoder(c here.Client, opts ...basic.Option) geocode.Geocoder {
+	cfg := basic.BuildConfig(opts...)
 	return geocoder{
 		client: c,
+		tracer: cfg.Tracer,
 	}
 }
 
 type geocoder struct {
 	client here.Client
+	tracer opentracing.Tracer
 }
 
 var _ geocode.Geocoder = (*geocoder)(nil)
@@ -34,6 +40,12 @@ func (g geocoder) ReverseGeocode(
 	coord location.Coordinates,
 	opts ...geocode.ReverseGeocodeOption,
 ) ([]geocode.ReverseGeocodeResult, error) {
+	span, ctx := opentracing.StartSpanFromContextWithTracer(
+		ctx, g.tracer,
+		name.OfFunc(geocoder.ReverseGeocode),
+	)
+	defer span.Finish()
+
 	// Build and validate config.
 	var cfg geocode.ReverseGeocodeConfig
 	for _, opt := range opts {

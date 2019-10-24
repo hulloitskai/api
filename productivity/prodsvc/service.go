@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"github.com/cockroachdb/errors"
+	"github.com/opentracing/opentracing-go"
 	"github.com/sirupsen/logrus"
 	"go.stevenxie.me/gopkg/logutil"
 	"go.stevenxie.me/gopkg/name"
@@ -27,13 +28,16 @@ func NewService(
 		records: records,
 		zones:   zones,
 		log:     logutil.AddComponent(cfg.Logger, (*service)(nil)),
+		tracer:  cfg.Tracer,
 	}
 }
 
 type service struct {
 	records productivity.RecordSource
 	zones   location.TimeZoneService
-	log     *logrus.Entry
+
+	log    *logrus.Entry
+	tracer opentracing.Tracer
 }
 
 var _ productivity.Service = (*service)(nil)
@@ -42,6 +46,12 @@ func (svc service) GetProductivity(
 	ctx context.Context,
 	date time.Time,
 ) (*productivity.Productivity, error) {
+	span, ctx := opentracing.StartSpanFromContextWithTracer(
+		ctx, svc.tracer,
+		name.OfFunc(service.GetProductivity),
+	)
+	defer span.Finish()
+
 	log := svc.log.WithFields(logrus.Fields{
 		logutil.MethodKey: name.OfMethod(service.GetProductivity),
 		"date":            date,
@@ -94,6 +104,12 @@ func (svc service) GetProductivity(
 
 func (svc service) CurrentProductivity(ctx context.Context) (
 	*productivity.Productivity, error) {
+	span, ctx := opentracing.StartSpanFromContextWithTracer(
+		ctx, svc.tracer,
+		name.OfFunc(service.CurrentProductivity),
+	)
+	defer span.Finish()
+
 	log := logutil.
 		WithMethod(svc.log, service.CurrentProductivity).
 		WithContext(ctx)

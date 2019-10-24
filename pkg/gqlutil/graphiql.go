@@ -13,7 +13,7 @@ const _giqlVersion = "0.11.11"
 func ServeGraphiQL(endpoint string) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		if err := func() error {
-			t, err := template.New("GraphiQL").Parse(giqlTemplate)
+			t, err := template.New("GraphiQL").Parse(_giqlTemplate)
 			if err != nil {
 				return errors.Wrap(err, "parsing template")
 			}
@@ -22,7 +22,7 @@ func ServeGraphiQL(endpoint string) http.HandlerFunc {
 			ps := r.URL.Query()
 			query := ps.Get("query")
 			if query == "" {
-				query = defaultQuery
+				query = _defaultQuery
 			}
 
 			d := giqlData{
@@ -51,7 +51,7 @@ type giqlData struct {
 	OperationName   string
 }
 
-const giqlTemplate = `
+const _giqlTemplate = `
 <!DOCTYPE html>
 <html>
 <head>
@@ -171,7 +171,7 @@ const giqlTemplate = `
 </html>
 `
 
-const defaultQuery = `# Welcome to GraphiQL
+const _defaultQuery = `# Welcome to GraphiQL
 #
 # GraphiQL is an in-browser tool for writing, validating, and
 # testing GraphQL queries.

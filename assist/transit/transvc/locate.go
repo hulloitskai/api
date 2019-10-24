@@ -39,16 +39,16 @@ func (svc locatorService) NearbyDepartures(
 	pos location.Coordinates,
 	opts ...transit.NearbyDeparturesOption,
 ) ([]transit.NearbyDeparture, error) {
-	log := svc.log.WithFields(logrus.Fields{
-		logutil.MethodKey: name.OfMethod(svc.NearbyDepartures),
-		"position":        pos,
-	})
-
 	span, ctx := opentracing.StartSpanFromContextWithTracer(
 		ctx, svc.tracer,
 		name.OfFunc(locatorService.NearbyDepartures),
 	)
 	defer span.Finish()
+
+	log := svc.log.WithFields(logrus.Fields{
+		logutil.MethodKey: name.OfMethod(svc.NearbyDepartures),
+		"position":        pos,
+	})
 
 	// Derive config, add log fields.
 	var cfg transit.NearbyDeparturesConfig

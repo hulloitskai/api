@@ -7,15 +7,15 @@ import (
 )
 
 const (
-	googleURL    = "https://google.com"
-	cookieDomain = ".google.com"
-	cookiePath   = "/"
+	_googleURL    = "https://google.com"
+	_cookieDomain = ".google.com"
+	_cookiePath   = "/"
 )
 
 // cookiesFromMap builds and fills a cookiejar.Jar with the name-value pairs
 // of cookie data in m.
 func cookiesFromMap(m map[string]string) (*cookiejar.Jar, error) {
-	url, err := url.Parse(googleURL)
+	url, err := url.Parse(_googleURL)
 	if err != nil {
 		panic(err)
 	}
@@ -30,8 +30,8 @@ func cookiesFromMap(m map[string]string) (*cookiejar.Jar, error) {
 		cookies = append(cookies, &http.Cookie{
 			Name:   k,
 			Value:  v,
-			Domain: cookieDomain,
-			Path:   cookiePath,
+			Domain: _cookieDomain,
+			Path:   _cookiePath,
 			Secure: true,
 		})
 	}

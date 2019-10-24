@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"github.com/cockroachdb/errors"
+	"github.com/opentracing/opentracing-go"
 	"github.com/sirupsen/logrus"
 
 	"go.stevenxie.me/gopkg/logutil"
@@ -24,16 +25,19 @@ func NewService(
 ) scheduling.Service {
 	cfg := basic.BuildConfig(opts...)
 	return service{
-		cal:   cal,
-		zones: zones,
-		log:   logutil.AddComponent(cfg.Logger, (*service)(nil)),
+		cal:    cal,
+		zones:  zones,
+		log:    logutil.AddComponent(cfg.Logger, (*service)(nil)),
+		tracer: cfg.Tracer,
 	}
 }
 
 type service struct {
 	cal   scheduling.Calendar
 	zones location.TimeZoneService
-	log   *logrus.Entry
+
+	log    *logrus.Entry
+	tracer opentracing.Tracer
 }
 
 var _ scheduling.Service = (*service)(nil)
@@ -42,6 +46,12 @@ func (svc service) BusyTimes(
 	ctx context.Context,
 	date time.Time,
 ) ([]scheduling.TimeSpan, error) {
+	span, ctx := opentracing.StartSpanFromContextWithTracer(
+		ctx, svc.tracer,
+		name.OfFunc(service.BusyTimes),
+	)
+	defer span.Finish()
+
 	log := svc.log.WithFields(logrus.Fields{
 		logutil.MethodKey: name.OfMethod(service.BusyTimes),
 		"date":            date,
@@ -68,6 +78,12 @@ func (svc service) BusyTimes(
 }
 
 func (svc service) BusyTimesToday(ctx context.Context) ([]scheduling.TimeSpan, error) {
+	span, ctx := opentracing.StartSpanFromContextWithTracer(
+		ctx, svc.tracer,
+		name.OfFunc(service.BusyTimesToday),
+	)
+	defer span.Finish()
+
 	log := logutil.
 		WithMethod(svc.log, service.BusyTimesToday).
 		WithContext(ctx)

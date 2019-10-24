@@ -29,14 +29,6 @@ func (res SubscriptionResolver) CurrentlyPlaying(ctx context.Context) (
 		dst = make(chan *music.CurrentlyPlaying, 1)
 	)
 
-	// Tiny state machine!
-	type currentlyPlayingState uint8
-	const (
-		stoppedState currentlyPlayingState = iota + 1
-		pausedState
-		playingState
-	)
-
 	go func(
 		src <-chan music.CurrentlyPlayingResult,
 		dst chan<- *music.CurrentlyPlaying,
@@ -55,6 +47,7 @@ func (res SubscriptionResolver) CurrentlyPlaying(ctx context.Context) (
 		}
 		close(dst)
 	}(src, dst)
+
 	if err := res.stream.StreamCurrent(ctx, src); err != nil {
 		return nil, err
 	}

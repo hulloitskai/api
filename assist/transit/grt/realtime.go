@@ -22,7 +22,9 @@ import (
 	"go.stevenxie.me/api/pkg/httputil"
 )
 
-const _cacheMaxAge = 30 * time.Second
+const (
+	_cacheMaxAge = 30 * time.Second
+)
 
 // NewRealtimeSource creates a transit.RealtimeSource that gets realtime data
 // using GRT.

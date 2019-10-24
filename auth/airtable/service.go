@@ -9,10 +9,10 @@ import (
 	"strings"
 	"time"
 
-	"github.com/openlyinc/pointy"
-
 	"github.com/cockroachdb/errors"
 	"github.com/mitchellh/mapstructure"
+	"github.com/openlyinc/pointy"
+	"github.com/opentracing/opentracing-go"
 	"github.com/sirupsen/logrus"
 
 	"go.stevenxie.me/api/auth"
@@ -35,6 +35,7 @@ func NewService(
 	// Configure and build service.
 	cfg := ServiceConfig{
 		Logger: logutil.NoopEntry(),
+		Tracer: new(opentracing.NoopTracer),
 	}
 	for _, opt := range opts {
 		opt(&cfg)
@@ -45,9 +46,19 @@ func NewService(
 			codes:  &sel,
 			access: cfg.AccessSelector,
 		},
-		// timezone: cfg.Timezone,
-		log: logutil.AddComponent(cfg.Logger, (*service)(nil)),
+		log:    logutil.AddComponent(cfg.Logger, (*service)(nil)),
+		tracer: cfg.Tracer,
 	}
+}
+
+// WithLogger configures an auth.Service to write logs with log.
+func WithLogger(log *logrus.Entry) ServiceOption {
+	return func(cfg *ServiceConfig) { cfg.Logger = log }
+}
+
+// WithTracer configures an auth.Service to write logs with log.
+func WithTracer(t opentracing.Tracer) ServiceOption {
+	return func(cfg *ServiceConfig) { cfg.Tracer = t }
 }
 
 type (
@@ -55,8 +66,8 @@ type (
 		client    Client
 		selectors serviceSelectors
 
-		// timezone *time.Location
-		log *logrus.Entry
+		log    *logrus.Entry
+		tracer opentracing.Tracer
 	}
 
 	serviceSelectors struct {
@@ -70,8 +81,8 @@ type (
 		// corresponding fields.
 		AccessSelector *AccessSelector
 
-		// Timezone *time.Location
 		Logger *logrus.Entry
+		Tracer opentracing.Tracer
 	}
 
 	// A ServiceOption modifies a ServiceConfig.
@@ -92,6 +103,12 @@ func (svc *service) HasPermission(
 	ctx context.Context,
 	code string, p auth.Permission,
 ) (ok bool, err error) {
+	span, ctx := opentracing.StartSpanFromContextWithTracer(
+		ctx, svc.tracer,
+		name.OfFunc((*service).HasPermission),
+	)
+	defer span.Finish()
+
 	log := svc.log.WithFields(logrus.Fields{
 		logutil.MethodKey: name.OfMethod((*service).HasPermission),
 		"code":            code,
@@ -119,7 +136,7 @@ func (svc *service) HasPermission(
 	for _, perm := range perms {
 		if p == perm {
 			log.Trace("Requested permission matches code permissions.")
-			go svc.recordAccess(id, p)
+			go svc.recordAccess(ctx, id, p)
 			return true, nil
 		}
 	}
@@ -132,6 +149,12 @@ func (svc *service) getPermissions(
 	ctx context.Context,
 	code string,
 ) (perms []auth.Permission, recordID string, err error) {
+	span, ctx := opentracing.StartSpanFromContextWithTracer(
+		ctx, svc.tracer,
+		name.OfFunc((*service).getPermissions),
+	)
+	defer span.Finish()
+
 	log := svc.log.WithFields(logrus.Fields{
 		logutil.MethodKey: name.OfMethod((*service).getPermissions),
 		"code":            code,
@@ -239,7 +262,13 @@ func (svc *service) getPermissions(
 	return nil, "", auth.ErrInvalidCode
 }
 
-func (svc service) recordAccess(id string, p auth.Permission) {
+func (svc service) recordAccess(ctx context.Context, id string, p auth.Permission) {
+	span, ctx := opentracing.StartSpanFromContextWithTracer(
+		ctx, svc.tracer,
+		name.OfFunc((*service).getPermissions),
+	)
+	defer span.Finish()
+
 	log := svc.log.WithFields(logrus.Fields{
 		logutil.MethodKey: name.OfMethod(service.recordAccess),
 		"id":              id,
