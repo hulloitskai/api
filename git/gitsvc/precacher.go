@@ -39,7 +39,7 @@ func NewServicePrecacher(
 				)
 			}),
 			interval,
-			poll.WithPrecacherLogger(log),
+			poll.PrecacherWithLogger(log),
 		),
 	}
 }

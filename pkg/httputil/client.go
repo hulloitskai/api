@@ -35,8 +35,8 @@ func (c client) Get(url string) (*http.Response, error) {
 	return c.BasicClient.Do(req)
 }
 
-// WithBasicHTTPClient configures a BasicClient to make HTTP requests using c.
-func WithBasicHTTPClient(c *http.Client) BasicClientOption {
+// BasicWithHTTPClient configures a BasicClient to make HTTP requests using c.
+func BasicWithHTTPClient(c *http.Client) BasicClientOption {
 	return func(cfg *BasicClientConfig) { cfg.HTTPClient = c }
 }
 

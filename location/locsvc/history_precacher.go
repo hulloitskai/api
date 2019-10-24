@@ -28,7 +28,7 @@ func NewHistoryServicePrecacher(
 				return svc.RecentHistory(context.Background())
 			}),
 			interval,
-			poll.WithPrecacherLogger(log),
+			poll.PrecacherWithLogger(log),
 		),
 	}
 }

@@ -46,8 +46,8 @@ func NewRealtimeSource(opts ...RealtimeSourceOption) (transit.RealtimeSource, er
 	client := cfg.HTTPClient
 	cache, err := httputil.NewCachingTripper(
 		client.Transport,
-		httputil.WithCachingTripperLogger(log),
-		httputil.WithCachingTripperMaxAge(_cacheMaxAge),
+		httputil.CachingTripperWithLogger(log),
+		httputil.CachingTripperWithMaxAge(_cacheMaxAge),
 	)
 	if err != nil {
 		return nil, errors.Wrap(err, "grt: creating CachingTripper")

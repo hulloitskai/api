@@ -277,8 +277,8 @@ func run(*cli.Context) (err error) {
 	if cfg := cfg.Music.Streamer; cfg.Enabled {
 		currentStreamer := musicsvc.NewCurrentStreamer(
 			musicService,
-			musicsvc.WithCurrentStreamerPollInterval(cfg.PollInterval),
-			musicsvc.WithCurrentStreamerLogger(log),
+			musicsvc.StreamerWithLogger(log),
+			musicsvc.StreamerWithPollInterval(cfg.PollInterval),
 		)
 		guillo.AddFunc(
 			currentStreamer.Stop,

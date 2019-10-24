@@ -53,14 +53,14 @@ func NewCachingTripper(
 	}, nil
 }
 
-// WithCachingTripperLogger configures a CachingTripper to write logs with log.
-func WithCachingTripperLogger(log *logrus.Entry) CachingTripperOption {
+// CachingTripperWithLogger configures a CachingTripper to write logs with log.
+func CachingTripperWithLogger(log *logrus.Entry) CachingTripperOption {
 	return func(cfg *CachingTripperConfig) { cfg.Logger = log }
 }
 
-// WithCachingTripperMaxAge configures a CachingTripper to expire each response
+// CachingTripperWithMaxAge configures a CachingTripper to expire each response
 // after age (the amount of time since the response was received).
-func WithCachingTripperMaxAge(age time.Duration) CachingTripperOption {
+func CachingTripperWithMaxAge(age time.Duration) CachingTripperOption {
 	return func(cfg *CachingTripperConfig) {
 		cfg.ExpiresFunc = func(_ *http.Request, timestamp time.Time) *time.Time {
 			t := timestamp.Add(age)

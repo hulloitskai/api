@@ -30,9 +30,9 @@ func FindWithRadius(r int) FindDeparturesOption {
 	}
 }
 
-// RestrictFindOperator restricts the search to the Operator with the specified
+// FindWithOperator restricts the search to the Operator with the specified
 // code.
-func RestrictFindOperator(opCode string) FindDeparturesOption {
+func FindWithOperator(opCode string) FindDeparturesOption {
 	return func(cfg *FindDeparturesConfig) { cfg.OperatorCode = opCode }
 }
 

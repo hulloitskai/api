@@ -137,7 +137,7 @@ func (svc service) CurrentCity(ctx context.Context) (string, error) {
 	res, err := svc.geo.ReverseGeocode(
 		ctx,
 		*coords,
-		geocode.WithReverseGeocodeLevel(geocode.CityLevel),
+		geocode.ReverseWithLevel(geocode.CityLevel),
 	)
 	if err != nil {
 		log.WithError(err).Error("Failed to reverse-geocode current position.")

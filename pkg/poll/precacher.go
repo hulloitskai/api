@@ -31,14 +31,14 @@ func NewPrecacher(
 	return &Precacher{
 		pl: NewPoller(
 			ca, n,
-			WithPollerLogger(log),
+			PollerWithLogger(log),
 		),
 		ca: ca,
 	}
 }
 
-// WithPrecacherLogger configures a Precacher to write logs with log.
-func WithPrecacherLogger(log *logrus.Entry) PrecacherOption {
+// PrecacherWithLogger configures a Precacher to write logs with log.
+func PrecacherWithLogger(log *logrus.Entry) PrecacherOption {
 	return func(cfg *PrecacherConfig) { cfg.Logger = log }
 }
 

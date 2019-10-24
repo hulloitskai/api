@@ -28,7 +28,7 @@ func NewCurrentStreamer(
 		actor  = newCurrentStreamActor(curr, log)
 		poller = poll.NewPoller(
 			actor, cfg.PollInterval,
-			poll.WithPollerLogger(log),
+			poll.PollerWithLogger(log),
 		)
 	)
 	return CurrentStreamer{
@@ -39,15 +39,15 @@ func NewCurrentStreamer(
 	}
 }
 
-// WithCurrentStreamerLogger configures a CurrentStreamer to write logs with
+// StreamerWithLogger configures a CurrentStreamer to write logs with
 // log.
-func WithCurrentStreamerLogger(log *logrus.Entry) CurrentStreamerOption {
+func StreamerWithLogger(log *logrus.Entry) CurrentStreamerOption {
 	return func(cfg *CurrentStreamerConfig) { cfg.Logger = log }
 }
 
-// WithCurrentStreamerPollInterval configures the interval at which a
+// StreamerWithPollInterval configures the interval at which a
 // CurrentStreamer polls for changes.
-func WithCurrentStreamerPollInterval(interval time.Duration) CurrentStreamerOption {
+func StreamerWithPollInterval(interval time.Duration) CurrentStreamerOption {
 	return func(cfg *CurrentStreamerConfig) { cfg.PollInterval = interval }
 }
 

@@ -25,26 +25,26 @@ type (
 	}
 )
 
-// WithReverseGeocodeLevel sets the geocoding level (proximity) of a
+// ReverseWithLevel sets the geocoding level (proximity) of a
 // reverse-geocoding request.
-func WithReverseGeocodeLevel(l Level) ReverseGeocodeOption {
+func ReverseWithLevel(l Level) ReverseGeocodeOption {
 	return func(cfg *ReverseGeocodeConfig) { cfg.Level = l }
 }
 
-// WithReverseGeocodeRadius sets the search radius of a reverse-geocoding
+// ReverseWithRadius sets the search radius of a reverse-geocoding
 // request.
-func WithReverseGeocodeRadius(radius uint) ReverseGeocodeOption {
+func ReverseWithRadius(radius uint) ReverseGeocodeOption {
 	return func(cfg *ReverseGeocodeConfig) { cfg.Radius = radius }
 }
 
-// IncludeReverseGeocodeShape sets a reverse-geocoding request to include
+// ReverseWithShape sets a reverse-geocoding request to include
 // geographical shape information in the response.
-func IncludeReverseGeocodeShape() ReverseGeocodeOption {
-	return func(cfg *ReverseGeocodeConfig) { cfg.IncludeShape = true }
+func ReverseWithShape(include bool) ReverseGeocodeOption {
+	return func(cfg *ReverseGeocodeConfig) { cfg.IncludeShape = include }
 }
 
-// IncludeReverseGeocodeTimeZone sets a reverse-geocoding request to include
+// ReverseWithTimeZone sets a reverse-geocoding request to include
 // time zone information in the response.
-func IncludeReverseGeocodeTimeZone() ReverseGeocodeOption {
-	return func(cfg *ReverseGeocodeConfig) { cfg.IncludeTimeZone = true }
+func ReverseWithTimeZone(include bool) ReverseGeocodeOption {
+	return func(cfg *ReverseGeocodeConfig) { cfg.IncludeTimeZone = include }
 }

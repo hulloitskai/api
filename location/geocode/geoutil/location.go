@@ -19,7 +19,7 @@ func TimeLocation(
 	res, err := geo.ReverseGeocode(
 		ctx,
 		coords,
-		geocode.IncludeReverseGeocodeTimeZone(),
+		geocode.ReverseWithTimeZone(true),
 	)
 	if err != nil {
 		return nil, errors.Wrap(err, "geoutil: reverse-geocoding timezone info")

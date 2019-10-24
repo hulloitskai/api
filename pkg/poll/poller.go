@@ -30,8 +30,8 @@ func NewPoller(a Actor, n time.Duration, opts ...PollerOption) *Poller {
 	return p
 }
 
-// WithPollerLogger configures a Poller to write logs with log.
-func WithPollerLogger(log *logrus.Entry) PollerOption {
+// PollerWithLogger configures a Poller to write logs with log.
+func PollerWithLogger(log *logrus.Entry) PollerOption {
 	return func(cfg *PollerConfig) { cfg.Logger = log }
 }
 
