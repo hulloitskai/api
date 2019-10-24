@@ -35,7 +35,7 @@ func NewServer(svcs Services, strms Streamers, opts ...ServerOption) *Server {
 	}
 
 	// Configure logger.
-	log := logutil.AddComponent(cfg.Logger, (*Server)(nil))
+	log := logutil.WithComponent(cfg.Logger, (*Server)(nil))
 
 	// Configure Echo.
 	echo := echo.New()

@@ -27,7 +27,7 @@ func NewService(
 	return service{
 		cal:    cal,
 		zones:  zones,
-		log:    logutil.AddComponent(cfg.Logger, (*service)(nil)),
+		log:    logutil.WithComponent(cfg.Logger, (*service)(nil)),
 		tracer: cfg.Tracer,
 	}
 }

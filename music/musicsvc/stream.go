@@ -23,7 +23,7 @@ func NewCurrentStreamer(
 	for _, opt := range opts {
 		opt(&cfg)
 	}
-	log := logutil.AddComponent(cfg.Logger, (*CurrentStreamer)(nil))
+	log := logutil.WithComponent(cfg.Logger, (*CurrentStreamer)(nil))
 	var (
 		actor  = newCurrentStreamActor(curr, log)
 		poller = poll.NewPoller(

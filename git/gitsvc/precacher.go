@@ -24,7 +24,7 @@ func NewServicePrecacher(
 	for _, opt := range opts {
 		opt(&cfg)
 	}
-	log := logutil.AddComponent(cfg.Logger, (*ServicePrecacher)(nil))
+	log := logutil.WithComponent(cfg.Logger, (*ServicePrecacher)(nil))
 	return ServicePrecacher{
 		Service: svc,
 		pc: poll.NewPrecacher(

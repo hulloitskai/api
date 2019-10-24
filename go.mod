@@ -41,8 +41,8 @@ require (
 	github.com/vektah/gqlparser v1.1.2
 	github.com/zmb3/spotify v0.0.0-20191010212056-e12fb981aacb
 	go.opencensus.io v0.22.1 // indirect
-	go.stevenxie.me/gopkg v0.4.5
-	go.stevenxie.me/guillotine v0.1.5
+	go.stevenxie.me/gopkg v0.4.6
+	go.stevenxie.me/guillotine v0.1.6-0.20191024122142-967b06f2b609
 	go.uber.org/atomic v1.4.0 // indirect
 	golang.org/x/crypto v0.0.0-20191011191535-87dc89f01550 // indirect
 	golang.org/x/net v0.0.0-20191021144547-ec77196f6094 // indirect

@@ -24,7 +24,7 @@ func NewCurrentService(
 	cfg := basic.BuildConfig(opts...)
 	return currentService{
 		client: c,
-		log:    logutil.AddComponent(cfg.Logger, (*currentService)(nil)),
+		log:    logutil.WithComponent(cfg.Logger, (*currentService)(nil)),
 		tracer: cfg.Tracer,
 	}
 }

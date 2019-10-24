@@ -54,6 +54,15 @@ func NewTracer(name string, opts ...Option) (opentracing.Tracer, io.Closer, erro
 	return c.New(name)
 }
 
+// WithOverrides merges in a Config that overrides the pre-existing settings.
+func WithOverrides(overrides *Config) Option {
+	return func(cfg *Config) {
+		if err := mergo.Merge(cfg, overrides, mergo.WithOverride); err != nil {
+			panic(errors.Wrap(err, "jaeger: failed to merge configs"))
+		}
+	}
+}
+
 type (
 	// A Config is a susbet of a config.Configuration.
 	Config struct {

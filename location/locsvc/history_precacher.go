@@ -19,7 +19,7 @@ func NewHistoryServicePrecacher(
 ) HistoryServicePrecacher {
 	var (
 		cfg = basic.BuildConfig(opts...)
-		log = logutil.AddComponent(cfg.Logger, (*HistoryServicePrecacher)(nil))
+		log = logutil.WithComponent(cfg.Logger, (*HistoryServicePrecacher)(nil))
 	)
 	return HistoryServicePrecacher{
 		HistoryService: svc,

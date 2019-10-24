@@ -14,7 +14,7 @@ import (
 // SentryRecoverFunc creates a new graphql.RecoverFunc that logs panics to
 // Sentry.
 func SentryRecoverFunc(c *sentry.Client, log *logrus.Entry) graphql.RecoverFunc {
-	log = logutil.AddComponent(log, SentryRecoverFunc)
+	log = logutil.WithComponent(log, SentryRecoverFunc)
 	scope := sentry.NewScope()
 	return func(ctx context.Context, err zero.Interface) error {
 		id := c.RecoverWithContext(

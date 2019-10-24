@@ -25,7 +25,7 @@ func NewPrecacher(
 	}
 
 	var (
-		log = logutil.AddComponent(cfg.Logger, (*Precacher)(nil))
+		log = logutil.WithComponent(cfg.Logger, (*Precacher)(nil))
 		ca  = newCacheActor(p, log)
 	)
 	return &Precacher{

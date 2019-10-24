@@ -40,7 +40,7 @@ func NewRealtimeSource(opts ...RealtimeSourceOption) (transit.RealtimeSource, er
 	}
 
 	// Create log with component name.
-	log := logutil.AddComponent(cfg.Logger, (*realtimeSource)(nil))
+	log := logutil.WithComponent(cfg.Logger, (*realtimeSource)(nil))
 
 	// Use custom caching round-tripper.
 	client := cfg.HTTPClient

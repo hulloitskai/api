@@ -46,7 +46,7 @@ func NewCachingTripper(
 	}
 	return &CachingTripper{
 		Tripper: underlying,
-		log:     logutil.AddComponent(cfg.Logger, (*CachingTripper)(nil)),
+		log:     logutil.WithComponent(cfg.Logger, (*CachingTripper)(nil)),
 
 		expiresFunc: cfg.ExpiresFunc,
 		cache:       cache,

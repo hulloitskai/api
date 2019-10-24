@@ -19,7 +19,7 @@ func NewControlService(
 	cfg := basic.BuildConfig(opts...)
 	return controlService{
 		ctrl:   ctrl,
-		log:    logutil.AddComponent(cfg.Logger, (*controlService)(nil)),
+		log:    logutil.WithComponent(cfg.Logger, (*controlService)(nil)),
 		tracer: cfg.Tracer,
 	}
 }

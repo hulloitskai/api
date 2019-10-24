@@ -46,7 +46,7 @@ func NewService(
 			codes:  &sel,
 			access: cfg.AccessSelector,
 		},
-		log:    logutil.AddComponent(cfg.Logger, (*service)(nil)),
+		log:    logutil.WithComponent(cfg.Logger, (*service)(nil)),
 		tracer: cfg.Tracer,
 	}
 }

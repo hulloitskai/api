@@ -19,7 +19,7 @@ func NewSourceService(
 	cfg := basic.BuildConfig(opts...)
 	return sourceService{
 		src:    src,
-		log:    logutil.AddComponent(cfg.Logger, (*sourceService)(nil)),
+		log:    logutil.WithComponent(cfg.Logger, (*sourceService)(nil)),
 		tracer: cfg.Tracer,
 	}
 }

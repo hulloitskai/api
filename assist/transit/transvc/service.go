@@ -30,7 +30,7 @@ func NewService(
 
 		maxRTDepGap: cfg.MaxRealtimeDepartureGap,
 
-		log:    logutil.AddComponent(cfg.Logger, (*service)(nil)),
+		log:    logutil.WithComponent(cfg.Logger, (*service)(nil)),
 		tracer: cfg.Tracer,
 	}
 }

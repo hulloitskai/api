@@ -27,7 +27,7 @@ func NewHistoryService(
 	return &historyService{
 		hist:   hist,
 		geo:    geo,
-		log:    logutil.AddComponent(cfg.Logger, (*historyService)(nil)),
+		log:    logutil.WithComponent(cfg.Logger, (*historyService)(nil)),
 		tracer: cfg.Tracer,
 	}
 }

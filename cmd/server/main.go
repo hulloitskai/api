@@ -141,9 +141,7 @@ func run(*cli.Context) (err error) {
 		var closer io.Closer
 		tracer, closer, err = jaeger.NewTracer(
 			cmdint.Namespace,
-			func(cfg *jaeger.Config) {
-				jaeger.MergeConfigs(cfg, &t.Jaeger)
-			},
+			jaeger.WithOverrides(&t.Jaeger),
 		)
 		if err != nil {
 			return errors.Wrap(err, "creating Jaeger tracer")

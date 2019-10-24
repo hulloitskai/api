@@ -20,7 +20,7 @@ func newCurrentStreamActor(
 ) *currentStreamActor {
 	return &currentStreamActor{
 		svc:  src,
-		log:  logutil.AddComponent(log, (*currentStreamActor)(nil)),
+		log:  logutil.WithComponent(log, (*currentStreamActor)(nil)),
 		subs: make(map[chan<- music.CurrentlyPlayingResult]zero.Struct),
 	}
 }

@@ -21,7 +21,7 @@ func NewPoller(a Actor, n time.Duration, opts ...PollerOption) *Poller {
 	}
 	p := &Poller{
 		act:    a,
-		log:    logutil.AddComponent(cfg.Logger, (*Poller)(nil)),
+		log:    logutil.WithComponent(cfg.Logger, (*Poller)(nil)),
 		ticker: time.NewTicker(n),
 		recv:   make(chan result),
 		stop:   make(chan zero.Struct),

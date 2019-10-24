@@ -21,7 +21,7 @@ func NewLocatorService(
 	cfg := basic.BuildConfig(opts...)
 	return locatorService{
 		loc:    loc,
-		log:    logutil.AddComponent(cfg.Logger, (*locatorService)(nil)),
+		log:    logutil.WithComponent(cfg.Logger, (*locatorService)(nil)),
 		tracer: cfg.Tracer,
 	}
 }

@@ -35,7 +35,7 @@ func NewService(
 		geo:            geo,
 		regionLevel:    cfg.RegionGeocodeLevel,
 
-		log:    logutil.AddComponent(cfg.Logger, (*service)(nil)),
+		log:    logutil.WithComponent(cfg.Logger, (*service)(nil)),
 		tracer: cfg.Tracer,
 	}
 }

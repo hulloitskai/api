@@ -13,7 +13,7 @@ import (
 func NewNoopCurrentStreamer(opts ...basic.Option) music.CurrentStreamer {
 	cfg := basic.BuildConfig(opts...)
 	return noopCurrentStreamer{
-		log: logutil.AddComponent(cfg.Logger, (*noopCurrentStreamer)(nil)),
+		log: logutil.WithComponent(cfg.Logger, (*noopCurrentStreamer)(nil)),
 	}
 }
 
