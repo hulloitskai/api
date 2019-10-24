@@ -48,7 +48,7 @@ func (svc service) BusyTimes(
 	}).WithContext(ctx)
 
 	log.Trace("Getting busy times from calendar...")
-	periods, err := svc.cal.RawBusyTimes(ctx, date)
+	periods, err := svc.cal.BusyTimes(ctx, date)
 	if err != nil {
 		log.WithError(err).Error("Failed to load busy times from calendar.")
 		return nil, err

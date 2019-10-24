@@ -57,5 +57,5 @@ func (ts *TimeSpan) MarshalJSON() ([]byte, error) {
 
 // A Calendar can get my busy time periods.
 type Calendar interface {
-	RawBusyTimes(ctx context.Context, date time.Time) ([]TimeSpan, error)
+	BusyTimes(ctx context.Context, date time.Time) ([]TimeSpan, error)
 }

@@ -5,6 +5,7 @@ import (
 	"sync"
 	"time"
 
+	"github.com/opentracing/opentracing-go"
 	"github.com/sirupsen/logrus"
 	"go.stevenxie.me/gopkg/logutil"
 	"go.stevenxie.me/gopkg/name"
@@ -24,16 +25,19 @@ func NewHistoryService(
 ) location.HistoryService {
 	cfg := basic.BuildConfig(opts...)
 	return &historyService{
-		hist: hist,
-		geo:  geo,
-		log:  logutil.AddComponent(cfg.Logger, (*historyService)(nil)),
+		hist:   hist,
+		geo:    geo,
+		log:    logutil.AddComponent(cfg.Logger, (*historyService)(nil)),
+		tracer: cfg.Tracer,
 	}
 }
 
 type historyService struct {
 	hist location.Historian
 	geo  geocode.Geocoder
-	log  *logrus.Entry
+
+	log    *logrus.Entry
+	tracer opentracing.Tracer
 
 	mux sync.Mutex
 	loc *time.Location
@@ -45,6 +49,12 @@ func (svc *historyService) GetHistory(
 	ctx context.Context,
 	date time.Time,
 ) ([]location.HistorySegment, error) {
+	span, ctx := opentracing.StartSpanFromContextWithTracer(
+		ctx, svc.tracer,
+		name.OfFunc((*historyService).GetHistory),
+	)
+	defer span.Finish()
+
 	log := svc.log.WithFields(logrus.Fields{
 		logutil.MethodKey: name.OfMethod((*historyService).GetHistory),
 		"date":            date,
@@ -60,6 +70,12 @@ func (svc *historyService) GetHistory(
 
 func (svc *historyService) RecentHistory(ctx context.Context) (
 	[]location.HistorySegment, error) {
+	span, ctx := opentracing.StartSpanFromContextWithTracer(
+		ctx, svc.tracer,
+		name.OfFunc((*historyService).RecentHistory),
+	)
+	defer span.Finish()
+
 	log := logutil.
 		WithMethod(svc.log, (*historyService).RecentHistory).
 		WithContext(ctx)

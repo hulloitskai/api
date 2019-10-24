@@ -5,6 +5,7 @@ import (
 	"time"
 
 	"github.com/cockroachdb/errors"
+	"github.com/opentracing/opentracing-go"
 	"github.com/sirupsen/logrus"
 
 	"go.stevenxie.me/api/location"
@@ -23,6 +24,7 @@ func NewService(
 ) location.Service {
 	cfg := ServiceConfig{
 		Logger:             logutil.NoopEntry(),
+		Tracer:             new(opentracing.NoopTracer),
 		RegionGeocodeLevel: geocode.CityLevel,
 	}
 	for _, opt := range opts {
@@ -32,13 +34,20 @@ func NewService(
 		HistoryService: hist,
 		geo:            geo,
 		regionLevel:    cfg.RegionGeocodeLevel,
-		log:            logutil.AddComponent(cfg.Logger, (*service)(nil)),
+
+		log:    logutil.AddComponent(cfg.Logger, (*service)(nil)),
+		tracer: cfg.Tracer,
 	}
 }
 
 // WithLogger configures a Service to write logs with log.
 func WithLogger(log *logrus.Entry) ServiceOption {
 	return func(cfg *ServiceConfig) { cfg.Logger = log }
+}
+
+// WithTracer configures a Service to trace calls with t.
+func WithTracer(t opentracing.Tracer) ServiceOption {
+	return func(cfg *ServiceConfig) { cfg.Tracer = t }
 }
 
 // WithRegionGeocodeLevel configures the geocoding level that a Service uses
@@ -50,16 +59,18 @@ func WithRegionGeocodeLevel(l geocode.Level) ServiceOption {
 type (
 	service struct {
 		location.HistoryService
-
-		geo geocode.Geocoder
-		log *logrus.Entry
-
+		geo         geocode.Geocoder
 		regionLevel geocode.Level
+
+		log    *logrus.Entry
+		tracer opentracing.Tracer
 	}
 
 	// A ServiceConfig configures a Service.
 	ServiceConfig struct {
-		Logger             *logrus.Entry
+		Logger *logrus.Entry
+		Tracer opentracing.Tracer
+
 		RegionGeocodeLevel geocode.Level
 	}
 
@@ -70,6 +81,12 @@ type (
 var _ location.Service = (*service)(nil)
 
 func (svc service) CurrentPosition(ctx context.Context) (*location.Coordinates, error) {
+	span, ctx := opentracing.StartSpanFromContextWithTracer(
+		ctx, svc.tracer,
+		name.OfFunc(service.CurrentPosition),
+	)
+	defer span.Finish()
+
 	log := logutil.
 		WithMethod(svc.log, service.CurrentPosition).
 		WithContext(ctx)
@@ -97,6 +114,12 @@ func (svc service) CurrentPosition(ctx context.Context) (*location.Coordinates, 
 }
 
 func (svc service) CurrentCity(ctx context.Context) (string, error) {
+	span, ctx := opentracing.StartSpanFromContextWithTracer(
+		ctx, svc.tracer,
+		name.OfFunc(service.CurrentCity),
+	)
+	defer span.Finish()
+
 	log := logutil.
 		WithMethod(svc.log, service.CurrentCity).
 		WithContext(ctx)
@@ -134,6 +157,12 @@ func (svc service) CurrentRegion(
 	ctx context.Context,
 	opts ...location.CurrentRegionOption,
 ) (*location.Place, error) {
+	span, ctx := opentracing.StartSpanFromContextWithTracer(
+		ctx, svc.tracer,
+		name.OfFunc(service.CurrentRegion),
+	)
+
+	defer span.Finish()
 	var cfg location.CurrentRegionConfig
 	for _, opt := range opts {
 		opt(&cfg)
@@ -177,6 +206,12 @@ func (svc service) CurrentRegion(
 }
 
 func (svc service) CurrentTimeZone(ctx context.Context) (*time.Location, error) {
+	span, ctx := opentracing.StartSpanFromContextWithTracer(
+		ctx, svc.tracer,
+		name.OfFunc(service.CurrentTimeZone),
+	)
+	defer span.Finish()
+
 	log := logutil.
 		WithMethod(svc.log, service.CurrentTimeZone).
 		WithContext(ctx)

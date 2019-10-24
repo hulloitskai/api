@@ -4,6 +4,7 @@ import (
 	"context"
 	"sort"
 
+	"github.com/opentracing/opentracing-go"
 	"github.com/sirupsen/logrus"
 
 	"go.stevenxie.me/gopkg/logutil"
@@ -20,6 +21,12 @@ func (svc *service) NearbyTransports(
 	coords location.Coordinates,
 	opts ...transit.NearbyTransportsOption,
 ) ([]transit.Transport, error) {
+	span, ctx := opentracing.StartSpanFromContextWithTracer(
+		ctx, svc.tracer,
+		name.OfFunc((*service).NearbyTransports),
+	)
+	defer span.Finish()
+
 	log := svc.log.WithFields(logrus.Fields{
 		logutil.MethodKey: name.OfMethod((*service).NearbyTransports),
 		"coordinates":     coords,

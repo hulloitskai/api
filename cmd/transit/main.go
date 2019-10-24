@@ -60,25 +60,25 @@ func main() {
 		}
 	}
 
-	var loc transit.LocatorService
+	var locsvc transit.LocatorService
 	{
 		client, err := here.NewClient(_appID)
 		if err != nil {
 			log.WithError(err).Fatal("Failed to create Here client.")
 		}
-		locator := heretrans.NewLocator(client)
-		loc = transvc.NewLocatorService(locator, basic.WithLogger(log))
+		loc := heretrans.NewLocator(client)
+		locsvc = transvc.NewLocatorService(loc, basic.WithLogger(log))
 	}
 
 	// Create service.
 	var svc transit.Service
 	{
-		grt, err := grt.NewRealtimeSource(grt.WithRealtimeLogger(log))
+		grt, err := grt.NewRealtimeSource(grt.WithLogger(log))
 		if err != nil {
 			log.WithError(err).Fatal("Failed to create RealTimeSource.")
 		}
 		svc = transvc.NewService(
-			loc,
+			locsvc,
 			transvc.WithLogger(log),
 			transvc.WithRealtimeSource(grt, transit.OpCodeGRT),
 		)

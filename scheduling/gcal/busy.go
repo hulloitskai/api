@@ -36,7 +36,7 @@ type calendar struct {
 
 var _ scheduling.Calendar = (*calendar)(nil)
 
-func (cal calendar) RawBusyTimes(
+func (cal calendar) BusyTimes(
 	ctx context.Context,
 	date time.Time,
 ) ([]scheduling.TimeSpan, error) {

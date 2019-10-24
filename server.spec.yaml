@@ -1,5 +1,21 @@
 shutdownTimeout: Duration
 
+tracer:
+  enabled: Bool
+  jaeger:
+    sampler:
+      type: String
+      param: Float
+      samplingServerURL: String
+      maxOperations: Int
+      samplingRefreshInterval: Duration
+    reporter:
+      queueSize: Int
+      logSpans: Bool
+      localAgentHostPort: String
+      collectorEndpoint: String
+      user: String
+
 about:
   gist:
     id: String

@@ -11,6 +11,7 @@ import (
 	"time"
 
 	"github.com/cockroachdb/errors"
+	"github.com/opentracing/opentracing-go"
 	"github.com/sirupsen/logrus"
 
 	"go.stevenxie.me/gopkg/logutil"
@@ -54,32 +55,37 @@ func NewRealtimeSource(opts ...RealtimeSourceOption) (transit.RealtimeSource, er
 	return &realtimeSource{
 		client: client,
 		log:    log,
+		tracer: cfg.Tracer,
 		cache:  cache,
 	}, nil
 }
 
-// WithRealtimeLogger configures a transit.RealtimeService to write logs with
+// WithLogger configures a transit.RealtimeSource to write logs with
 // log.
-func WithRealtimeLogger(log *logrus.Entry) RealtimeSourceOption {
+func WithLogger(log *logrus.Entry) RealtimeSourceOption {
 	return func(cfg *RealtimeSourceConfig) { cfg.Logger = log }
+}
+
+// WithTracer configures a transit.RealtimeSource to trace calls with t.
+func WithTracer(t opentracing.Tracer) RealtimeSourceOption {
+	return func(cfg *RealtimeSourceConfig) { cfg.Tracer = t }
 }
 
 type (
 	realtimeSource struct {
 		client *http.Client
 		log    *logrus.Entry
+		tracer opentracing.Tracer
 
 		cache          *httputil.CachingTripper
 		cacheTimestamp time.Time
-
-		// depResCache          map[string][]byte
-		// depResCacheTimestamp time.Time
 	}
 
-	// A RealtimeSourceConfig configures a transit.RealtimeService.
+	// A RealtimeSourceConfig configures a transit.RealtimeSource.
 	RealtimeSourceConfig struct {
 		HTTPClient *http.Client
 		Logger     *logrus.Entry
+		Tracer     opentracing.Tracer
 	}
 
 	// A RealtimeSourceOption modifies a RealtimeServiceConfig.
@@ -95,6 +101,12 @@ func (src *realtimeSource) GetDepartureTimes(
 	tp transit.Transport,
 	stn transit.Station,
 ) ([]time.Time, error) {
+	span, ctx := opentracing.StartSpanFromContextWithTracer(
+		ctx, src.tracer,
+		name.OfFunc((*realtimeSource).GetDepartureTimes),
+	)
+	defer span.Finish()
+
 	log := logrus.WithFields(logrus.Fields{
 		logutil.MethodKey: name.OfMethod((*realtimeSource).GetDepartureTimes),
 		"route":           tp.Route,
@@ -186,6 +198,12 @@ func (src *realtimeSource) getStopIDs(
 	stn *transit.Station,
 	tp *transit.Transport,
 ) ([]string, error) {
+	span, ctx := opentracing.StartSpanFromContextWithTracer(
+		ctx, src.tracer,
+		name.OfFunc((*realtimeSource).getStopIDs),
+	)
+	defer span.Finish()
+
 	log := src.log.WithFields(logrus.Fields{
 		logutil.MethodKey: name.OfMethod((*realtimeSource).getStopIDs),
 		"station":         stn.Name,
@@ -258,6 +276,12 @@ func (src *realtimeSource) getDepartureTimes(
 	tp *transit.Transport,
 	stopID string,
 ) ([]time.Time, error) {
+	span, ctx := opentracing.StartSpanFromContextWithTracer(
+		ctx, src.tracer,
+		name.OfFunc((*realtimeSource).getDepartureTimes),
+	)
+	defer span.Finish()
+
 	log := src.log.WithFields(logrus.Fields{
 		logutil.MethodKey: name.OfMethod((*realtimeSource).getDepartureTimes),
 		"route":           tp.Route,

@@ -5,6 +5,7 @@ import (
 
 	"go.stevenxie.me/gopkg/name"
 
+	"github.com/opentracing/opentracing-go"
 	"github.com/sirupsen/logrus"
 	"go.stevenxie.me/api/assist/transit"
 	"go.stevenxie.me/api/location"
@@ -19,14 +20,16 @@ func NewLocatorService(
 ) transit.LocatorService {
 	cfg := basic.BuildConfig(opts...)
 	return locatorService{
-		loc: loc,
-		log: logutil.AddComponent(cfg.Logger, (*locatorService)(nil)),
+		loc:    loc,
+		log:    logutil.AddComponent(cfg.Logger, (*locatorService)(nil)),
+		tracer: cfg.Tracer,
 	}
 }
 
 type locatorService struct {
-	loc transit.Locator
-	log *logrus.Entry
+	loc    transit.Locator
+	log    *logrus.Entry
+	tracer opentracing.Tracer
 }
 
 var _ transit.LocatorService = (*locatorService)(nil)
@@ -40,6 +43,12 @@ func (svc locatorService) NearbyDepartures(
 		logutil.MethodKey: name.OfMethod(svc.NearbyDepartures),
 		"position":        pos,
 	})
+
+	span, ctx := opentracing.StartSpanFromContextWithTracer(
+		ctx, svc.tracer,
+		name.OfFunc(locatorService.NearbyDepartures),
+	)
+	defer span.Finish()
 
 	// Derive config, add log fields.
 	var cfg transit.NearbyDeparturesConfig

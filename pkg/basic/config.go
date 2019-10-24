@@ -1,6 +1,7 @@
 package basic
 
 import (
+	opentracing "github.com/opentracing/opentracing-go"
 	"github.com/sirupsen/logrus"
 	"go.stevenxie.me/gopkg/logutil"
 )
@@ -10,10 +11,16 @@ func WithLogger(log *logrus.Entry) Option {
 	return func(cfg *Config) { cfg.Logger = log }
 }
 
+// WithTracer configures a basic component to trace calls with t.
+func WithTracer(t opentracing.Tracer) Option {
+	return func(cfg *Config) { cfg.Tracer = t }
+}
+
 type (
 	// A Config configures a basic component.
 	Config struct {
 		Logger *logrus.Entry
+		Tracer opentracing.Tracer
 	}
 
 	// A Option modifies a BasicConfig.
@@ -24,6 +31,7 @@ type (
 func DefaultConfig() Config {
 	return Config{
 		Logger: logutil.NoopEntry(),
+		Tracer: new(opentracing.NoopTracer),
 	}
 }
 

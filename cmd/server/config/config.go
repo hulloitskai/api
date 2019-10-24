@@ -3,6 +3,8 @@ package config
 import (
 	"time"
 
+	"go.stevenxie.me/api/pkg/jaeger"
+
 	"github.com/cockroachdb/errors"
 	"go.stevenxie.me/api/auth/airtable"
 
@@ -13,6 +15,11 @@ import (
 // package.
 type Config struct {
 	ShutdownTimeout *time.Duration `yaml:"shutdownTimeout"`
+
+	Tracer struct {
+		Enabled bool          `yaml:"enabled"`
+		Jaeger  jaeger.Config `yaml:"jaeger"`
+	} `yaml:"tracer"`
 
 	About struct {
 		Gist struct {

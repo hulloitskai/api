@@ -3,11 +3,13 @@ package main
 import (
 	"context"
 	"fmt"
+	"io"
 	"net/http"
 	"os"
 
 	"github.com/cockroachdb/errors"
 	"github.com/getsentry/sentry-go"
+	"github.com/opentracing/opentracing-go"
 	"github.com/sirupsen/logrus"
 	"github.com/urfave/cli"
 
@@ -19,6 +21,7 @@ import (
 	"go.stevenxie.me/api/pkg/github"
 	"go.stevenxie.me/api/pkg/google"
 	"go.stevenxie.me/api/pkg/here"
+	"go.stevenxie.me/api/pkg/jaeger"
 
 	"go.stevenxie.me/api/location"
 	"go.stevenxie.me/api/location/geocode"
@@ -132,6 +135,22 @@ func run(*cli.Context) (err error) {
 		}
 	}()
 
+	// Init tracer.
+	var tracer opentracing.Tracer
+	if t := cfg.Tracer; t.Enabled {
+		var closer io.Closer
+		tracer, closer, err = jaeger.NewTracer(
+			cmdint.Namespace,
+			func(cfg *jaeger.Config) {
+				jaeger.MergeConfigs(cfg, &t.Jaeger)
+			},
+		)
+		if err != nil {
+			return errors.Wrap(err, "creating Jaeger tracer")
+		}
+		guillo.AddCloser(closer, guillotine.WithPrefix("closing Jaeger tracer"))
+	}
+
 	// Connect to data sources.
 	log.Info("Connecting to data sources...")
 
@@ -181,6 +200,7 @@ func run(*cli.Context) (err error) {
 			histsvc = locsvc.NewHistoryService(
 				hist, geoc,
 				basic.WithLogger(log),
+				basic.WithTracer(tracer),
 			)
 		)
 
@@ -192,7 +212,7 @@ func run(*cli.Context) (err error) {
 			)
 			guillo.AddFunc(
 				historyPrecacher.Stop,
-				guillotine.WithPrefix("stopping location history service precacher"),
+				guillotine.WithPrefix("stopping location.HistoryServicePrecacher"),
 			)
 			histsvc = historyPrecacher
 		}
@@ -206,6 +226,7 @@ func run(*cli.Context) (err error) {
 		locationService = locsvc.NewService(
 			histsvc, geoc,
 			locsvc.WithLogger(log),
+			locsvc.WithTracer(tracer),
 			locsvc.WithRegionGeocodeLevel(geocodeLevel),
 		)
 	}
@@ -222,6 +243,7 @@ func run(*cli.Context) (err error) {
 		aboutService = aboutsvc.NewService(
 			src, locationService,
 			basic.WithLogger(log),
+			basic.WithTracer(tracer),
 		)
 	}
 
@@ -335,15 +357,20 @@ func run(*cli.Context) (err error) {
 			locsvc = transvc.NewLocatorService(
 				loc,
 				basic.WithLogger(log),
+				basic.WithTracer(tracer),
 			)
 		)
-		grt, err := grt.NewRealtimeSource(grt.WithRealtimeLogger(log))
+		grt, err := grt.NewRealtimeSource(
+			grt.WithLogger(log),
+			grt.WithTracer(tracer),
+		)
 		if err != nil {
 			return errors.Wrap(err, "create grt.RealTimeSource")
 		}
 		transitService = transvc.NewService(
 			locsvc,
 			transvc.WithLogger(log),
+			transvc.WithTracer(tracer),
 			transvc.WithRealtimeSource(grt, transit.OpCodeGRT),
 		)
 	}

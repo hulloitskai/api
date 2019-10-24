@@ -6,8 +6,11 @@ import (
 	"time"
 
 	"github.com/cockroachdb/errors"
+	opentracing "github.com/opentracing/opentracing-go"
 	"github.com/sirupsen/logrus"
+
 	"go.stevenxie.me/gopkg/logutil"
+	"go.stevenxie.me/gopkg/name"
 
 	"go.stevenxie.me/api/about"
 	"go.stevenxie.me/api/location"
@@ -24,19 +27,29 @@ func NewService(
 	return service{
 		static:    static,
 		locations: locations,
-		log:       logutil.AddComponent(cfg.Logger, (*service)(nil)),
+
+		log:    logutil.AddComponent(cfg.Logger, (*service)(nil)),
+		tracer: cfg.Tracer,
 	}
 }
 
 type service struct {
 	static    about.StaticSource
 	locations location.Service
-	log       *logrus.Entry
+
+	log    *logrus.Entry
+	tracer opentracing.Tracer
 }
 
 var _ about.Service = (*service)(nil)
 
 func (svc service) GetAbout(ctx context.Context) (*about.About, error) {
+	span, ctx := opentracing.StartSpanFromContextWithTracer(
+		ctx, svc.tracer,
+		name.OfFunc(service.GetAbout),
+	)
+	defer span.Finish()
+
 	log := logutil.
 		WithMethod(svc.log, service.GetAbout).
 		WithContext(ctx)
@@ -73,6 +86,12 @@ func (svc service) GetAbout(ctx context.Context) (*about.About, error) {
 }
 
 func (svc service) GetMasked(ctx context.Context) (*about.Masked, error) {
+	span, ctx := opentracing.StartSpanFromContextWithTracer(
+		ctx, svc.tracer,
+		name.OfFunc(service.GetMasked),
+	)
+	defer span.Finish()
+
 	log := logutil.
 		WithMethod(svc.log, service.GetMasked).
 		WithContext(ctx)

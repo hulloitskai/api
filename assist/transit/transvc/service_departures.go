@@ -9,6 +9,7 @@ import (
 
 	"github.com/cockroachdb/errors"
 	"github.com/lithammer/fuzzysearch/fuzzy"
+	opentracing "github.com/opentracing/opentracing-go"
 	"github.com/sirupsen/logrus"
 
 	"go.stevenxie.me/gopkg/logutil"
@@ -27,6 +28,12 @@ func (svc *service) FindDepartures(
 	coords location.Coordinates,
 	opts ...transit.FindDeparturesOption,
 ) ([]transit.NearbyDeparture, error) {
+	span, ctx := opentracing.StartSpanFromContextWithTracer(
+		ctx, svc.tracer,
+		name.OfFunc((*service).FindDepartures),
+	)
+	defer span.Finish()
+
 	log := svc.log.WithFields(logrus.Fields{
 		logutil.MethodKey: name.OfMethod((*service).FindDepartures),
 		"route_query":     routeQuery,
