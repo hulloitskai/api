@@ -47,8 +47,8 @@ func (svc *service) FindDepartures(
 	}
 
 	cfg := transit.FindDeparturesConfig{
-		PreferRealtime: true,
-		TimesLimit:     3,
+		Realtime:   true,
+		TimesLimit: 3,
 	}
 	for _, opt := range opts {
 		opt(&cfg)
@@ -58,10 +58,11 @@ func (svc *service) FindDepartures(
 	}
 	{
 		fields := logrus.Fields{
-			"prefer_realtime":  cfg.PreferRealtime,
+			"realtime":         cfg.Realtime,
 			"fuzzy_match":      cfg.FuzzyMatch,
 			"group_by_station": cfg.GroupByStation,
 			"limit":            cfg.Limit,
+			"times_limit":      cfg.TimesLimit,
 		}
 		if c := cfg.OperatorCode; c != "" {
 			fields["operator_code"] = c
@@ -240,7 +241,7 @@ func (svc *service) FindDepartures(
 	}
 
 	// Update with realtime departures times, if available.
-	if cfg.PreferRealtime {
+	if cfg.Realtime {
 		log.
 			WithField("realtime_sources", svc.rts).
 			Trace("Updating results with realtime data...")
@@ -287,7 +288,7 @@ func (svc *service) FindDepartures(
 					continue
 				}
 				log.Error("Failed to get realtime departure times.")
-				return nil, errors.Wrap(err, "transvc: get realtime departure times")
+				continue
 			}
 			if len(times) == 0 {
 				log.Info("No realtime departure times found, skipping.")

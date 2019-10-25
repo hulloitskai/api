@@ -22,7 +22,7 @@ func (srv *Server) registerRoutes() error {
 	// Register metadata route.
 	e.Match(
 		[]string{http.MethodGet, http.MethodHead}, "/",
-		httputil.InfoHandler(name.OfType((*Server)(nil)), internal.Version),
+		httputil.InfoHandler(name.OfTypeFull((*Server)(nil)), internal.Version),
 	)
 
 	// Add GraphQL and GraphiQL endpoints.

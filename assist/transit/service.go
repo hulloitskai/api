@@ -76,11 +76,11 @@ type (
 	FindDeparturesConfig struct {
 		OperatorCode string // filter by operator code
 
-		PreferRealtime bool // make extra queries for realtime data
-		FuzzyMatch     bool // use fuzzy match algorithm for route
+		Realtime   bool // make extra queries for realtime data
+		FuzzyMatch bool // use fuzzy match algorithm for route
 
 		GroupByStation bool // group results by station
-		SingleSet      bool // get one result per direction, overrides Limit
+		SingleSet      bool // get one result per direction (overrides Limit)
 
 		Limit      int // limit number of results
 		TimesLimit int // limit number of departure times to include
