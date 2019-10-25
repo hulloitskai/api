@@ -5,7 +5,7 @@ import (
 	"sync"
 	"time"
 
-	"github.com/opentracing/opentracing-go"
+	opentracing "github.com/opentracing/opentracing-go"
 	"github.com/sirupsen/logrus"
 	"go.stevenxie.me/gopkg/logutil"
 	"go.stevenxie.me/gopkg/name"

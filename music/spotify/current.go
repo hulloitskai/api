@@ -6,14 +6,15 @@ import (
 	"time"
 
 	"github.com/cockroachdb/errors"
-	"github.com/opentracing/opentracing-go"
+	opentracing "github.com/opentracing/opentracing-go"
 	"github.com/sirupsen/logrus"
 	"github.com/zmb3/spotify"
 
-	"go.stevenxie.me/api/music"
-	"go.stevenxie.me/api/pkg/basic"
 	"go.stevenxie.me/gopkg/logutil"
 	"go.stevenxie.me/gopkg/name"
+
+	"go.stevenxie.me/api/music"
+	"go.stevenxie.me/api/pkg/basic"
 )
 
 // NewCurrentService creates a new music.CurrentSource.

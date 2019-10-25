@@ -5,14 +5,14 @@ import (
 	"time"
 
 	"github.com/cockroachdb/errors"
-	"github.com/opentracing/opentracing-go"
+	opentracing "github.com/opentracing/opentracing-go"
 	"github.com/sirupsen/logrus"
+	"go.stevenxie.me/gopkg/logutil"
+	"go.stevenxie.me/gopkg/name"
 
 	"go.stevenxie.me/api/location"
 	"go.stevenxie.me/api/location/geocode"
 	"go.stevenxie.me/api/location/geocode/geoutil"
-	"go.stevenxie.me/gopkg/logutil"
-	"go.stevenxie.me/gopkg/name"
 )
 
 // NewService creates a new location.Service using a HistoryService and

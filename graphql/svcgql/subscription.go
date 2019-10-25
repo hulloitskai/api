@@ -3,10 +3,9 @@ package svcgql
 import (
 	"context"
 
-	"go.stevenxie.me/api/music/musicgql"
-
 	"go.stevenxie.me/api/graphql"
 	"go.stevenxie.me/api/music"
+	"go.stevenxie.me/api/music/musicgql"
 )
 
 func newSubscriptionResolver(strms Streamers) graphql.SubscriptionResolver {

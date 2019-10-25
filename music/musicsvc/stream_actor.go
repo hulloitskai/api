@@ -4,14 +4,13 @@ import (
 	"context"
 	"sync"
 
-	"go.stevenxie.me/gopkg/logutil"
-
 	"github.com/cockroachdb/errors"
 	"github.com/sirupsen/logrus"
+	"go.stevenxie.me/gopkg/logutil"
+	"go.stevenxie.me/gopkg/zero"
 
 	"go.stevenxie.me/api/music"
 	"go.stevenxie.me/api/pkg/poll"
-	"go.stevenxie.me/gopkg/zero"
 )
 
 func newCurrentStreamActor(

@@ -3,16 +3,18 @@ package svcgql
 import (
 	"context"
 
+	"go.stevenxie.me/api/productivity"
+	"go.stevenxie.me/api/productivity/prodgql"
+
 	"go.stevenxie.me/api/about"
 	"go.stevenxie.me/api/about/aboutgql"
+
 	"go.stevenxie.me/api/assist/assistgql"
 	"go.stevenxie.me/api/auth/authgql"
 	"go.stevenxie.me/api/git/gitgql"
 	"go.stevenxie.me/api/graphql"
 	"go.stevenxie.me/api/location/locgql"
 	"go.stevenxie.me/api/music/musicgql"
-	"go.stevenxie.me/api/productivity"
-	"go.stevenxie.me/api/productivity/prodgql"
 	"go.stevenxie.me/api/scheduling/schedgql"
 )
 

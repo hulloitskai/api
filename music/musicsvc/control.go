@@ -3,12 +3,13 @@ package musicsvc
 import (
 	"context"
 
-	"github.com/opentracing/opentracing-go"
+	opentracing "github.com/opentracing/opentracing-go"
 	"github.com/sirupsen/logrus"
-	"go.stevenxie.me/api/music"
-	"go.stevenxie.me/api/pkg/basic"
 	"go.stevenxie.me/gopkg/logutil"
 	"go.stevenxie.me/gopkg/name"
+
+	"go.stevenxie.me/api/music"
+	"go.stevenxie.me/api/pkg/basic"
 )
 
 // NewControlService creates a new music.ControlService.

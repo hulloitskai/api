@@ -5,10 +5,10 @@ import (
 	"time"
 
 	"github.com/cockroachdb/errors"
-	"go.stevenxie.me/api/auth/authutil"
-	"go.stevenxie.me/api/pkg/timeutil"
 
 	"go.stevenxie.me/api/auth"
+	"go.stevenxie.me/api/auth/authutil"
+	"go.stevenxie.me/api/pkg/timeutil"
 	"go.stevenxie.me/api/scheduling"
 )
 

@@ -4,7 +4,6 @@ import (
 	"context"
 
 	"github.com/openlyinc/pointy"
-
 	"go.stevenxie.me/api/productivity"
 	"go.stevenxie.me/gopkg/zero"
 )

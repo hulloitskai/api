@@ -4,9 +4,10 @@ import (
 	"context"
 
 	"github.com/sirupsen/logrus"
+	"go.stevenxie.me/gopkg/logutil"
+
 	"go.stevenxie.me/api/music"
 	"go.stevenxie.me/api/pkg/basic"
-	"go.stevenxie.me/gopkg/logutil"
 )
 
 // NewNoopCurrentStreamer creates a no-op music.CurrentStreamer.

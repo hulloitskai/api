@@ -5,10 +5,9 @@ import (
 	"net/http"
 	"os"
 
+	"github.com/cockroachdb/errors"
 	"go.stevenxie.me/api/pkg/httputil"
 	"go.stevenxie.me/gopkg/name"
-
-	"github.com/cockroachdb/errors"
 )
 
 // Namespace is the package namespace used for things like envvar prefixes.

@@ -4,7 +4,6 @@ import (
 	"context"
 
 	"github.com/cockroachdb/errors"
-
 	"github.com/zmb3/spotify"
 	"go.stevenxie.me/api/music"
 )

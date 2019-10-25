@@ -12,7 +12,7 @@ import (
 	"github.com/cockroachdb/errors"
 	"github.com/mitchellh/mapstructure"
 	"github.com/openlyinc/pointy"
-	"github.com/opentracing/opentracing-go"
+	opentracing "github.com/opentracing/opentracing-go"
 	"github.com/sirupsen/logrus"
 
 	"go.stevenxie.me/api/auth"

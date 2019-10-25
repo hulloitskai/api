@@ -11,12 +11,13 @@ import (
 	"time"
 
 	"github.com/cockroachdb/errors"
-	"github.com/opentracing/opentracing-go"
+	opentracing "github.com/opentracing/opentracing-go"
+	"go.stevenxie.me/gopkg/name"
+
 	"go.stevenxie.me/api/location"
 	"go.stevenxie.me/api/location/geocode"
 	"go.stevenxie.me/api/pkg/basic"
 	"go.stevenxie.me/api/pkg/here"
-	"go.stevenxie.me/gopkg/name"
 )
 
 // NewGeocoder creates a new geocode.Geocoder.

@@ -8,11 +8,11 @@ import (
 
 	"github.com/cockroachdb/errors"
 	sentry "github.com/getsentry/sentry-go"
+	"github.com/sirupsen/logrus"
+	"go.stevenxie.me/gopkg/logutil"
+
 	echo "github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"
-	"github.com/sirupsen/logrus"
-
-	"go.stevenxie.me/gopkg/logutil"
 
 	"go.stevenxie.me/api/about"
 	"go.stevenxie.me/api/assist/transit"

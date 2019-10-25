@@ -3,12 +3,11 @@ package config
 import (
 	"time"
 
-	"go.stevenxie.me/api/pkg/jaeger"
-
 	"github.com/cockroachdb/errors"
-	"go.stevenxie.me/api/auth/airtable"
-
 	validation "github.com/go-ozzo/ozzo-validation"
+
+	"go.stevenxie.me/api/auth/airtable"
+	"go.stevenxie.me/api/pkg/jaeger"
 )
 
 // Config maps to a configuration YAML that can configure programs in this

@@ -3,9 +3,9 @@ package google
 import (
 	"context"
 
+	validation "github.com/go-ozzo/ozzo-validation"
 	"golang.org/x/oauth2"
 	googleauth "golang.org/x/oauth2/google"
-	"gopkg.in/go-validator/validator.v2"
 
 	"github.com/cockroachdb/errors"
 	"github.com/kelseyhightower/envconfig"
@@ -34,8 +34,13 @@ func NewClientSet() (*ClientSet, error) {
 	}
 
 	// Validate data.
-	if err := validator.Validate(&data); err != nil {
-		return nil, errors.Wrap(err, "google: validating envvars")
+	if err := validation.ValidateStruct(
+		&data,
+		validation.Field(&data.Token, validation.Required),
+		validation.Field(&data.ID, validation.Required),
+		validation.Field(&data.Secret, validation.Required),
+	); err != nil {
+		return nil, errors.Wrap(err, "google: missing envvars")
 	}
 
 	// Create authenticated google service.

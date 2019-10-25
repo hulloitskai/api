@@ -51,7 +51,5 @@ require (
 	google.golang.org/api v0.11.0
 	google.golang.org/appengine v1.6.5 // indirect
 	google.golang.org/grpc v1.24.0 // indirect
-	gopkg.in/go-validator/validator.v2 v2.0.0-20191008145730-5614e8810ea7
-	gopkg.in/validator.v2 v2.0.0-20180514200540-135c24b11c19 // indirect
 	gopkg.in/yaml.v2 v2.2.4 // indirect
 )

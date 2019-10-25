@@ -3,7 +3,7 @@ package transvc
 import (
 	"time"
 
-	"github.com/opentracing/opentracing-go"
+	opentracing "github.com/opentracing/opentracing-go"
 	"github.com/sirupsen/logrus"
 
 	"go.stevenxie.me/api/assist/transit"

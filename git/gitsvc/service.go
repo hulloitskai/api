@@ -3,13 +3,13 @@ package gitsvc
 import (
 	"context"
 
-	"github.com/opentracing/opentracing-go"
+	opentracing "github.com/opentracing/opentracing-go"
 	"github.com/sirupsen/logrus"
+	"go.stevenxie.me/gopkg/logutil"
+	"go.stevenxie.me/gopkg/name"
 
 	"go.stevenxie.me/api/git"
 	"go.stevenxie.me/api/pkg/basic"
-	"go.stevenxie.me/gopkg/logutil"
-	"go.stevenxie.me/gopkg/name"
 )
 
 // NewService creates a new git.Service.

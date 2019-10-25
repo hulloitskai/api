@@ -6,11 +6,11 @@ import (
 
 	"github.com/99designs/gqlgen/handler"
 	echo "github.com/labstack/echo/v4"
+	"go.stevenxie.me/gopkg/name"
 
 	"go.stevenxie.me/api/internal"
 	"go.stevenxie.me/api/pkg/gqlutil"
 	"go.stevenxie.me/api/pkg/httputil"
-	"go.stevenxie.me/gopkg/name"
 )
 
 func (srv *Server) registerRoutes() error {

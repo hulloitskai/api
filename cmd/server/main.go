@@ -8,8 +8,8 @@ import (
 	"os"
 
 	"github.com/cockroachdb/errors"
-	"github.com/getsentry/sentry-go"
-	"github.com/opentracing/opentracing-go"
+	sentry "github.com/getsentry/sentry-go"
+	opentracing "github.com/opentracing/opentracing-go"
 	"github.com/sirupsen/logrus"
 	"github.com/urfave/cli"
 
@@ -58,7 +58,7 @@ import (
 	"go.stevenxie.me/api/auth/airtable"
 
 	"go.stevenxie.me/api/cmd/server/config"
-	cmdint "go.stevenxie.me/api/cmd/server/internal"
+	cmdinternal "go.stevenxie.me/api/cmd/server/internal"
 	"go.stevenxie.me/api/internal"
 	"go.stevenxie.me/api/server/httpsrv"
 )
@@ -69,9 +69,9 @@ func main() {
 		cmdutil.Fatalf("Failed to load dotenv file: %v\n", err)
 	}
 	app := cli.NewApp()
-	app.Name = cmdint.Name
+	app.Name = cmdinternal.Name
 	app.Usage = "A server for my personal API."
-	app.UsageText = fmt.Sprintf("%s [global options]", cmdint.Name)
+	app.UsageText = fmt.Sprintf("%s [global options]", cmdinternal.Name)
 	app.Version = internal.Version
 	app.Action = run
 
@@ -140,7 +140,7 @@ func run(*cli.Context) (err error) {
 	if t := cfg.Tracer; t.Enabled {
 		var closer io.Closer
 		tracer, closer, err = jaeger.NewTracer(
-			cmdint.Namespace,
+			cmdinternal.Namespace,
 			jaeger.WithOverrides(&t.Jaeger),
 		)
 		if err != nil {
