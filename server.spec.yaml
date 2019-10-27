@@ -1,4 +1,5 @@
 shutdownTimeout: Duration
+debug: Bool
 
 tracer:
   enabled: Bool

@@ -1,11 +1,11 @@
-package httpsrv
+package gqlsrv
 
 import (
 	"net/http"
-	"os"
 
 	"github.com/99designs/gqlgen/handler"
 	echo "github.com/labstack/echo/v4"
+	"go.stevenxie.me/gopkg/configutil"
 	"go.stevenxie.me/gopkg/name"
 
 	"go.stevenxie.me/api/internal"
@@ -19,7 +19,7 @@ func (srv *Server) registerRoutes() error {
 		srv.log.WithField("handler", "error"),
 	)
 
-	// Register metadata route.
+	// Register meta route.
 	e.Match(
 		[]string{http.MethodGet, http.MethodHead}, "/",
 		httputil.InfoHandler(name.OfTypeFull((*Server)(nil)), internal.Version),
@@ -33,7 +33,7 @@ func (srv *Server) registerRoutes() error {
 	)
 
 	// Only enable playground in development.
-	if os.Getenv("GOENV") == "development" {
+	if configutil.GetGoEnv() == configutil.GoEnvDevelopment {
 		e.GET(
 			"/playground",
 			echo.WrapHandler(handler.Playground("Playground", "/graphql")),

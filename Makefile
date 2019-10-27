@@ -117,10 +117,20 @@ __GOVERIFYCMD = \
     echo "No build package was specified." && exit 1; \
   fi
 
+
+GOREGEX ?= \.go$
+__REFLEX = reflex -d none
+__GORUN  = go run $(GOBUILDFLAGS) $(GORUNFLAGS) $(__GOCMD) $(__GOARGS)
+
 go-run:
 	@$(__GOENV) && $(__GOVERIFYCMD) && \
-	 echo "Running with 'go run'..." && \
-	 go run $(GOBUILDFLAGS) $(GORUNFLAGS) $(__GOCMD) $(__GOARGS)
+	 if command -v $(__REFLEX) > /dev/null; then \
+	   echo "Running with 'reflex [...] go run'..." && \
+	   $(__REFLEX) -sr '$(GOREGEX)' -- $(__GORUN); \
+	 else \
+	   echo "Running with 'go run'.." && \
+	   go run $(GOBUILDFLAGS) $(GORUNFLAGS) $(__GOCMD) $(__GOARGS); \
+	 fi
 go-build:
 	@$(__GOENV) && \
 	 echo "Building with 'go build'..." && \

@@ -1,10 +1,11 @@
-package httpsrv
+package gqlsrv
 
 import (
 	"context"
 	"io/ioutil"
 	"net/http"
-	"os"
+
+	"go.stevenxie.me/gopkg/configutil"
 
 	"github.com/cockroachdb/errors"
 	sentry "github.com/getsentry/sentry-go"
@@ -49,18 +50,19 @@ func NewServer(svcs Services, strms Streamers, opts ...ServerOption) *Server {
 	))
 
 	// Enable Access-Control-Allow-Origin: * during development.
-	if os.Getenv("GOENV") == "development" {
+	if configutil.GetGoEnv() == configutil.GoEnvDevelopment {
 		echo.Use(middleware.CORS())
 	}
 
-	// Create and configure server.
+	// Create server.
 	return &Server{
 		echo:   echo,
 		log:    log,
 		sentry: cfg.Sentry,
 
-		svcs:            svcs,
-		strms:           strms,
+		svcs:  svcs,
+		strms: strms,
+
 		complexityLimit: cfg.ComplexityLimit,
 	}
 }
@@ -127,13 +129,13 @@ type (
 // ListenAndServe listens and serves on the specified address.
 func (srv *Server) ListenAndServe(addr string) error {
 	if addr == "" {
-		return errors.New("httpsrv: addr must be non-empty")
+		return errors.New("gqlsrv: addr must be non-empty")
 	}
 	log := srv.log.WithField("addr", addr)
 
 	// Register routes.
 	if err := srv.registerRoutes(); err != nil {
-		return errors.Wrap(err, "httpsrv: registering routes")
+		return errors.Wrap(err, "gqlsrv: registering routes")
 	}
 
 	// Listen for connections.

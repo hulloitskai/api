@@ -1,4 +1,4 @@
-package httpsrv
+package gqlsrv
 
 import (
 	"net/http"

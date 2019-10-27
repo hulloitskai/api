@@ -7,6 +7,10 @@ import (
 	"net/http"
 	"os"
 
+	"go.stevenxie.me/api/server/debugsrv"
+
+	"golang.org/x/sync/errgroup"
+
 	"github.com/cockroachdb/errors"
 	sentry "github.com/getsentry/sentry-go"
 	opentracing "github.com/opentracing/opentracing-go"
@@ -60,7 +64,7 @@ import (
 	"go.stevenxie.me/api/cmd/server/config"
 	cmdinternal "go.stevenxie.me/api/cmd/server/internal"
 	"go.stevenxie.me/api/internal"
-	"go.stevenxie.me/api/server/httpsrv"
+	"go.stevenxie.me/api/server/gqlsrv"
 )
 
 func main() {
@@ -81,10 +85,16 @@ func main() {
 	// Configure flags.
 	app.Flags = []cli.Flag{
 		cli.IntFlag{
-			Name:        "port",
-			Usage:       "port that the HTTP server listens on",
+			Name:        "gql-port",
+			Usage:       "port that the GraphQL server listens on",
 			Value:       3000,
-			Destination: &flags.HTTPPort,
+			Destination: &flags.GQLPort,
+		},
+		cli.IntFlag{
+			Name:        "debug-port",
+			Usage:       "port that the debug server listens on",
+			Value:       6060,
+			Destination: &flags.DebugPort,
 		},
 		cli.BoolFlag{
 			Name:  "help,h",
@@ -99,7 +109,8 @@ func main() {
 }
 
 var flags struct {
-	HTTPPort int
+	GQLPort   int
+	DebugPort int
 }
 
 func run(*cli.Context) (err error) {
@@ -384,10 +395,18 @@ func run(*cli.Context) (err error) {
 		)
 	}
 
-	// Start HTTP server.
-	log.Info("Initializing HTTP server...")
-	srv := httpsrv.NewServer(
-		httpsrv.Services{
+	// Coordinate processes with errgroup.
+	var group errgroup.Group
+
+	var host string
+	if configutil.GetGoEnv() == configutil.GoEnvDevelopment {
+		host = "localhost"
+	}
+
+	// Start GraphQL server.
+	log.Info("Initializing GraphQL server...")
+	gqlServer := gqlsrv.NewServer(
+		gqlsrv.Services{
 			Git:          gitService,
 			About:        aboutService,
 			Music:        musicService,
@@ -397,11 +416,11 @@ func run(*cli.Context) (err error) {
 			Scheduling:   schedulingService,
 			Productivity: productivityService,
 		},
-		httpsrv.Streamers{
+		gqlsrv.Streamers{
 			Music: musicStreamer,
 		},
-		httpsrv.WithLogger(log),
-		httpsrv.WithSentry(sentry),
+		gqlsrv.WithLogger(log),
+		gqlsrv.WithSentry(sentry),
 	)
 	guillo.AddFinalizer(func() error {
 		var (
@@ -414,16 +433,53 @@ func run(*cli.Context) (err error) {
 			ctx, cancel = context.WithTimeout(ctx, *timeout)
 			defer cancel()
 		}
-		log.Info("Shutting down HTTP server...")
-		err := srv.Shutdown(ctx)
-		return errors.Wrap(err, "shutting down server")
+		log.Info("Shutting down GraphQL server...")
+		err := gqlServer.Shutdown(ctx)
+		return errors.Wrap(err, "shutting down GraphQL server")
+	})
+	group.Go(func() error {
+		var (
+			addr = fmt.Sprintf("%s:%d", host, flags.GQLPort)
+			err  = gqlServer.ListenAndServe(addr)
+		)
+		if !errors.Is(err, http.ErrServerClosed) {
+			guillo.Trigger()
+			return errors.Wrap(err, "starting GraphQL server")
+		}
+		return nil
 	})
 
-	// Listen for new connections.
-	err = srv.ListenAndServe(fmt.Sprintf(":%d", flags.HTTPPort))
-	if !errors.Is(err, http.ErrServerClosed) {
-		guillo.Trigger()
-		return errors.Wrap(err, "starting HTTP server")
+	// Start debug server.
+	if cfg.Debug {
+		debugServer := debugsrv.NewServer(basic.WithLogger(log))
+		guillo.AddFinalizer(func() error {
+			var (
+				log = log
+				ctx = context.Background()
+			)
+			if timeout := cfg.ShutdownTimeout; timeout != nil {
+				log = log.WithField("timeout", *timeout)
+				var cancel context.CancelFunc
+				ctx, cancel = context.WithTimeout(ctx, *timeout)
+				defer cancel()
+			}
+			log.Info("Shutting down debug server...")
+			err := debugServer.Shutdown(ctx)
+			return errors.Wrap(err, "shutting down debug server")
+		})
+		group.Go(func() error {
+			var (
+				addr = fmt.Sprintf("%s:%d", host, flags.DebugPort)
+				err  = debugServer.ListenAndServe(addr)
+			)
+			if !errors.Is(err, http.ErrServerClosed) {
+				guillo.Trigger()
+				return errors.Wrap(err, "starting debug server")
+			}
+			return nil
+		})
 	}
-	return nil
+
+	// Wait for process group to finish.
+	return group.Wait()
 }

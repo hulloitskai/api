@@ -14,6 +14,7 @@ import (
 // package.
 type Config struct {
 	ShutdownTimeout *time.Duration `yaml:"shutdownTimeout"`
+	Debug           bool           `yaml:"debug"`
 
 	Tracer struct {
 		Enabled bool          `yaml:"enabled"`
