@@ -2,6 +2,9 @@ package gqlutil
 
 import (
 	"context"
+	"net/http"
+
+	"github.com/cockroachdb/errors/exthttp"
 
 	"github.com/99designs/gqlgen/graphql"
 	"github.com/cockroachdb/errors"
@@ -39,6 +42,13 @@ func PresentError(ctx context.Context, err error) *gqlerror.Error {
 			Line int    `json:"line"`
 			Fn   string `json:"fn"`
 		}{file, line, fn}
+	}
+	{
+		status := exthttp.GetHTTPCode(err, http.StatusInternalServerError)
+		exts["status"] = struct {
+			Code int    `json:"code"`
+			Text string `json:"text"`
+		}{status, http.StatusText(status)}
 	}
 
 	gqlErr := graphql.DefaultErrorPresenter(ctx, err)

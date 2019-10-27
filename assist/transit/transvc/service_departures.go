@@ -3,10 +3,13 @@ package transvc
 import (
 	"context"
 	"fmt"
+	"net/http"
 	"regexp"
 	"sort"
 	"strings"
 	"time"
+
+	"github.com/cockroachdb/errors/exthttp"
 
 	"github.com/cockroachdb/errors"
 	"github.com/lithammer/fuzzysearch/fuzzy"
@@ -139,10 +142,12 @@ func (svc *service) FindDepartures(
 		matches := fuzzy.RankFindFold(route, routesWithContext)
 		if len(matches) == 0 {
 			log.Trace("No matching routes, aborting.")
-			return nil, errors.WithDetailf(
-				errors.New("transvc: no matching route"),
+			err = errors.New("transvc: no matching route")
+			err = errors.WithDetailf(
+				err,
 				"No nearby routes matching '%s'.", routeQuery,
 			)
+			return nil, exthttp.WrapWithHTTPCode(err, http.StatusNotFound)
 		}
 		sort.Sort(matches)
 		log.
@@ -169,8 +174,9 @@ func (svc *service) FindDepartures(
 			}
 		}
 		if len(filtered) == 0 {
+			err = errors.New("transvc: no departures matching route")
 			return nil, errors.WithDetailf(
-				errors.New("transvc: no departures matching route"),
+				err,
 				"No departures found for '%s'.", routeQuery,
 			)
 		}

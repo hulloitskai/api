@@ -10,6 +10,8 @@ import (
 	"strings"
 	"time"
 
+	"github.com/cockroachdb/errors/exthttp"
+
 	"github.com/cockroachdb/errors"
 	opentracing "github.com/opentracing/opentracing-go"
 	"github.com/sirupsen/logrus"
@@ -261,15 +263,13 @@ func (src *realtimeSource) getStopIDs(
 		}
 	}
 	if len(ids) == 0 {
-		return nil, errors.WithDetailf(
-			errors.New("none found"),
+		err = errors.New("none found")
+		err = errors.WithDetailf(
+			err,
 			"No GRT stops found with the name '%s'.", stn.Name,
 		)
+		return nil, exthttp.WrapWithHTTPCode(err, http.StatusNotFound)
 	}
-	log.
-		WithField("ids", ids).
-		Trace("Got IDs.")
-
 	return ids, nil
 }
 
