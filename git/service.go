@@ -1,4 +1,4 @@
-package git // import "go.stevenxie.me/api/git"
+package git // import "go.stevenxie.me/api/v2/git"
 
 import "context"
 

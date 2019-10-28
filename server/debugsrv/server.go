@@ -8,7 +8,7 @@ import (
 	"github.com/sirupsen/logrus"
 	"go.stevenxie.me/gopkg/logutil"
 
-	"go.stevenxie.me/api/pkg/basic"
+	"go.stevenxie.me/api/v2/pkg/basic"
 )
 
 // NewServer creates a new Server.

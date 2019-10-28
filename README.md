@@ -15,8 +15,8 @@ _My personal API, now in GraphQL!_
 Since `v2.0.0`, my API is primarily accessed over
 [GraphQL](https://graphql.org/).
 
-For example, you can get the name of the song track I'm listening to right now
-with the following `curl` query:
+For example, you can get the name of the song I'm listening to right now with
+the following `curl` query:
 
 ```bash
 curl \

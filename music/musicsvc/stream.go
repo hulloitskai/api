@@ -7,8 +7,8 @@ import (
 	"github.com/cockroachdb/errors"
 	"github.com/sirupsen/logrus"
 
-	"go.stevenxie.me/api/music"
-	"go.stevenxie.me/api/pkg/poll"
+	"go.stevenxie.me/api/v2/music"
+	"go.stevenxie.me/api/v2/pkg/poll"
 	"go.stevenxie.me/gopkg/logutil"
 )
 

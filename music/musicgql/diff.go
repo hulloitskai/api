@@ -1,6 +1,6 @@
 package musicgql
 
-import "go.stevenxie.me/api/music"
+import "go.stevenxie.me/api/v2/music"
 
 // IsEqualsCurrentlyPlaying returns true if x is equal to y.
 func IsEqualsCurrentlyPlaying(x, y *music.CurrentlyPlaying) bool {

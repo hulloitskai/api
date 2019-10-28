@@ -12,9 +12,9 @@ import (
 	"go.stevenxie.me/gopkg/logutil"
 	"go.stevenxie.me/gopkg/name"
 
-	"go.stevenxie.me/api/about"
-	"go.stevenxie.me/api/location"
-	"go.stevenxie.me/api/pkg/basic"
+	"go.stevenxie.me/api/v2/about"
+	"go.stevenxie.me/api/v2/location"
+	"go.stevenxie.me/api/v2/pkg/basic"
 )
 
 // NewService creates a new about.Service.

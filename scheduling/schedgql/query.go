@@ -6,10 +6,10 @@ import (
 
 	"github.com/cockroachdb/errors"
 
-	"go.stevenxie.me/api/auth"
-	"go.stevenxie.me/api/auth/authutil"
-	"go.stevenxie.me/api/pkg/timeutil"
-	"go.stevenxie.me/api/scheduling"
+	"go.stevenxie.me/api/v2/auth"
+	"go.stevenxie.me/api/v2/auth/authutil"
+	"go.stevenxie.me/api/v2/pkg/timeutil"
+	"go.stevenxie.me/api/v2/scheduling"
 )
 
 // NewQuery creates a new Query.

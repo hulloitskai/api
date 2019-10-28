@@ -3,7 +3,7 @@ package musicgql
 import (
 	"context"
 
-	"go.stevenxie.me/api/music"
+	"go.stevenxie.me/api/v2/music"
 	"go.stevenxie.me/gopkg/zero"
 )
 

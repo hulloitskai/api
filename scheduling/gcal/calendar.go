@@ -7,8 +7,8 @@ import (
 	"github.com/cockroachdb/errors"
 	gcal "google.golang.org/api/calendar/v3"
 
-	"go.stevenxie.me/api/pkg/timeutil"
-	"go.stevenxie.me/api/scheduling"
+	"go.stevenxie.me/api/v2/pkg/timeutil"
+	"go.stevenxie.me/api/v2/scheduling"
 )
 
 const _timeLayout = time.RFC3339

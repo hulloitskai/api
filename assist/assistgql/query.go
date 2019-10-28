@@ -1,8 +1,8 @@
 package assistgql
 
 import (
-	"go.stevenxie.me/api/assist/transit"
-	"go.stevenxie.me/api/assist/transit/transgql"
+	"go.stevenxie.me/api/v2/assist/transit"
+	"go.stevenxie.me/api/v2/assist/transit/transgql"
 )
 
 // NewQuery creates a new Query.

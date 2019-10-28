@@ -1,7 +1,7 @@
 package internal
 
 import (
-	"go.stevenxie.me/api/internal"
+	"go.stevenxie.me/api/v2/internal"
 )
 
 const (

@@ -12,9 +12,9 @@ import (
 	"go.stevenxie.me/gopkg/logutil"
 	"go.stevenxie.me/gopkg/name"
 
-	"go.stevenxie.me/api/location"
-	"go.stevenxie.me/api/pkg/basic"
-	"go.stevenxie.me/api/productivity"
+	"go.stevenxie.me/api/v2/location"
+	"go.stevenxie.me/api/v2/pkg/basic"
+	"go.stevenxie.me/api/v2/productivity"
 )
 
 // NewService creates a new Services from a RecordService.

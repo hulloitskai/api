@@ -6,7 +6,7 @@ import (
 	opentracing "github.com/opentracing/opentracing-go"
 	"github.com/sirupsen/logrus"
 
-	"go.stevenxie.me/api/assist/transit"
+	"go.stevenxie.me/api/v2/assist/transit"
 	"go.stevenxie.me/gopkg/logutil"
 )
 

@@ -1,6 +1,6 @@
 package musicsvc
 
-import "go.stevenxie.me/api/music"
+import "go.stevenxie.me/api/v2/music"
 
 // NewService creates a new music.Service.
 func NewService(

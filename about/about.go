@@ -3,7 +3,7 @@ package about
 import (
 	"time"
 
-	"go.stevenxie.me/api/location"
+	"go.stevenxie.me/api/v2/location"
 )
 
 type (

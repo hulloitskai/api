@@ -3,14 +3,14 @@ package svcgql
 import (
 	"context"
 
-	"go.stevenxie.me/api/auth"
-	"go.stevenxie.me/api/auth/authutil"
+	"go.stevenxie.me/api/v2/auth"
+	"go.stevenxie.me/api/v2/auth/authutil"
 
 	"github.com/cockroachdb/errors"
 
-	"go.stevenxie.me/api/graphql"
-	"go.stevenxie.me/api/music"
-	"go.stevenxie.me/api/music/musicgql"
+	"go.stevenxie.me/api/v2/graphql"
+	"go.stevenxie.me/api/v2/music"
+	"go.stevenxie.me/api/v2/music/musicgql"
 )
 
 func newMutationResolver(svcs Services) graphql.MutationResolver {

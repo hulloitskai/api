@@ -4,7 +4,7 @@ __TAG = $(shell git describe --tags --always 2> /dev/null)
 ifneq ($(__TAG),)
 	VERSION ?= $(shell echo "$(__TAG)" | cut -c 2-)
 else
-	VERSION ?= undefined
+	VERSION ?= HEAD
 endif
 
 # Go module name.
@@ -28,7 +28,7 @@ GODEFAULTCMD =  server
 __ARGS = $(filter-out $@,$(MAKECMDGOALS))
 
 __default:
-	@$(MAKE) lint -- $(__ARGS)
+	@$(MAKE) run -- $(__ARGS)
 __unknown:
 	@echo "Target '$(__ARGS)' not configured."
 
@@ -92,6 +92,7 @@ go-deps: # Verify and tidy project dependencies.
 	@$(__GOENV) && \
 	 echo "Verifying Go module dependencies..." && \
 	 go mod verify && \
+	 $(MAKE) go-install && \
 	 echo "Tidying Go module dependencies..." && \
 	 go mod tidy && \
 	 echo done
@@ -118,9 +119,9 @@ __GOVERIFYCMD = \
   fi
 
 
-GOREGEX ?= \.go$
-__REFLEX = reflex -d none
-__GORUN  = go run $(GOBUILDFLAGS) $(GORUNFLAGS) $(__GOCMD) $(__GOARGS)
+GOREGEX  ?= \.go$
+__REFLEX  = reflex -d none
+__GORUN   = go run $(GOBUILDFLAGS) $(GORUNFLAGS) $(__GOCMD) $(__GOARGS)
 
 go-run:
 	@$(__GOENV) && $(__GOVERIFYCMD) && \

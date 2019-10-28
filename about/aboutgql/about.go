@@ -4,7 +4,7 @@ import (
 	"context"
 	"fmt"
 
-	"go.stevenxie.me/api/about"
+	"go.stevenxie.me/api/v2/about"
 	"go.stevenxie.me/gopkg/zero"
 )
 

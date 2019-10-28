@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"time"
 
-	"go.stevenxie.me/api/scheduling"
+	"go.stevenxie.me/api/v2/scheduling"
 )
 
 // A HistorySegment represents a segment of location history.

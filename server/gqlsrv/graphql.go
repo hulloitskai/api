@@ -7,9 +7,9 @@ import (
 	"github.com/99designs/gqlgen/handler"
 	"github.com/gorilla/websocket"
 
-	"go.stevenxie.me/api/graphql"
-	"go.stevenxie.me/api/graphql/svcgql"
-	"go.stevenxie.me/api/pkg/gqlutil"
+	"go.stevenxie.me/api/v2/graphql"
+	"go.stevenxie.me/api/v2/graphql/svcgql"
+	"go.stevenxie.me/api/v2/pkg/gqlutil"
 )
 
 func (srv *Server) gqlHandler() http.Handler {

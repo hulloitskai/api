@@ -8,8 +8,8 @@ import (
 	"go.stevenxie.me/gopkg/logutil"
 	"go.stevenxie.me/gopkg/zero"
 
-	"go.stevenxie.me/api/git"
-	"go.stevenxie.me/api/pkg/poll"
+	"go.stevenxie.me/api/v2/git"
+	"go.stevenxie.me/api/v2/pkg/poll"
 )
 
 // NewServicePrecacher creates a new ServicePrecacher.

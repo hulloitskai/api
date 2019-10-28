@@ -4,8 +4,8 @@ import (
 	"net/http"
 	"net/http/pprof"
 
-	"go.stevenxie.me/api/internal"
-	"go.stevenxie.me/api/pkg/httputil"
+	"go.stevenxie.me/api/v2/internal"
+	"go.stevenxie.me/api/v2/pkg/httputil"
 	"go.stevenxie.me/gopkg/name"
 )
 

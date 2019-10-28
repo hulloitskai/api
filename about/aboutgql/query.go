@@ -6,9 +6,9 @@ import (
 
 	"github.com/cockroachdb/errors"
 
-	"go.stevenxie.me/api/about"
-	"go.stevenxie.me/api/auth"
-	"go.stevenxie.me/api/auth/authutil"
+	"go.stevenxie.me/api/v2/about"
+	"go.stevenxie.me/api/v2/auth"
+	"go.stevenxie.me/api/v2/auth/authutil"
 )
 
 // NewQuery creates a new Query.

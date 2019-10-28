@@ -12,14 +12,14 @@ import (
 	"go.stevenxie.me/gopkg/cmdutil"
 	"go.stevenxie.me/gopkg/configutil"
 
-	"go.stevenxie.me/api/assist/transit"
-	"go.stevenxie.me/api/assist/transit/grt"
-	"go.stevenxie.me/api/assist/transit/heretrans"
-	"go.stevenxie.me/api/assist/transit/transvc"
+	"go.stevenxie.me/api/v2/assist/transit"
+	"go.stevenxie.me/api/v2/assist/transit/grt"
+	"go.stevenxie.me/api/v2/assist/transit/heretrans"
+	"go.stevenxie.me/api/v2/assist/transit/transvc"
 
-	"go.stevenxie.me/api/location"
-	"go.stevenxie.me/api/pkg/basic"
-	"go.stevenxie.me/api/pkg/here"
+	"go.stevenxie.me/api/v2/location"
+	"go.stevenxie.me/api/v2/pkg/basic"
+	"go.stevenxie.me/api/v2/pkg/here"
 )
 
 const _appID = "NJBvN0hkaR2Fv7bNpNpU"

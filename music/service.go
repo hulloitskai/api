@@ -1,4 +1,4 @@
-package music // import "go.stevenxie.me/api/music"
+package music // import "go.stevenxie.me/api/v2/music"
 
 type (
 	// A Service handles all music-related requests.

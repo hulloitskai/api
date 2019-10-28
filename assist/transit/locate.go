@@ -4,7 +4,7 @@ import (
 	"context"
 
 	validation "github.com/go-ozzo/ozzo-validation"
-	"go.stevenxie.me/api/location"
+	"go.stevenxie.me/api/v2/location"
 )
 
 type (

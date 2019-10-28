@@ -14,10 +14,10 @@ import (
 	opentracing "github.com/opentracing/opentracing-go"
 	"go.stevenxie.me/gopkg/name"
 
-	"go.stevenxie.me/api/location"
-	"go.stevenxie.me/api/location/geocode"
-	"go.stevenxie.me/api/pkg/basic"
-	"go.stevenxie.me/api/pkg/here"
+	"go.stevenxie.me/api/v2/location"
+	"go.stevenxie.me/api/v2/location/geocode"
+	"go.stevenxie.me/api/v2/pkg/basic"
+	"go.stevenxie.me/api/v2/pkg/here"
 )
 
 // NewGeocoder creates a new geocode.Geocoder.

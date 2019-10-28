@@ -3,7 +3,7 @@ package transit
 import (
 	"time"
 
-	"go.stevenxie.me/api/location"
+	"go.stevenxie.me/api/v2/location"
 )
 
 // A Station is a place where one can board a Transport.

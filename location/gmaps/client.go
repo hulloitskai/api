@@ -6,8 +6,8 @@ import (
 
 	"github.com/cockroachdb/errors"
 
-	"go.stevenxie.me/api/pkg/google"
-	"go.stevenxie.me/api/pkg/httputil"
+	"go.stevenxie.me/api/v2/pkg/google"
+	"go.stevenxie.me/api/v2/pkg/httputil"
 	"go.stevenxie.me/gopkg/name"
 )
 

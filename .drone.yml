@@ -5,9 +5,9 @@ steps:
   - name: install
     image: golang:1.13
     commands:
-      - go mod download
-      - go mod verify
       - go mod tidy
+      - go mod verify
+      - go mod download
     volumes:
       - name: gopath
         path: /go
@@ -92,7 +92,7 @@ steps:
              cat /i/version || true)
       username: stevenxie
       password:
-        from_secret: docker_pass
+        from_secret: docker_token
     volumes:
       - name: info
         path: /i

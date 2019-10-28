@@ -15,7 +15,7 @@ import (
 	opentracing "github.com/opentracing/opentracing-go"
 	"github.com/sirupsen/logrus"
 
-	"go.stevenxie.me/api/auth"
+	"go.stevenxie.me/api/v2/auth"
 	"go.stevenxie.me/gopkg/logutil"
 	"go.stevenxie.me/gopkg/name"
 	"go.stevenxie.me/gopkg/zero"

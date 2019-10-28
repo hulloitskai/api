@@ -9,9 +9,9 @@ import (
 	"github.com/cockroachdb/errors"
 	funk "github.com/thoas/go-funk"
 
-	"go.stevenxie.me/api/auth"
-	"go.stevenxie.me/api/auth/authutil"
-	"go.stevenxie.me/api/location"
+	"go.stevenxie.me/api/v2/auth"
+	"go.stevenxie.me/api/v2/auth/authutil"
+	"go.stevenxie.me/api/v2/location"
 )
 
 // NewQuery creates a new Query.

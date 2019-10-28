@@ -3,7 +3,7 @@ package configutil
 import (
 	"fmt"
 
-	"go.stevenxie.me/api/internal"
+	"go.stevenxie.me/api/v2/internal"
 )
 
 // ConfigDir is the configuration directory corresponding to this module.

@@ -8,7 +8,7 @@ import (
 	"time"
 
 	"github.com/cockroachdb/errors"
-	"go.stevenxie.me/api/productivity"
+	"go.stevenxie.me/api/v2/productivity"
 )
 
 const (

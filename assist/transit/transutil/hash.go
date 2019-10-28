@@ -2,7 +2,7 @@ package transutil
 
 import (
 	"github.com/segmentio/fasthash/fnv1a"
-	"go.stevenxie.me/api/assist/transit"
+	"go.stevenxie.me/api/v2/assist/transit"
 )
 
 // HashTransport returns a unique hash number that identifies the

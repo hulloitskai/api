@@ -1,6 +1,6 @@
 package locsvc
 
-import "go.stevenxie.me/api/location"
+import "go.stevenxie.me/api/v2/location"
 
 // Get the latest coordinates in a HistorySegment, or nil if the HistorySegment
 // contains no coordinates.

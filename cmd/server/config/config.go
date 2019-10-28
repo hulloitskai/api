@@ -6,8 +6,8 @@ import (
 	"github.com/cockroachdb/errors"
 	validation "github.com/go-ozzo/ozzo-validation"
 
-	"go.stevenxie.me/api/auth/airtable"
-	"go.stevenxie.me/api/pkg/jaeger"
+	"go.stevenxie.me/api/v2/auth/airtable"
+	"go.stevenxie.me/api/v2/pkg/jaeger"
 )
 
 // Config maps to a configuration YAML that can configure programs in this

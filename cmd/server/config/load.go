@@ -1,8 +1,8 @@
 package config
 
 import (
-	"go.stevenxie.me/api/cmd/server/internal"
-	"go.stevenxie.me/api/internal/configutil"
+	"go.stevenxie.me/api/v2/cmd/server/internal"
+	"go.stevenxie.me/api/v2/internal/configutil"
 )
 
 // Load finds and loads a Config from a set of possible file locations.

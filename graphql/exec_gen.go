@@ -17,21 +17,21 @@ import (
 	"github.com/99designs/gqlgen/graphql/introspection"
 	"github.com/vektah/gqlparser"
 	"github.com/vektah/gqlparser/ast"
-	"go.stevenxie.me/api/about"
-	"go.stevenxie.me/api/assist/assistgql"
-	"go.stevenxie.me/api/assist/transit"
-	"go.stevenxie.me/api/assist/transit/transgql"
-	"go.stevenxie.me/api/auth/authgql"
-	"go.stevenxie.me/api/git"
-	"go.stevenxie.me/api/git/gitgql"
-	"go.stevenxie.me/api/location"
-	"go.stevenxie.me/api/location/locgql"
-	"go.stevenxie.me/api/music"
-	"go.stevenxie.me/api/music/musicgql"
-	"go.stevenxie.me/api/productivity"
-	"go.stevenxie.me/api/productivity/prodgql"
-	"go.stevenxie.me/api/scheduling"
-	"go.stevenxie.me/api/scheduling/schedgql"
+	"go.stevenxie.me/api/v2/about"
+	"go.stevenxie.me/api/v2/assist/assistgql"
+	"go.stevenxie.me/api/v2/assist/transit"
+	"go.stevenxie.me/api/v2/assist/transit/transgql"
+	"go.stevenxie.me/api/v2/auth/authgql"
+	"go.stevenxie.me/api/v2/git"
+	"go.stevenxie.me/api/v2/git/gitgql"
+	"go.stevenxie.me/api/v2/location"
+	"go.stevenxie.me/api/v2/location/locgql"
+	"go.stevenxie.me/api/v2/music"
+	"go.stevenxie.me/api/v2/music/musicgql"
+	"go.stevenxie.me/api/v2/productivity"
+	"go.stevenxie.me/api/v2/productivity/prodgql"
+	"go.stevenxie.me/api/v2/scheduling"
+	"go.stevenxie.me/api/v2/scheduling/schedgql"
 )
 
 // region    ************************** generated!.gotpl **************************
@@ -2016,7 +2016,7 @@ func (ec *executionContext) field_TransitQuery_findDepartures_args(ctx context.C
 	args["route"] = arg0
 	var arg1 locgql.CoordinatesInput
 	if tmp, ok := rawArgs["coords"]; ok {
-		arg1, err = ec.unmarshalNCoordinatesInput2goᚗstevenxieᚗmeᚋapiᚋlocationᚋlocgqlᚐCoordinatesInput(ctx, tmp)
+		arg1, err = ec.unmarshalNCoordinatesInput2goᚗstevenxieᚗmeᚋapiᚋv2ᚋlocationᚋlocgqlᚐCoordinatesInput(ctx, tmp)
 		if err != nil {
 			return nil, err
 		}
@@ -2046,7 +2046,7 @@ func (ec *executionContext) field_TransitQuery_nearbyTransports_args(ctx context
 	args := map[string]interface{}{}
 	var arg0 locgql.CoordinatesInput
 	if tmp, ok := rawArgs["coords"]; ok {
-		arg0, err = ec.unmarshalNCoordinatesInput2goᚗstevenxieᚗmeᚋapiᚋlocationᚋlocgqlᚐCoordinatesInput(ctx, tmp)
+		arg0, err = ec.unmarshalNCoordinatesInput2goᚗstevenxieᚗmeᚋapiᚋv2ᚋlocationᚋlocgqlᚐCoordinatesInput(ctx, tmp)
 		if err != nil {
 			return nil, err
 		}
@@ -2465,7 +2465,7 @@ func (ec *executionContext) _AssistQuery_transit(ctx context.Context, field grap
 	res := resTmp.(transgql.Query)
 	rctx.Result = res
 	ctx = ec.Tracer.StartFieldChildExecution(ctx)
-	return ec.marshalNTransitQuery2goᚗstevenxieᚗmeᚋapiᚋassistᚋtransitᚋtransgqlᚐQuery(ctx, field.Selections, res)
+	return ec.marshalNTransitQuery2goᚗstevenxieᚗmeᚋapiᚋv2ᚋassistᚋtransitᚋtransgqlᚐQuery(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _AuthQuery_permissions(ctx context.Context, field graphql.CollectedField, obj *authgql.Query) (ret graphql.Marshaler) {
@@ -2694,7 +2694,7 @@ func (ec *executionContext) _CurrentlyPlayingMusic_track(ctx context.Context, fi
 	res := resTmp.(music.Track)
 	rctx.Result = res
 	ctx = ec.Tracer.StartFieldChildExecution(ctx)
-	return ec.marshalNMusicTrack2goᚗstevenxieᚗmeᚋapiᚋmusicᚐTrack(ctx, field.Selections, res)
+	return ec.marshalNMusicTrack2goᚗstevenxieᚗmeᚋapiᚋv2ᚋmusicᚐTrack(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _CurrentlyPlayingMusic_playing(ctx context.Context, field graphql.CollectedField, obj *music.CurrentlyPlaying) (ret graphql.Marshaler) {
@@ -3064,7 +3064,7 @@ func (ec *executionContext) _FullAbout_location(ctx context.Context, field graph
 	res := resTmp.(location.Coordinates)
 	rctx.Result = res
 	ctx = ec.Tracer.StartFieldChildExecution(ctx)
-	return ec.marshalNCoordinates2goᚗstevenxieᚗmeᚋapiᚋlocationᚐCoordinates(ctx, field.Selections, res)
+	return ec.marshalNCoordinates2goᚗstevenxieᚗmeᚋapiᚋv2ᚋlocationᚐCoordinates(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _GitCommit_sha(ctx context.Context, field graphql.CollectedField, obj *git.Commit) (ret graphql.Marshaler) {
@@ -3138,7 +3138,7 @@ func (ec *executionContext) _GitCommit_author(ctx context.Context, field graphql
 	res := resTmp.(git.CommitAuthor)
 	rctx.Result = res
 	ctx = ec.Tracer.StartFieldChildExecution(ctx)
-	return ec.marshalNGitCommitAuthor2goᚗstevenxieᚗmeᚋapiᚋgitᚐCommitAuthor(ctx, field.Selections, res)
+	return ec.marshalNGitCommitAuthor2goᚗstevenxieᚗmeᚋapiᚋv2ᚋgitᚐCommitAuthor(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _GitCommit_committer(ctx context.Context, field graphql.CollectedField, obj *git.Commit) (ret graphql.Marshaler) {
@@ -3172,7 +3172,7 @@ func (ec *executionContext) _GitCommit_committer(ctx context.Context, field grap
 	res := resTmp.(*git.CommitAuthor)
 	rctx.Result = res
 	ctx = ec.Tracer.StartFieldChildExecution(ctx)
-	return ec.marshalOGitCommitAuthor2ᚖgoᚗstevenxieᚗmeᚋapiᚋgitᚐCommitAuthor(ctx, field.Selections, res)
+	return ec.marshalOGitCommitAuthor2ᚖgoᚗstevenxieᚗmeᚋapiᚋv2ᚋgitᚐCommitAuthor(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _GitCommit_message(ctx context.Context, field graphql.CollectedField, obj *git.Commit) (ret graphql.Marshaler) {
@@ -3283,7 +3283,7 @@ func (ec *executionContext) _GitCommit_repo(ctx context.Context, field graphql.C
 	res := resTmp.(git.Repo)
 	rctx.Result = res
 	ctx = ec.Tracer.StartFieldChildExecution(ctx)
-	return ec.marshalNGitRepo2goᚗstevenxieᚗmeᚋapiᚋgitᚐRepo(ctx, field.Selections, res)
+	return ec.marshalNGitRepo2goᚗstevenxieᚗmeᚋapiᚋv2ᚋgitᚐRepo(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _GitCommit_timestamp(ctx context.Context, field graphql.CollectedField, obj *git.Commit) (ret graphql.Marshaler) {
@@ -3500,7 +3500,7 @@ func (ec *executionContext) _GitQuery_recentCommits(ctx context.Context, field g
 	res := resTmp.([]git.Commit)
 	rctx.Result = res
 	ctx = ec.Tracer.StartFieldChildExecution(ctx)
-	return ec.marshalNGitCommit2ᚕgoᚗstevenxieᚗmeᚋapiᚋgitᚐCommit(ctx, field.Selections, res)
+	return ec.marshalNGitCommit2ᚕgoᚗstevenxieᚗmeᚋapiᚋv2ᚋgitᚐCommit(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _GitRepo_name(ctx context.Context, field graphql.CollectedField, obj *git.Repo) (ret graphql.Marshaler) {
@@ -3790,7 +3790,7 @@ func (ec *executionContext) _LocationHistorySegment_timeSpan(ctx context.Context
 	res := resTmp.(scheduling.TimeSpan)
 	rctx.Result = res
 	ctx = ec.Tracer.StartFieldChildExecution(ctx)
-	return ec.marshalNTimeSpan2goᚗstevenxieᚗmeᚋapiᚋschedulingᚐTimeSpan(ctx, field.Selections, res)
+	return ec.marshalNTimeSpan2goᚗstevenxieᚗmeᚋapiᚋv2ᚋschedulingᚐTimeSpan(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _LocationHistorySegment_coordinates(ctx context.Context, field graphql.CollectedField, obj *location.HistorySegment) (ret graphql.Marshaler) {
@@ -3827,7 +3827,7 @@ func (ec *executionContext) _LocationHistorySegment_coordinates(ctx context.Cont
 	res := resTmp.([]location.Coordinates)
 	rctx.Result = res
 	ctx = ec.Tracer.StartFieldChildExecution(ctx)
-	return ec.marshalNCoordinates2ᚕgoᚗstevenxieᚗmeᚋapiᚋlocationᚐCoordinates(ctx, field.Selections, res)
+	return ec.marshalNCoordinates2ᚕgoᚗstevenxieᚗmeᚋapiᚋv2ᚋlocationᚐCoordinates(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _LocationQuery_region(ctx context.Context, field graphql.CollectedField, obj *locgql.Query) (ret graphql.Marshaler) {
@@ -3864,7 +3864,7 @@ func (ec *executionContext) _LocationQuery_region(ctx context.Context, field gra
 	res := resTmp.(*location.Place)
 	rctx.Result = res
 	ctx = ec.Tracer.StartFieldChildExecution(ctx)
-	return ec.marshalNPlace2ᚖgoᚗstevenxieᚗmeᚋapiᚋlocationᚐPlace(ctx, field.Selections, res)
+	return ec.marshalNPlace2ᚖgoᚗstevenxieᚗmeᚋapiᚋv2ᚋlocationᚐPlace(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _LocationQuery_history(ctx context.Context, field graphql.CollectedField, obj *locgql.Query) (ret graphql.Marshaler) {
@@ -3908,7 +3908,7 @@ func (ec *executionContext) _LocationQuery_history(ctx context.Context, field gr
 	res := resTmp.([]location.HistorySegment)
 	rctx.Result = res
 	ctx = ec.Tracer.StartFieldChildExecution(ctx)
-	return ec.marshalNLocationHistorySegment2ᚕgoᚗstevenxieᚗmeᚋapiᚋlocationᚐHistorySegment(ctx, field.Selections, res)
+	return ec.marshalNLocationHistorySegment2ᚕgoᚗstevenxieᚗmeᚋapiᚋv2ᚋlocationᚐHistorySegment(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _MaskedAbout_name(ctx context.Context, field graphql.CollectedField, obj *about.Masked) (ret graphql.Marshaler) {
@@ -4352,7 +4352,7 @@ func (ec *executionContext) _MusicAlbum_images(ctx context.Context, field graphq
 	res := resTmp.([]music.Image)
 	rctx.Result = res
 	ctx = ec.Tracer.StartFieldChildExecution(ctx)
-	return ec.marshalNMusicImage2ᚕgoᚗstevenxieᚗmeᚋapiᚋmusicᚐImage(ctx, field.Selections, res)
+	return ec.marshalNMusicImage2ᚕgoᚗstevenxieᚗmeᚋapiᚋv2ᚋmusicᚐImage(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _MusicAlbum_artists(ctx context.Context, field graphql.CollectedField, obj *music.Album) (ret graphql.Marshaler) {
@@ -4389,7 +4389,7 @@ func (ec *executionContext) _MusicAlbum_artists(ctx context.Context, field graph
 	res := resTmp.([]music.Artist)
 	rctx.Result = res
 	ctx = ec.Tracer.StartFieldChildExecution(ctx)
-	return ec.marshalNMusicArtist2ᚕgoᚗstevenxieᚗmeᚋapiᚋmusicᚐArtist(ctx, field.Selections, res)
+	return ec.marshalNMusicArtist2ᚕgoᚗstevenxieᚗmeᚋapiᚋv2ᚋmusicᚐArtist(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _MusicAlbum_tracks(ctx context.Context, field graphql.CollectedField, obj *music.Album) (ret graphql.Marshaler) {
@@ -4430,7 +4430,7 @@ func (ec *executionContext) _MusicAlbum_tracks(ctx context.Context, field graphq
 	res := resTmp.([]music.Track)
 	rctx.Result = res
 	ctx = ec.Tracer.StartFieldChildExecution(ctx)
-	return ec.marshalOMusicTrack2ᚕgoᚗstevenxieᚗmeᚋapiᚋmusicᚐTrack(ctx, field.Selections, res)
+	return ec.marshalOMusicTrack2ᚕgoᚗstevenxieᚗmeᚋapiᚋv2ᚋmusicᚐTrack(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _MusicArtist_id(ctx context.Context, field graphql.CollectedField, obj *music.Artist) (ret graphql.Marshaler) {
@@ -4622,7 +4622,7 @@ func (ec *executionContext) _MusicArtist_albums(ctx context.Context, field graph
 	res := resTmp.([]music.Album)
 	rctx.Result = res
 	ctx = ec.Tracer.StartFieldChildExecution(ctx)
-	return ec.marshalNMusicAlbum2ᚕgoᚗstevenxieᚗmeᚋapiᚋmusicᚐAlbum(ctx, field.Selections, res)
+	return ec.marshalNMusicAlbum2ᚕgoᚗstevenxieᚗmeᚋapiᚋv2ᚋmusicᚐAlbum(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _MusicImage_height(ctx context.Context, field graphql.CollectedField, obj *music.Image) (ret graphql.Marshaler) {
@@ -4848,7 +4848,7 @@ func (ec *executionContext) _MusicQuery_current(ctx context.Context, field graph
 	res := resTmp.(*music.CurrentlyPlaying)
 	rctx.Result = res
 	ctx = ec.Tracer.StartFieldChildExecution(ctx)
-	return ec.marshalOCurrentlyPlayingMusic2ᚖgoᚗstevenxieᚗmeᚋapiᚋmusicᚐCurrentlyPlaying(ctx, field.Selections, res)
+	return ec.marshalOCurrentlyPlayingMusic2ᚖgoᚗstevenxieᚗmeᚋapiᚋv2ᚋmusicᚐCurrentlyPlaying(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _MusicTrack_id(ctx context.Context, field graphql.CollectedField, obj *music.Track) (ret graphql.Marshaler) {
@@ -5033,7 +5033,7 @@ func (ec *executionContext) _MusicTrack_artists(ctx context.Context, field graph
 	res := resTmp.([]music.Artist)
 	rctx.Result = res
 	ctx = ec.Tracer.StartFieldChildExecution(ctx)
-	return ec.marshalNMusicArtist2ᚕgoᚗstevenxieᚗmeᚋapiᚋmusicᚐArtist(ctx, field.Selections, res)
+	return ec.marshalNMusicArtist2ᚕgoᚗstevenxieᚗmeᚋapiᚋv2ᚋmusicᚐArtist(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _MusicTrack_album(ctx context.Context, field graphql.CollectedField, obj *music.Track) (ret graphql.Marshaler) {
@@ -5070,7 +5070,7 @@ func (ec *executionContext) _MusicTrack_album(ctx context.Context, field graphql
 	res := resTmp.(*music.Album)
 	rctx.Result = res
 	ctx = ec.Tracer.StartFieldChildExecution(ctx)
-	return ec.marshalNMusicAlbum2ᚖgoᚗstevenxieᚗmeᚋapiᚋmusicᚐAlbum(ctx, field.Selections, res)
+	return ec.marshalNMusicAlbum2ᚖgoᚗstevenxieᚗmeᚋapiᚋv2ᚋmusicᚐAlbum(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _MusicTrack_duration(ctx context.Context, field graphql.CollectedField, obj *music.Track) (ret graphql.Marshaler) {
@@ -5151,7 +5151,7 @@ func (ec *executionContext) _Mutation_music(ctx context.Context, field graphql.C
 	res := resTmp.(*musicgql.Mutation)
 	rctx.Result = res
 	ctx = ec.Tracer.StartFieldChildExecution(ctx)
-	return ec.marshalNMusicMutation2ᚖgoᚗstevenxieᚗmeᚋapiᚋmusicᚋmusicgqlᚐMutation(ctx, field.Selections, res)
+	return ec.marshalNMusicMutation2ᚖgoᚗstevenxieᚗmeᚋapiᚋv2ᚋmusicᚋmusicgqlᚐMutation(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _NearbyTransitDeparture_departure(ctx context.Context, field graphql.CollectedField, obj *transit.NearbyDeparture) (ret graphql.Marshaler) {
@@ -5188,7 +5188,7 @@ func (ec *executionContext) _NearbyTransitDeparture_departure(ctx context.Contex
 	res := resTmp.(transit.Departure)
 	rctx.Result = res
 	ctx = ec.Tracer.StartFieldChildExecution(ctx)
-	return ec.marshalNTransitDeparture2goᚗstevenxieᚗmeᚋapiᚋassistᚋtransitᚐDeparture(ctx, field.Selections, res)
+	return ec.marshalNTransitDeparture2goᚗstevenxieᚗmeᚋapiᚋv2ᚋassistᚋtransitᚐDeparture(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _NearbyTransitDeparture_distance(ctx context.Context, field graphql.CollectedField, obj *transit.NearbyDeparture) (ret graphql.Marshaler) {
@@ -5373,7 +5373,7 @@ func (ec *executionContext) _Place_position(ctx context.Context, field graphql.C
 	res := resTmp.(location.Coordinates)
 	rctx.Result = res
 	ctx = ec.Tracer.StartFieldChildExecution(ctx)
-	return ec.marshalNCoordinates2goᚗstevenxieᚗmeᚋapiᚋlocationᚐCoordinates(ctx, field.Selections, res)
+	return ec.marshalNCoordinates2goᚗstevenxieᚗmeᚋapiᚋv2ᚋlocationᚐCoordinates(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _Place_timeZone(ctx context.Context, field graphql.CollectedField, obj *location.Place) (ret graphql.Marshaler) {
@@ -5407,7 +5407,7 @@ func (ec *executionContext) _Place_timeZone(ctx context.Context, field graphql.C
 	res := resTmp.(*locgql.TimeZone)
 	rctx.Result = res
 	ctx = ec.Tracer.StartFieldChildExecution(ctx)
-	return ec.marshalOTimeZone2ᚖgoᚗstevenxieᚗmeᚋapiᚋlocationᚋlocgqlᚐTimeZone(ctx, field.Selections, res)
+	return ec.marshalOTimeZone2ᚖgoᚗstevenxieᚗmeᚋapiᚋv2ᚋlocationᚋlocgqlᚐTimeZone(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _Place_address(ctx context.Context, field graphql.CollectedField, obj *location.Place) (ret graphql.Marshaler) {
@@ -5444,7 +5444,7 @@ func (ec *executionContext) _Place_address(ctx context.Context, field graphql.Co
 	res := resTmp.(location.Address)
 	rctx.Result = res
 	ctx = ec.Tracer.StartFieldChildExecution(ctx)
-	return ec.marshalNAddress2goᚗstevenxieᚗmeᚋapiᚋlocationᚐAddress(ctx, field.Selections, res)
+	return ec.marshalNAddress2goᚗstevenxieᚗmeᚋapiᚋv2ᚋlocationᚐAddress(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _Place_shape(ctx context.Context, field graphql.CollectedField, obj *location.Place) (ret graphql.Marshaler) {
@@ -5478,7 +5478,7 @@ func (ec *executionContext) _Place_shape(ctx context.Context, field graphql.Coll
 	res := resTmp.([]location.Coordinates)
 	rctx.Result = res
 	ctx = ec.Tracer.StartFieldChildExecution(ctx)
-	return ec.marshalOCoordinates2ᚕgoᚗstevenxieᚗmeᚋapiᚋlocationᚐCoordinates(ctx, field.Selections, res)
+	return ec.marshalOCoordinates2ᚕgoᚗstevenxieᚗmeᚋapiᚋv2ᚋlocationᚐCoordinates(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _Productivity_records(ctx context.Context, field graphql.CollectedField, obj *productivity.Productivity) (ret graphql.Marshaler) {
@@ -5515,7 +5515,7 @@ func (ec *executionContext) _Productivity_records(ctx context.Context, field gra
 	res := resTmp.([]productivity.Record)
 	rctx.Result = res
 	ctx = ec.Tracer.StartFieldChildExecution(ctx)
-	return ec.marshalNProductivityRecord2ᚕgoᚗstevenxieᚗmeᚋapiᚋproductivityᚐRecord(ctx, field.Selections, res)
+	return ec.marshalNProductivityRecord2ᚕgoᚗstevenxieᚗmeᚋapiᚋv2ᚋproductivityᚐRecord(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _Productivity_score(ctx context.Context, field graphql.CollectedField, obj *productivity.Productivity) (ret graphql.Marshaler) {
@@ -5697,7 +5697,7 @@ func (ec *executionContext) _ProductivityRecord_category(ctx context.Context, fi
 	res := resTmp.(*prodgql.Category)
 	rctx.Result = res
 	ctx = ec.Tracer.StartFieldChildExecution(ctx)
-	return ec.marshalNProductivityCategory2ᚖgoᚗstevenxieᚗmeᚋapiᚋproductivityᚋprodgqlᚐCategory(ctx, field.Selections, res)
+	return ec.marshalNProductivityCategory2ᚖgoᚗstevenxieᚗmeᚋapiᚋv2ᚋproductivityᚋprodgqlᚐCategory(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _ProductivityRecord_duration(ctx context.Context, field graphql.CollectedField, obj *productivity.Record) (ret graphql.Marshaler) {
@@ -5778,7 +5778,7 @@ func (ec *executionContext) _Query_about(ctx context.Context, field graphql.Coll
 	res := resTmp.(about.ContactInfo)
 	rctx.Result = res
 	ctx = ec.Tracer.StartFieldChildExecution(ctx)
-	return ec.marshalNPartialAbout2goᚗstevenxieᚗmeᚋapiᚋaboutᚐContactInfo(ctx, field.Selections, res)
+	return ec.marshalNPartialAbout2goᚗstevenxieᚗmeᚋapiᚋv2ᚋaboutᚐContactInfo(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _Query_productivity(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
@@ -5815,7 +5815,7 @@ func (ec *executionContext) _Query_productivity(ctx context.Context, field graph
 	res := resTmp.(*productivity.Productivity)
 	rctx.Result = res
 	ctx = ec.Tracer.StartFieldChildExecution(ctx)
-	return ec.marshalNProductivity2ᚖgoᚗstevenxieᚗmeᚋapiᚋproductivityᚐProductivity(ctx, field.Selections, res)
+	return ec.marshalNProductivity2ᚖgoᚗstevenxieᚗmeᚋapiᚋv2ᚋproductivityᚐProductivity(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _Query_assist(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
@@ -5852,7 +5852,7 @@ func (ec *executionContext) _Query_assist(ctx context.Context, field graphql.Col
 	res := resTmp.(*assistgql.Query)
 	rctx.Result = res
 	ctx = ec.Tracer.StartFieldChildExecution(ctx)
-	return ec.marshalNAssistQuery2ᚖgoᚗstevenxieᚗmeᚋapiᚋassistᚋassistgqlᚐQuery(ctx, field.Selections, res)
+	return ec.marshalNAssistQuery2ᚖgoᚗstevenxieᚗmeᚋapiᚋv2ᚋassistᚋassistgqlᚐQuery(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _Query_git(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
@@ -5889,7 +5889,7 @@ func (ec *executionContext) _Query_git(ctx context.Context, field graphql.Collec
 	res := resTmp.(*gitgql.Query)
 	rctx.Result = res
 	ctx = ec.Tracer.StartFieldChildExecution(ctx)
-	return ec.marshalNGitQuery2ᚖgoᚗstevenxieᚗmeᚋapiᚋgitᚋgitgqlᚐQuery(ctx, field.Selections, res)
+	return ec.marshalNGitQuery2ᚖgoᚗstevenxieᚗmeᚋapiᚋv2ᚋgitᚋgitgqlᚐQuery(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _Query_auth(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
@@ -5926,7 +5926,7 @@ func (ec *executionContext) _Query_auth(ctx context.Context, field graphql.Colle
 	res := resTmp.(*authgql.Query)
 	rctx.Result = res
 	ctx = ec.Tracer.StartFieldChildExecution(ctx)
-	return ec.marshalNAuthQuery2ᚖgoᚗstevenxieᚗmeᚋapiᚋauthᚋauthgqlᚐQuery(ctx, field.Selections, res)
+	return ec.marshalNAuthQuery2ᚖgoᚗstevenxieᚗmeᚋapiᚋv2ᚋauthᚋauthgqlᚐQuery(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _Query_music(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
@@ -5963,7 +5963,7 @@ func (ec *executionContext) _Query_music(ctx context.Context, field graphql.Coll
 	res := resTmp.(*musicgql.Query)
 	rctx.Result = res
 	ctx = ec.Tracer.StartFieldChildExecution(ctx)
-	return ec.marshalNMusicQuery2ᚖgoᚗstevenxieᚗmeᚋapiᚋmusicᚋmusicgqlᚐQuery(ctx, field.Selections, res)
+	return ec.marshalNMusicQuery2ᚖgoᚗstevenxieᚗmeᚋapiᚋv2ᚋmusicᚋmusicgqlᚐQuery(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _Query_location(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
@@ -6000,7 +6000,7 @@ func (ec *executionContext) _Query_location(ctx context.Context, field graphql.C
 	res := resTmp.(*locgql.Query)
 	rctx.Result = res
 	ctx = ec.Tracer.StartFieldChildExecution(ctx)
-	return ec.marshalNLocationQuery2ᚖgoᚗstevenxieᚗmeᚋapiᚋlocationᚋlocgqlᚐQuery(ctx, field.Selections, res)
+	return ec.marshalNLocationQuery2ᚖgoᚗstevenxieᚗmeᚋapiᚋv2ᚋlocationᚋlocgqlᚐQuery(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _Query_scheduling(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
@@ -6037,7 +6037,7 @@ func (ec *executionContext) _Query_scheduling(ctx context.Context, field graphql
 	res := resTmp.(*schedgql.Query)
 	rctx.Result = res
 	ctx = ec.Tracer.StartFieldChildExecution(ctx)
-	return ec.marshalNSchedulingQuery2ᚖgoᚗstevenxieᚗmeᚋapiᚋschedulingᚋschedgqlᚐQuery(ctx, field.Selections, res)
+	return ec.marshalNSchedulingQuery2ᚖgoᚗstevenxieᚗmeᚋapiᚋv2ᚋschedulingᚋschedgqlᚐQuery(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _Query___type(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
@@ -6156,7 +6156,7 @@ func (ec *executionContext) _SchedulingQuery_busyTimes(ctx context.Context, fiel
 	res := resTmp.([]scheduling.TimeSpan)
 	rctx.Result = res
 	ctx = ec.Tracer.StartFieldChildExecution(ctx)
-	return ec.marshalNTimeSpan2ᚕgoᚗstevenxieᚗmeᚋapiᚋschedulingᚐTimeSpan(ctx, field.Selections, res)
+	return ec.marshalNTimeSpan2ᚕgoᚗstevenxieᚗmeᚋapiᚋv2ᚋschedulingᚐTimeSpan(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _Subscription_music(ctx context.Context, field graphql.CollectedField) (ret func() graphql.Marshaler) {
@@ -6196,7 +6196,7 @@ func (ec *executionContext) _Subscription_music(ctx context.Context, field graph
 			w.Write([]byte{'{'})
 			graphql.MarshalString(field.Alias).MarshalGQL(w)
 			w.Write([]byte{':'})
-			ec.marshalOCurrentlyPlayingMusic2ᚖgoᚗstevenxieᚗmeᚋapiᚋmusicᚐCurrentlyPlaying(ctx, field.Selections, res).MarshalGQL(w)
+			ec.marshalOCurrentlyPlayingMusic2ᚖgoᚗstevenxieᚗmeᚋapiᚋv2ᚋmusicᚐCurrentlyPlaying(ctx, field.Selections, res).MarshalGQL(w)
 			w.Write([]byte{'}'})
 		})
 	}
@@ -6421,7 +6421,7 @@ func (ec *executionContext) _TransitDeparture_transport(ctx context.Context, fie
 	res := resTmp.(*transit.Transport)
 	rctx.Result = res
 	ctx = ec.Tracer.StartFieldChildExecution(ctx)
-	return ec.marshalNTransport2ᚖgoᚗstevenxieᚗmeᚋapiᚋassistᚋtransitᚐTransport(ctx, field.Selections, res)
+	return ec.marshalNTransport2ᚖgoᚗstevenxieᚗmeᚋapiᚋv2ᚋassistᚋtransitᚐTransport(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _TransitDeparture_station(ctx context.Context, field graphql.CollectedField, obj *transit.Departure) (ret graphql.Marshaler) {
@@ -6458,7 +6458,7 @@ func (ec *executionContext) _TransitDeparture_station(ctx context.Context, field
 	res := resTmp.(*transit.Station)
 	rctx.Result = res
 	ctx = ec.Tracer.StartFieldChildExecution(ctx)
-	return ec.marshalNTransitStation2ᚖgoᚗstevenxieᚗmeᚋapiᚋassistᚋtransitᚐStation(ctx, field.Selections, res)
+	return ec.marshalNTransitStation2ᚖgoᚗstevenxieᚗmeᚋapiᚋv2ᚋassistᚋtransitᚐStation(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _TransitDeparture_relativeTimes(ctx context.Context, field graphql.CollectedField, obj *transit.Departure) (ret graphql.Marshaler) {
@@ -6650,7 +6650,7 @@ func (ec *executionContext) _TransitQuery_findDepartures(ctx context.Context, fi
 	res := resTmp.([]transit.NearbyDeparture)
 	rctx.Result = res
 	ctx = ec.Tracer.StartFieldChildExecution(ctx)
-	return ec.marshalNNearbyTransitDeparture2ᚕgoᚗstevenxieᚗmeᚋapiᚋassistᚋtransitᚐNearbyDeparture(ctx, field.Selections, res)
+	return ec.marshalNNearbyTransitDeparture2ᚕgoᚗstevenxieᚗmeᚋapiᚋv2ᚋassistᚋtransitᚐNearbyDeparture(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _TransitQuery_nearbyTransports(ctx context.Context, field graphql.CollectedField, obj *transgql.Query) (ret graphql.Marshaler) {
@@ -6694,7 +6694,7 @@ func (ec *executionContext) _TransitQuery_nearbyTransports(ctx context.Context, 
 	res := resTmp.([]transit.Transport)
 	rctx.Result = res
 	ctx = ec.Tracer.StartFieldChildExecution(ctx)
-	return ec.marshalNTransport2ᚕgoᚗstevenxieᚗmeᚋapiᚋassistᚋtransitᚐTransport(ctx, field.Selections, res)
+	return ec.marshalNTransport2ᚕgoᚗstevenxieᚗmeᚋapiᚋv2ᚋassistᚋtransitᚐTransport(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _TransitStation_id(ctx context.Context, field graphql.CollectedField, obj *transit.Station) (ret graphql.Marshaler) {
@@ -6805,7 +6805,7 @@ func (ec *executionContext) _TransitStation_coordinates(ctx context.Context, fie
 	res := resTmp.(location.Coordinates)
 	rctx.Result = res
 	ctx = ec.Tracer.StartFieldChildExecution(ctx)
-	return ec.marshalNCoordinates2goᚗstevenxieᚗmeᚋapiᚋlocationᚐCoordinates(ctx, field.Selections, res)
+	return ec.marshalNCoordinates2goᚗstevenxieᚗmeᚋapiᚋv2ᚋlocationᚐCoordinates(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _Transport_route(ctx context.Context, field graphql.CollectedField, obj *transit.Transport) (ret graphql.Marshaler) {
@@ -6953,7 +6953,7 @@ func (ec *executionContext) _Transport_operator(ctx context.Context, field graph
 	res := resTmp.(*transit.Operator)
 	rctx.Result = res
 	ctx = ec.Tracer.StartFieldChildExecution(ctx)
-	return ec.marshalNTransitOperator2ᚖgoᚗstevenxieᚗmeᚋapiᚋassistᚋtransitᚐOperator(ctx, field.Selections, res)
+	return ec.marshalNTransitOperator2ᚖgoᚗstevenxieᚗmeᚋapiᚋv2ᚋassistᚋtransitᚐOperator(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) ___Directive_name(ctx context.Context, field graphql.CollectedField, obj *introspection.Directive) (ret graphql.Marshaler) {
@@ -10088,15 +10088,15 @@ func (ec *executionContext) ___Type(ctx context.Context, sel ast.SelectionSet, o
 
 // region    ***************************** type.gotpl *****************************
 
-func (ec *executionContext) marshalNAddress2goᚗstevenxieᚗmeᚋapiᚋlocationᚐAddress(ctx context.Context, sel ast.SelectionSet, v location.Address) graphql.Marshaler {
+func (ec *executionContext) marshalNAddress2goᚗstevenxieᚗmeᚋapiᚋv2ᚋlocationᚐAddress(ctx context.Context, sel ast.SelectionSet, v location.Address) graphql.Marshaler {
 	return ec._Address(ctx, sel, &v)
 }
 
-func (ec *executionContext) marshalNAssistQuery2goᚗstevenxieᚗmeᚋapiᚋassistᚋassistgqlᚐQuery(ctx context.Context, sel ast.SelectionSet, v assistgql.Query) graphql.Marshaler {
+func (ec *executionContext) marshalNAssistQuery2goᚗstevenxieᚗmeᚋapiᚋv2ᚋassistᚋassistgqlᚐQuery(ctx context.Context, sel ast.SelectionSet, v assistgql.Query) graphql.Marshaler {
 	return ec._AssistQuery(ctx, sel, &v)
 }
 
-func (ec *executionContext) marshalNAssistQuery2ᚖgoᚗstevenxieᚗmeᚋapiᚋassistᚋassistgqlᚐQuery(ctx context.Context, sel ast.SelectionSet, v *assistgql.Query) graphql.Marshaler {
+func (ec *executionContext) marshalNAssistQuery2ᚖgoᚗstevenxieᚗmeᚋapiᚋv2ᚋassistᚋassistgqlᚐQuery(ctx context.Context, sel ast.SelectionSet, v *assistgql.Query) graphql.Marshaler {
 	if v == nil {
 		if !ec.HasError(graphql.GetResolverContext(ctx)) {
 			ec.Errorf(ctx, "must not be null")
@@ -10106,11 +10106,11 @@ func (ec *executionContext) marshalNAssistQuery2ᚖgoᚗstevenxieᚗmeᚋapiᚋa
 	return ec._AssistQuery(ctx, sel, v)
 }
 
-func (ec *executionContext) marshalNAuthQuery2goᚗstevenxieᚗmeᚋapiᚋauthᚋauthgqlᚐQuery(ctx context.Context, sel ast.SelectionSet, v authgql.Query) graphql.Marshaler {
+func (ec *executionContext) marshalNAuthQuery2goᚗstevenxieᚗmeᚋapiᚋv2ᚋauthᚋauthgqlᚐQuery(ctx context.Context, sel ast.SelectionSet, v authgql.Query) graphql.Marshaler {
 	return ec._AuthQuery(ctx, sel, &v)
 }
 
-func (ec *executionContext) marshalNAuthQuery2ᚖgoᚗstevenxieᚗmeᚋapiᚋauthᚋauthgqlᚐQuery(ctx context.Context, sel ast.SelectionSet, v *authgql.Query) graphql.Marshaler {
+func (ec *executionContext) marshalNAuthQuery2ᚖgoᚗstevenxieᚗmeᚋapiᚋv2ᚋauthᚋauthgqlᚐQuery(ctx context.Context, sel ast.SelectionSet, v *authgql.Query) graphql.Marshaler {
 	if v == nil {
 		if !ec.HasError(graphql.GetResolverContext(ctx)) {
 			ec.Errorf(ctx, "must not be null")
@@ -10134,11 +10134,11 @@ func (ec *executionContext) marshalNBoolean2bool(ctx context.Context, sel ast.Se
 	return res
 }
 
-func (ec *executionContext) marshalNCoordinates2goᚗstevenxieᚗmeᚋapiᚋlocationᚐCoordinates(ctx context.Context, sel ast.SelectionSet, v location.Coordinates) graphql.Marshaler {
+func (ec *executionContext) marshalNCoordinates2goᚗstevenxieᚗmeᚋapiᚋv2ᚋlocationᚐCoordinates(ctx context.Context, sel ast.SelectionSet, v location.Coordinates) graphql.Marshaler {
 	return ec._Coordinates(ctx, sel, &v)
 }
 
-func (ec *executionContext) marshalNCoordinates2ᚕgoᚗstevenxieᚗmeᚋapiᚋlocationᚐCoordinates(ctx context.Context, sel ast.SelectionSet, v []location.Coordinates) graphql.Marshaler {
+func (ec *executionContext) marshalNCoordinates2ᚕgoᚗstevenxieᚗmeᚋapiᚋv2ᚋlocationᚐCoordinates(ctx context.Context, sel ast.SelectionSet, v []location.Coordinates) graphql.Marshaler {
 	ret := make(graphql.Array, len(v))
 	var wg sync.WaitGroup
 	isLen1 := len(v) == 1
@@ -10162,7 +10162,7 @@ func (ec *executionContext) marshalNCoordinates2ᚕgoᚗstevenxieᚗmeᚋapiᚋl
 			if !isLen1 {
 				defer wg.Done()
 			}
-			ret[i] = ec.marshalNCoordinates2goᚗstevenxieᚗmeᚋapiᚋlocationᚐCoordinates(ctx, sel, v[i])
+			ret[i] = ec.marshalNCoordinates2goᚗstevenxieᚗmeᚋapiᚋv2ᚋlocationᚐCoordinates(ctx, sel, v[i])
 		}
 		if isLen1 {
 			f(i)
@@ -10175,7 +10175,7 @@ func (ec *executionContext) marshalNCoordinates2ᚕgoᚗstevenxieᚗmeᚋapiᚋl
 	return ret
 }
 
-func (ec *executionContext) unmarshalNCoordinatesInput2goᚗstevenxieᚗmeᚋapiᚋlocationᚋlocgqlᚐCoordinatesInput(ctx context.Context, v interface{}) (locgql.CoordinatesInput, error) {
+func (ec *executionContext) unmarshalNCoordinatesInput2goᚗstevenxieᚗmeᚋapiᚋv2ᚋlocationᚋlocgqlᚐCoordinatesInput(ctx context.Context, v interface{}) (locgql.CoordinatesInput, error) {
 	return ec.unmarshalInputCoordinatesInput(ctx, v)
 }
 
@@ -10193,11 +10193,11 @@ func (ec *executionContext) marshalNFloat2float64(ctx context.Context, sel ast.S
 	return res
 }
 
-func (ec *executionContext) marshalNGitCommit2goᚗstevenxieᚗmeᚋapiᚋgitᚐCommit(ctx context.Context, sel ast.SelectionSet, v git.Commit) graphql.Marshaler {
+func (ec *executionContext) marshalNGitCommit2goᚗstevenxieᚗmeᚋapiᚋv2ᚋgitᚐCommit(ctx context.Context, sel ast.SelectionSet, v git.Commit) graphql.Marshaler {
 	return ec._GitCommit(ctx, sel, &v)
 }
 
-func (ec *executionContext) marshalNGitCommit2ᚕgoᚗstevenxieᚗmeᚋapiᚋgitᚐCommit(ctx context.Context, sel ast.SelectionSet, v []git.Commit) graphql.Marshaler {
+func (ec *executionContext) marshalNGitCommit2ᚕgoᚗstevenxieᚗmeᚋapiᚋv2ᚋgitᚐCommit(ctx context.Context, sel ast.SelectionSet, v []git.Commit) graphql.Marshaler {
 	ret := make(graphql.Array, len(v))
 	var wg sync.WaitGroup
 	isLen1 := len(v) == 1
@@ -10221,7 +10221,7 @@ func (ec *executionContext) marshalNGitCommit2ᚕgoᚗstevenxieᚗmeᚋapiᚋgit
 			if !isLen1 {
 				defer wg.Done()
 			}
-			ret[i] = ec.marshalNGitCommit2goᚗstevenxieᚗmeᚋapiᚋgitᚐCommit(ctx, sel, v[i])
+			ret[i] = ec.marshalNGitCommit2goᚗstevenxieᚗmeᚋapiᚋv2ᚋgitᚐCommit(ctx, sel, v[i])
 		}
 		if isLen1 {
 			f(i)
@@ -10234,15 +10234,15 @@ func (ec *executionContext) marshalNGitCommit2ᚕgoᚗstevenxieᚗmeᚋapiᚋgit
 	return ret
 }
 
-func (ec *executionContext) marshalNGitCommitAuthor2goᚗstevenxieᚗmeᚋapiᚋgitᚐCommitAuthor(ctx context.Context, sel ast.SelectionSet, v git.CommitAuthor) graphql.Marshaler {
+func (ec *executionContext) marshalNGitCommitAuthor2goᚗstevenxieᚗmeᚋapiᚋv2ᚋgitᚐCommitAuthor(ctx context.Context, sel ast.SelectionSet, v git.CommitAuthor) graphql.Marshaler {
 	return ec._GitCommitAuthor(ctx, sel, &v)
 }
 
-func (ec *executionContext) marshalNGitQuery2goᚗstevenxieᚗmeᚋapiᚋgitᚋgitgqlᚐQuery(ctx context.Context, sel ast.SelectionSet, v gitgql.Query) graphql.Marshaler {
+func (ec *executionContext) marshalNGitQuery2goᚗstevenxieᚗmeᚋapiᚋv2ᚋgitᚋgitgqlᚐQuery(ctx context.Context, sel ast.SelectionSet, v gitgql.Query) graphql.Marshaler {
 	return ec._GitQuery(ctx, sel, &v)
 }
 
-func (ec *executionContext) marshalNGitQuery2ᚖgoᚗstevenxieᚗmeᚋapiᚋgitᚋgitgqlᚐQuery(ctx context.Context, sel ast.SelectionSet, v *gitgql.Query) graphql.Marshaler {
+func (ec *executionContext) marshalNGitQuery2ᚖgoᚗstevenxieᚗmeᚋapiᚋv2ᚋgitᚋgitgqlᚐQuery(ctx context.Context, sel ast.SelectionSet, v *gitgql.Query) graphql.Marshaler {
 	if v == nil {
 		if !ec.HasError(graphql.GetResolverContext(ctx)) {
 			ec.Errorf(ctx, "must not be null")
@@ -10252,7 +10252,7 @@ func (ec *executionContext) marshalNGitQuery2ᚖgoᚗstevenxieᚗmeᚋapiᚋgit�
 	return ec._GitQuery(ctx, sel, v)
 }
 
-func (ec *executionContext) marshalNGitRepo2goᚗstevenxieᚗmeᚋapiᚋgitᚐRepo(ctx context.Context, sel ast.SelectionSet, v git.Repo) graphql.Marshaler {
+func (ec *executionContext) marshalNGitRepo2goᚗstevenxieᚗmeᚋapiᚋv2ᚋgitᚐRepo(ctx context.Context, sel ast.SelectionSet, v git.Repo) graphql.Marshaler {
 	return ec._GitRepo(ctx, sel, &v)
 }
 
@@ -10298,11 +10298,11 @@ func (ec *executionContext) marshalNInt2int(ctx context.Context, sel ast.Selecti
 	return res
 }
 
-func (ec *executionContext) marshalNLocationHistorySegment2goᚗstevenxieᚗmeᚋapiᚋlocationᚐHistorySegment(ctx context.Context, sel ast.SelectionSet, v location.HistorySegment) graphql.Marshaler {
+func (ec *executionContext) marshalNLocationHistorySegment2goᚗstevenxieᚗmeᚋapiᚋv2ᚋlocationᚐHistorySegment(ctx context.Context, sel ast.SelectionSet, v location.HistorySegment) graphql.Marshaler {
 	return ec._LocationHistorySegment(ctx, sel, &v)
 }
 
-func (ec *executionContext) marshalNLocationHistorySegment2ᚕgoᚗstevenxieᚗmeᚋapiᚋlocationᚐHistorySegment(ctx context.Context, sel ast.SelectionSet, v []location.HistorySegment) graphql.Marshaler {
+func (ec *executionContext) marshalNLocationHistorySegment2ᚕgoᚗstevenxieᚗmeᚋapiᚋv2ᚋlocationᚐHistorySegment(ctx context.Context, sel ast.SelectionSet, v []location.HistorySegment) graphql.Marshaler {
 	ret := make(graphql.Array, len(v))
 	var wg sync.WaitGroup
 	isLen1 := len(v) == 1
@@ -10326,7 +10326,7 @@ func (ec *executionContext) marshalNLocationHistorySegment2ᚕgoᚗstevenxieᚗm
 			if !isLen1 {
 				defer wg.Done()
 			}
-			ret[i] = ec.marshalNLocationHistorySegment2goᚗstevenxieᚗmeᚋapiᚋlocationᚐHistorySegment(ctx, sel, v[i])
+			ret[i] = ec.marshalNLocationHistorySegment2goᚗstevenxieᚗmeᚋapiᚋv2ᚋlocationᚐHistorySegment(ctx, sel, v[i])
 		}
 		if isLen1 {
 			f(i)
@@ -10339,11 +10339,11 @@ func (ec *executionContext) marshalNLocationHistorySegment2ᚕgoᚗstevenxieᚗm
 	return ret
 }
 
-func (ec *executionContext) marshalNLocationQuery2goᚗstevenxieᚗmeᚋapiᚋlocationᚋlocgqlᚐQuery(ctx context.Context, sel ast.SelectionSet, v locgql.Query) graphql.Marshaler {
+func (ec *executionContext) marshalNLocationQuery2goᚗstevenxieᚗmeᚋapiᚋv2ᚋlocationᚋlocgqlᚐQuery(ctx context.Context, sel ast.SelectionSet, v locgql.Query) graphql.Marshaler {
 	return ec._LocationQuery(ctx, sel, &v)
 }
 
-func (ec *executionContext) marshalNLocationQuery2ᚖgoᚗstevenxieᚗmeᚋapiᚋlocationᚋlocgqlᚐQuery(ctx context.Context, sel ast.SelectionSet, v *locgql.Query) graphql.Marshaler {
+func (ec *executionContext) marshalNLocationQuery2ᚖgoᚗstevenxieᚗmeᚋapiᚋv2ᚋlocationᚋlocgqlᚐQuery(ctx context.Context, sel ast.SelectionSet, v *locgql.Query) graphql.Marshaler {
 	if v == nil {
 		if !ec.HasError(graphql.GetResolverContext(ctx)) {
 			ec.Errorf(ctx, "must not be null")
@@ -10353,11 +10353,11 @@ func (ec *executionContext) marshalNLocationQuery2ᚖgoᚗstevenxieᚗmeᚋapi�
 	return ec._LocationQuery(ctx, sel, v)
 }
 
-func (ec *executionContext) marshalNMusicAlbum2goᚗstevenxieᚗmeᚋapiᚋmusicᚐAlbum(ctx context.Context, sel ast.SelectionSet, v music.Album) graphql.Marshaler {
+func (ec *executionContext) marshalNMusicAlbum2goᚗstevenxieᚗmeᚋapiᚋv2ᚋmusicᚐAlbum(ctx context.Context, sel ast.SelectionSet, v music.Album) graphql.Marshaler {
 	return ec._MusicAlbum(ctx, sel, &v)
 }
 
-func (ec *executionContext) marshalNMusicAlbum2ᚕgoᚗstevenxieᚗmeᚋapiᚋmusicᚐAlbum(ctx context.Context, sel ast.SelectionSet, v []music.Album) graphql.Marshaler {
+func (ec *executionContext) marshalNMusicAlbum2ᚕgoᚗstevenxieᚗmeᚋapiᚋv2ᚋmusicᚐAlbum(ctx context.Context, sel ast.SelectionSet, v []music.Album) graphql.Marshaler {
 	ret := make(graphql.Array, len(v))
 	var wg sync.WaitGroup
 	isLen1 := len(v) == 1
@@ -10381,7 +10381,7 @@ func (ec *executionContext) marshalNMusicAlbum2ᚕgoᚗstevenxieᚗmeᚋapiᚋmu
 			if !isLen1 {
 				defer wg.Done()
 			}
-			ret[i] = ec.marshalNMusicAlbum2goᚗstevenxieᚗmeᚋapiᚋmusicᚐAlbum(ctx, sel, v[i])
+			ret[i] = ec.marshalNMusicAlbum2goᚗstevenxieᚗmeᚋapiᚋv2ᚋmusicᚐAlbum(ctx, sel, v[i])
 		}
 		if isLen1 {
 			f(i)
@@ -10394,7 +10394,7 @@ func (ec *executionContext) marshalNMusicAlbum2ᚕgoᚗstevenxieᚗmeᚋapiᚋmu
 	return ret
 }
 
-func (ec *executionContext) marshalNMusicAlbum2ᚖgoᚗstevenxieᚗmeᚋapiᚋmusicᚐAlbum(ctx context.Context, sel ast.SelectionSet, v *music.Album) graphql.Marshaler {
+func (ec *executionContext) marshalNMusicAlbum2ᚖgoᚗstevenxieᚗmeᚋapiᚋv2ᚋmusicᚐAlbum(ctx context.Context, sel ast.SelectionSet, v *music.Album) graphql.Marshaler {
 	if v == nil {
 		if !ec.HasError(graphql.GetResolverContext(ctx)) {
 			ec.Errorf(ctx, "must not be null")
@@ -10404,11 +10404,11 @@ func (ec *executionContext) marshalNMusicAlbum2ᚖgoᚗstevenxieᚗmeᚋapiᚋmu
 	return ec._MusicAlbum(ctx, sel, v)
 }
 
-func (ec *executionContext) marshalNMusicArtist2goᚗstevenxieᚗmeᚋapiᚋmusicᚐArtist(ctx context.Context, sel ast.SelectionSet, v music.Artist) graphql.Marshaler {
+func (ec *executionContext) marshalNMusicArtist2goᚗstevenxieᚗmeᚋapiᚋv2ᚋmusicᚐArtist(ctx context.Context, sel ast.SelectionSet, v music.Artist) graphql.Marshaler {
 	return ec._MusicArtist(ctx, sel, &v)
 }
 
-func (ec *executionContext) marshalNMusicArtist2ᚕgoᚗstevenxieᚗmeᚋapiᚋmusicᚐArtist(ctx context.Context, sel ast.SelectionSet, v []music.Artist) graphql.Marshaler {
+func (ec *executionContext) marshalNMusicArtist2ᚕgoᚗstevenxieᚗmeᚋapiᚋv2ᚋmusicᚐArtist(ctx context.Context, sel ast.SelectionSet, v []music.Artist) graphql.Marshaler {
 	ret := make(graphql.Array, len(v))
 	var wg sync.WaitGroup
 	isLen1 := len(v) == 1
@@ -10432,7 +10432,7 @@ func (ec *executionContext) marshalNMusicArtist2ᚕgoᚗstevenxieᚗmeᚋapiᚋm
 			if !isLen1 {
 				defer wg.Done()
 			}
-			ret[i] = ec.marshalNMusicArtist2goᚗstevenxieᚗmeᚋapiᚋmusicᚐArtist(ctx, sel, v[i])
+			ret[i] = ec.marshalNMusicArtist2goᚗstevenxieᚗmeᚋapiᚋv2ᚋmusicᚐArtist(ctx, sel, v[i])
 		}
 		if isLen1 {
 			f(i)
@@ -10445,11 +10445,11 @@ func (ec *executionContext) marshalNMusicArtist2ᚕgoᚗstevenxieᚗmeᚋapiᚋm
 	return ret
 }
 
-func (ec *executionContext) marshalNMusicImage2goᚗstevenxieᚗmeᚋapiᚋmusicᚐImage(ctx context.Context, sel ast.SelectionSet, v music.Image) graphql.Marshaler {
+func (ec *executionContext) marshalNMusicImage2goᚗstevenxieᚗmeᚋapiᚋv2ᚋmusicᚐImage(ctx context.Context, sel ast.SelectionSet, v music.Image) graphql.Marshaler {
 	return ec._MusicImage(ctx, sel, &v)
 }
 
-func (ec *executionContext) marshalNMusicImage2ᚕgoᚗstevenxieᚗmeᚋapiᚋmusicᚐImage(ctx context.Context, sel ast.SelectionSet, v []music.Image) graphql.Marshaler {
+func (ec *executionContext) marshalNMusicImage2ᚕgoᚗstevenxieᚗmeᚋapiᚋv2ᚋmusicᚐImage(ctx context.Context, sel ast.SelectionSet, v []music.Image) graphql.Marshaler {
 	ret := make(graphql.Array, len(v))
 	var wg sync.WaitGroup
 	isLen1 := len(v) == 1
@@ -10473,7 +10473,7 @@ func (ec *executionContext) marshalNMusicImage2ᚕgoᚗstevenxieᚗmeᚋapiᚋmu
 			if !isLen1 {
 				defer wg.Done()
 			}
-			ret[i] = ec.marshalNMusicImage2goᚗstevenxieᚗmeᚋapiᚋmusicᚐImage(ctx, sel, v[i])
+			ret[i] = ec.marshalNMusicImage2goᚗstevenxieᚗmeᚋapiᚋv2ᚋmusicᚐImage(ctx, sel, v[i])
 		}
 		if isLen1 {
 			f(i)
@@ -10486,11 +10486,11 @@ func (ec *executionContext) marshalNMusicImage2ᚕgoᚗstevenxieᚗmeᚋapiᚋmu
 	return ret
 }
 
-func (ec *executionContext) marshalNMusicMutation2goᚗstevenxieᚗmeᚋapiᚋmusicᚋmusicgqlᚐMutation(ctx context.Context, sel ast.SelectionSet, v musicgql.Mutation) graphql.Marshaler {
+func (ec *executionContext) marshalNMusicMutation2goᚗstevenxieᚗmeᚋapiᚋv2ᚋmusicᚋmusicgqlᚐMutation(ctx context.Context, sel ast.SelectionSet, v musicgql.Mutation) graphql.Marshaler {
 	return ec._MusicMutation(ctx, sel, &v)
 }
 
-func (ec *executionContext) marshalNMusicMutation2ᚖgoᚗstevenxieᚗmeᚋapiᚋmusicᚋmusicgqlᚐMutation(ctx context.Context, sel ast.SelectionSet, v *musicgql.Mutation) graphql.Marshaler {
+func (ec *executionContext) marshalNMusicMutation2ᚖgoᚗstevenxieᚗmeᚋapiᚋv2ᚋmusicᚋmusicgqlᚐMutation(ctx context.Context, sel ast.SelectionSet, v *musicgql.Mutation) graphql.Marshaler {
 	if v == nil {
 		if !ec.HasError(graphql.GetResolverContext(ctx)) {
 			ec.Errorf(ctx, "must not be null")
@@ -10500,11 +10500,11 @@ func (ec *executionContext) marshalNMusicMutation2ᚖgoᚗstevenxieᚗmeᚋapi�
 	return ec._MusicMutation(ctx, sel, v)
 }
 
-func (ec *executionContext) marshalNMusicQuery2goᚗstevenxieᚗmeᚋapiᚋmusicᚋmusicgqlᚐQuery(ctx context.Context, sel ast.SelectionSet, v musicgql.Query) graphql.Marshaler {
+func (ec *executionContext) marshalNMusicQuery2goᚗstevenxieᚗmeᚋapiᚋv2ᚋmusicᚋmusicgqlᚐQuery(ctx context.Context, sel ast.SelectionSet, v musicgql.Query) graphql.Marshaler {
 	return ec._MusicQuery(ctx, sel, &v)
 }
 
-func (ec *executionContext) marshalNMusicQuery2ᚖgoᚗstevenxieᚗmeᚋapiᚋmusicᚋmusicgqlᚐQuery(ctx context.Context, sel ast.SelectionSet, v *musicgql.Query) graphql.Marshaler {
+func (ec *executionContext) marshalNMusicQuery2ᚖgoᚗstevenxieᚗmeᚋapiᚋv2ᚋmusicᚋmusicgqlᚐQuery(ctx context.Context, sel ast.SelectionSet, v *musicgql.Query) graphql.Marshaler {
 	if v == nil {
 		if !ec.HasError(graphql.GetResolverContext(ctx)) {
 			ec.Errorf(ctx, "must not be null")
@@ -10514,15 +10514,15 @@ func (ec *executionContext) marshalNMusicQuery2ᚖgoᚗstevenxieᚗmeᚋapiᚋmu
 	return ec._MusicQuery(ctx, sel, v)
 }
 
-func (ec *executionContext) marshalNMusicTrack2goᚗstevenxieᚗmeᚋapiᚋmusicᚐTrack(ctx context.Context, sel ast.SelectionSet, v music.Track) graphql.Marshaler {
+func (ec *executionContext) marshalNMusicTrack2goᚗstevenxieᚗmeᚋapiᚋv2ᚋmusicᚐTrack(ctx context.Context, sel ast.SelectionSet, v music.Track) graphql.Marshaler {
 	return ec._MusicTrack(ctx, sel, &v)
 }
 
-func (ec *executionContext) marshalNNearbyTransitDeparture2goᚗstevenxieᚗmeᚋapiᚋassistᚋtransitᚐNearbyDeparture(ctx context.Context, sel ast.SelectionSet, v transit.NearbyDeparture) graphql.Marshaler {
+func (ec *executionContext) marshalNNearbyTransitDeparture2goᚗstevenxieᚗmeᚋapiᚋv2ᚋassistᚋtransitᚐNearbyDeparture(ctx context.Context, sel ast.SelectionSet, v transit.NearbyDeparture) graphql.Marshaler {
 	return ec._NearbyTransitDeparture(ctx, sel, &v)
 }
 
-func (ec *executionContext) marshalNNearbyTransitDeparture2ᚕgoᚗstevenxieᚗmeᚋapiᚋassistᚋtransitᚐNearbyDeparture(ctx context.Context, sel ast.SelectionSet, v []transit.NearbyDeparture) graphql.Marshaler {
+func (ec *executionContext) marshalNNearbyTransitDeparture2ᚕgoᚗstevenxieᚗmeᚋapiᚋv2ᚋassistᚋtransitᚐNearbyDeparture(ctx context.Context, sel ast.SelectionSet, v []transit.NearbyDeparture) graphql.Marshaler {
 	ret := make(graphql.Array, len(v))
 	var wg sync.WaitGroup
 	isLen1 := len(v) == 1
@@ -10546,7 +10546,7 @@ func (ec *executionContext) marshalNNearbyTransitDeparture2ᚕgoᚗstevenxieᚗm
 			if !isLen1 {
 				defer wg.Done()
 			}
-			ret[i] = ec.marshalNNearbyTransitDeparture2goᚗstevenxieᚗmeᚋapiᚋassistᚋtransitᚐNearbyDeparture(ctx, sel, v[i])
+			ret[i] = ec.marshalNNearbyTransitDeparture2goᚗstevenxieᚗmeᚋapiᚋv2ᚋassistᚋtransitᚐNearbyDeparture(ctx, sel, v[i])
 		}
 		if isLen1 {
 			f(i)
@@ -10559,7 +10559,7 @@ func (ec *executionContext) marshalNNearbyTransitDeparture2ᚕgoᚗstevenxieᚗm
 	return ret
 }
 
-func (ec *executionContext) marshalNPartialAbout2goᚗstevenxieᚗmeᚋapiᚋaboutᚐContactInfo(ctx context.Context, sel ast.SelectionSet, v about.ContactInfo) graphql.Marshaler {
+func (ec *executionContext) marshalNPartialAbout2goᚗstevenxieᚗmeᚋapiᚋv2ᚋaboutᚐContactInfo(ctx context.Context, sel ast.SelectionSet, v about.ContactInfo) graphql.Marshaler {
 	if v == nil {
 		if !ec.HasError(graphql.GetResolverContext(ctx)) {
 			ec.Errorf(ctx, "must not be null")
@@ -10569,11 +10569,11 @@ func (ec *executionContext) marshalNPartialAbout2goᚗstevenxieᚗmeᚋapiᚋabo
 	return ec._PartialAbout(ctx, sel, v)
 }
 
-func (ec *executionContext) marshalNPlace2goᚗstevenxieᚗmeᚋapiᚋlocationᚐPlace(ctx context.Context, sel ast.SelectionSet, v location.Place) graphql.Marshaler {
+func (ec *executionContext) marshalNPlace2goᚗstevenxieᚗmeᚋapiᚋv2ᚋlocationᚐPlace(ctx context.Context, sel ast.SelectionSet, v location.Place) graphql.Marshaler {
 	return ec._Place(ctx, sel, &v)
 }
 
-func (ec *executionContext) marshalNPlace2ᚖgoᚗstevenxieᚗmeᚋapiᚋlocationᚐPlace(ctx context.Context, sel ast.SelectionSet, v *location.Place) graphql.Marshaler {
+func (ec *executionContext) marshalNPlace2ᚖgoᚗstevenxieᚗmeᚋapiᚋv2ᚋlocationᚐPlace(ctx context.Context, sel ast.SelectionSet, v *location.Place) graphql.Marshaler {
 	if v == nil {
 		if !ec.HasError(graphql.GetResolverContext(ctx)) {
 			ec.Errorf(ctx, "must not be null")
@@ -10583,11 +10583,11 @@ func (ec *executionContext) marshalNPlace2ᚖgoᚗstevenxieᚗmeᚋapiᚋlocatio
 	return ec._Place(ctx, sel, v)
 }
 
-func (ec *executionContext) marshalNProductivity2goᚗstevenxieᚗmeᚋapiᚋproductivityᚐProductivity(ctx context.Context, sel ast.SelectionSet, v productivity.Productivity) graphql.Marshaler {
+func (ec *executionContext) marshalNProductivity2goᚗstevenxieᚗmeᚋapiᚋv2ᚋproductivityᚐProductivity(ctx context.Context, sel ast.SelectionSet, v productivity.Productivity) graphql.Marshaler {
 	return ec._Productivity(ctx, sel, &v)
 }
 
-func (ec *executionContext) marshalNProductivity2ᚖgoᚗstevenxieᚗmeᚋapiᚋproductivityᚐProductivity(ctx context.Context, sel ast.SelectionSet, v *productivity.Productivity) graphql.Marshaler {
+func (ec *executionContext) marshalNProductivity2ᚖgoᚗstevenxieᚗmeᚋapiᚋv2ᚋproductivityᚐProductivity(ctx context.Context, sel ast.SelectionSet, v *productivity.Productivity) graphql.Marshaler {
 	if v == nil {
 		if !ec.HasError(graphql.GetResolverContext(ctx)) {
 			ec.Errorf(ctx, "must not be null")
@@ -10597,11 +10597,11 @@ func (ec *executionContext) marshalNProductivity2ᚖgoᚗstevenxieᚗmeᚋapiᚋ
 	return ec._Productivity(ctx, sel, v)
 }
 
-func (ec *executionContext) marshalNProductivityCategory2goᚗstevenxieᚗmeᚋapiᚋproductivityᚋprodgqlᚐCategory(ctx context.Context, sel ast.SelectionSet, v prodgql.Category) graphql.Marshaler {
+func (ec *executionContext) marshalNProductivityCategory2goᚗstevenxieᚗmeᚋapiᚋv2ᚋproductivityᚋprodgqlᚐCategory(ctx context.Context, sel ast.SelectionSet, v prodgql.Category) graphql.Marshaler {
 	return ec._ProductivityCategory(ctx, sel, &v)
 }
 
-func (ec *executionContext) marshalNProductivityCategory2ᚖgoᚗstevenxieᚗmeᚋapiᚋproductivityᚋprodgqlᚐCategory(ctx context.Context, sel ast.SelectionSet, v *prodgql.Category) graphql.Marshaler {
+func (ec *executionContext) marshalNProductivityCategory2ᚖgoᚗstevenxieᚗmeᚋapiᚋv2ᚋproductivityᚋprodgqlᚐCategory(ctx context.Context, sel ast.SelectionSet, v *prodgql.Category) graphql.Marshaler {
 	if v == nil {
 		if !ec.HasError(graphql.GetResolverContext(ctx)) {
 			ec.Errorf(ctx, "must not be null")
@@ -10611,11 +10611,11 @@ func (ec *executionContext) marshalNProductivityCategory2ᚖgoᚗstevenxieᚗme�
 	return ec._ProductivityCategory(ctx, sel, v)
 }
 
-func (ec *executionContext) marshalNProductivityRecord2goᚗstevenxieᚗmeᚋapiᚋproductivityᚐRecord(ctx context.Context, sel ast.SelectionSet, v productivity.Record) graphql.Marshaler {
+func (ec *executionContext) marshalNProductivityRecord2goᚗstevenxieᚗmeᚋapiᚋv2ᚋproductivityᚐRecord(ctx context.Context, sel ast.SelectionSet, v productivity.Record) graphql.Marshaler {
 	return ec._ProductivityRecord(ctx, sel, &v)
 }
 
-func (ec *executionContext) marshalNProductivityRecord2ᚕgoᚗstevenxieᚗmeᚋapiᚋproductivityᚐRecord(ctx context.Context, sel ast.SelectionSet, v []productivity.Record) graphql.Marshaler {
+func (ec *executionContext) marshalNProductivityRecord2ᚕgoᚗstevenxieᚗmeᚋapiᚋv2ᚋproductivityᚐRecord(ctx context.Context, sel ast.SelectionSet, v []productivity.Record) graphql.Marshaler {
 	ret := make(graphql.Array, len(v))
 	var wg sync.WaitGroup
 	isLen1 := len(v) == 1
@@ -10639,7 +10639,7 @@ func (ec *executionContext) marshalNProductivityRecord2ᚕgoᚗstevenxieᚗmeᚋ
 			if !isLen1 {
 				defer wg.Done()
 			}
-			ret[i] = ec.marshalNProductivityRecord2goᚗstevenxieᚗmeᚋapiᚋproductivityᚐRecord(ctx, sel, v[i])
+			ret[i] = ec.marshalNProductivityRecord2goᚗstevenxieᚗmeᚋapiᚋv2ᚋproductivityᚐRecord(ctx, sel, v[i])
 		}
 		if isLen1 {
 			f(i)
@@ -10652,11 +10652,11 @@ func (ec *executionContext) marshalNProductivityRecord2ᚕgoᚗstevenxieᚗmeᚋ
 	return ret
 }
 
-func (ec *executionContext) marshalNSchedulingQuery2goᚗstevenxieᚗmeᚋapiᚋschedulingᚋschedgqlᚐQuery(ctx context.Context, sel ast.SelectionSet, v schedgql.Query) graphql.Marshaler {
+func (ec *executionContext) marshalNSchedulingQuery2goᚗstevenxieᚗmeᚋapiᚋv2ᚋschedulingᚋschedgqlᚐQuery(ctx context.Context, sel ast.SelectionSet, v schedgql.Query) graphql.Marshaler {
 	return ec._SchedulingQuery(ctx, sel, &v)
 }
 
-func (ec *executionContext) marshalNSchedulingQuery2ᚖgoᚗstevenxieᚗmeᚋapiᚋschedulingᚋschedgqlᚐQuery(ctx context.Context, sel ast.SelectionSet, v *schedgql.Query) graphql.Marshaler {
+func (ec *executionContext) marshalNSchedulingQuery2ᚖgoᚗstevenxieᚗmeᚋapiᚋv2ᚋschedulingᚋschedgqlᚐQuery(ctx context.Context, sel ast.SelectionSet, v *schedgql.Query) graphql.Marshaler {
 	if v == nil {
 		if !ec.HasError(graphql.GetResolverContext(ctx)) {
 			ec.Errorf(ctx, "must not be null")
@@ -10752,11 +10752,11 @@ func (ec *executionContext) marshalNTime2ᚕtimeᚐTime(ctx context.Context, sel
 	return ret
 }
 
-func (ec *executionContext) marshalNTimeSpan2goᚗstevenxieᚗmeᚋapiᚋschedulingᚐTimeSpan(ctx context.Context, sel ast.SelectionSet, v scheduling.TimeSpan) graphql.Marshaler {
+func (ec *executionContext) marshalNTimeSpan2goᚗstevenxieᚗmeᚋapiᚋv2ᚋschedulingᚐTimeSpan(ctx context.Context, sel ast.SelectionSet, v scheduling.TimeSpan) graphql.Marshaler {
 	return ec._TimeSpan(ctx, sel, &v)
 }
 
-func (ec *executionContext) marshalNTimeSpan2ᚕgoᚗstevenxieᚗmeᚋapiᚋschedulingᚐTimeSpan(ctx context.Context, sel ast.SelectionSet, v []scheduling.TimeSpan) graphql.Marshaler {
+func (ec *executionContext) marshalNTimeSpan2ᚕgoᚗstevenxieᚗmeᚋapiᚋv2ᚋschedulingᚐTimeSpan(ctx context.Context, sel ast.SelectionSet, v []scheduling.TimeSpan) graphql.Marshaler {
 	ret := make(graphql.Array, len(v))
 	var wg sync.WaitGroup
 	isLen1 := len(v) == 1
@@ -10780,7 +10780,7 @@ func (ec *executionContext) marshalNTimeSpan2ᚕgoᚗstevenxieᚗmeᚋapiᚋsche
 			if !isLen1 {
 				defer wg.Done()
 			}
-			ret[i] = ec.marshalNTimeSpan2goᚗstevenxieᚗmeᚋapiᚋschedulingᚐTimeSpan(ctx, sel, v[i])
+			ret[i] = ec.marshalNTimeSpan2goᚗstevenxieᚗmeᚋapiᚋv2ᚋschedulingᚐTimeSpan(ctx, sel, v[i])
 		}
 		if isLen1 {
 			f(i)
@@ -10793,15 +10793,15 @@ func (ec *executionContext) marshalNTimeSpan2ᚕgoᚗstevenxieᚗmeᚋapiᚋsche
 	return ret
 }
 
-func (ec *executionContext) marshalNTransitDeparture2goᚗstevenxieᚗmeᚋapiᚋassistᚋtransitᚐDeparture(ctx context.Context, sel ast.SelectionSet, v transit.Departure) graphql.Marshaler {
+func (ec *executionContext) marshalNTransitDeparture2goᚗstevenxieᚗmeᚋapiᚋv2ᚋassistᚋtransitᚐDeparture(ctx context.Context, sel ast.SelectionSet, v transit.Departure) graphql.Marshaler {
 	return ec._TransitDeparture(ctx, sel, &v)
 }
 
-func (ec *executionContext) marshalNTransitOperator2goᚗstevenxieᚗmeᚋapiᚋassistᚋtransitᚐOperator(ctx context.Context, sel ast.SelectionSet, v transit.Operator) graphql.Marshaler {
+func (ec *executionContext) marshalNTransitOperator2goᚗstevenxieᚗmeᚋapiᚋv2ᚋassistᚋtransitᚐOperator(ctx context.Context, sel ast.SelectionSet, v transit.Operator) graphql.Marshaler {
 	return ec._TransitOperator(ctx, sel, &v)
 }
 
-func (ec *executionContext) marshalNTransitOperator2ᚖgoᚗstevenxieᚗmeᚋapiᚋassistᚋtransitᚐOperator(ctx context.Context, sel ast.SelectionSet, v *transit.Operator) graphql.Marshaler {
+func (ec *executionContext) marshalNTransitOperator2ᚖgoᚗstevenxieᚗmeᚋapiᚋv2ᚋassistᚋtransitᚐOperator(ctx context.Context, sel ast.SelectionSet, v *transit.Operator) graphql.Marshaler {
 	if v == nil {
 		if !ec.HasError(graphql.GetResolverContext(ctx)) {
 			ec.Errorf(ctx, "must not be null")
@@ -10811,15 +10811,15 @@ func (ec *executionContext) marshalNTransitOperator2ᚖgoᚗstevenxieᚗmeᚋapi
 	return ec._TransitOperator(ctx, sel, v)
 }
 
-func (ec *executionContext) marshalNTransitQuery2goᚗstevenxieᚗmeᚋapiᚋassistᚋtransitᚋtransgqlᚐQuery(ctx context.Context, sel ast.SelectionSet, v transgql.Query) graphql.Marshaler {
+func (ec *executionContext) marshalNTransitQuery2goᚗstevenxieᚗmeᚋapiᚋv2ᚋassistᚋtransitᚋtransgqlᚐQuery(ctx context.Context, sel ast.SelectionSet, v transgql.Query) graphql.Marshaler {
 	return ec._TransitQuery(ctx, sel, &v)
 }
 
-func (ec *executionContext) marshalNTransitStation2goᚗstevenxieᚗmeᚋapiᚋassistᚋtransitᚐStation(ctx context.Context, sel ast.SelectionSet, v transit.Station) graphql.Marshaler {
+func (ec *executionContext) marshalNTransitStation2goᚗstevenxieᚗmeᚋapiᚋv2ᚋassistᚋtransitᚐStation(ctx context.Context, sel ast.SelectionSet, v transit.Station) graphql.Marshaler {
 	return ec._TransitStation(ctx, sel, &v)
 }
 
-func (ec *executionContext) marshalNTransitStation2ᚖgoᚗstevenxieᚗmeᚋapiᚋassistᚋtransitᚐStation(ctx context.Context, sel ast.SelectionSet, v *transit.Station) graphql.Marshaler {
+func (ec *executionContext) marshalNTransitStation2ᚖgoᚗstevenxieᚗmeᚋapiᚋv2ᚋassistᚋtransitᚐStation(ctx context.Context, sel ast.SelectionSet, v *transit.Station) graphql.Marshaler {
 	if v == nil {
 		if !ec.HasError(graphql.GetResolverContext(ctx)) {
 			ec.Errorf(ctx, "must not be null")
@@ -10829,11 +10829,11 @@ func (ec *executionContext) marshalNTransitStation2ᚖgoᚗstevenxieᚗmeᚋapi�
 	return ec._TransitStation(ctx, sel, v)
 }
 
-func (ec *executionContext) marshalNTransport2goᚗstevenxieᚗmeᚋapiᚋassistᚋtransitᚐTransport(ctx context.Context, sel ast.SelectionSet, v transit.Transport) graphql.Marshaler {
+func (ec *executionContext) marshalNTransport2goᚗstevenxieᚗmeᚋapiᚋv2ᚋassistᚋtransitᚐTransport(ctx context.Context, sel ast.SelectionSet, v transit.Transport) graphql.Marshaler {
 	return ec._Transport(ctx, sel, &v)
 }
 
-func (ec *executionContext) marshalNTransport2ᚕgoᚗstevenxieᚗmeᚋapiᚋassistᚋtransitᚐTransport(ctx context.Context, sel ast.SelectionSet, v []transit.Transport) graphql.Marshaler {
+func (ec *executionContext) marshalNTransport2ᚕgoᚗstevenxieᚗmeᚋapiᚋv2ᚋassistᚋtransitᚐTransport(ctx context.Context, sel ast.SelectionSet, v []transit.Transport) graphql.Marshaler {
 	ret := make(graphql.Array, len(v))
 	var wg sync.WaitGroup
 	isLen1 := len(v) == 1
@@ -10857,7 +10857,7 @@ func (ec *executionContext) marshalNTransport2ᚕgoᚗstevenxieᚗmeᚋapiᚋass
 			if !isLen1 {
 				defer wg.Done()
 			}
-			ret[i] = ec.marshalNTransport2goᚗstevenxieᚗmeᚋapiᚋassistᚋtransitᚐTransport(ctx, sel, v[i])
+			ret[i] = ec.marshalNTransport2goᚗstevenxieᚗmeᚋapiᚋv2ᚋassistᚋtransitᚐTransport(ctx, sel, v[i])
 		}
 		if isLen1 {
 			f(i)
@@ -10870,7 +10870,7 @@ func (ec *executionContext) marshalNTransport2ᚕgoᚗstevenxieᚗmeᚋapiᚋass
 	return ret
 }
 
-func (ec *executionContext) marshalNTransport2ᚖgoᚗstevenxieᚗmeᚋapiᚋassistᚋtransitᚐTransport(ctx context.Context, sel ast.SelectionSet, v *transit.Transport) graphql.Marshaler {
+func (ec *executionContext) marshalNTransport2ᚖgoᚗstevenxieᚗmeᚋapiᚋv2ᚋassistᚋtransitᚐTransport(ctx context.Context, sel ast.SelectionSet, v *transit.Transport) graphql.Marshaler {
 	if v == nil {
 		if !ec.HasError(graphql.GetResolverContext(ctx)) {
 			ec.Errorf(ctx, "must not be null")
@@ -11129,7 +11129,7 @@ func (ec *executionContext) marshalOBoolean2ᚖbool(ctx context.Context, sel ast
 	return ec.marshalOBoolean2bool(ctx, sel, *v)
 }
 
-func (ec *executionContext) marshalOCoordinates2ᚕgoᚗstevenxieᚗmeᚋapiᚋlocationᚐCoordinates(ctx context.Context, sel ast.SelectionSet, v []location.Coordinates) graphql.Marshaler {
+func (ec *executionContext) marshalOCoordinates2ᚕgoᚗstevenxieᚗmeᚋapiᚋv2ᚋlocationᚐCoordinates(ctx context.Context, sel ast.SelectionSet, v []location.Coordinates) graphql.Marshaler {
 	if v == nil {
 		return graphql.Null
 	}
@@ -11156,7 +11156,7 @@ func (ec *executionContext) marshalOCoordinates2ᚕgoᚗstevenxieᚗmeᚋapiᚋl
 			if !isLen1 {
 				defer wg.Done()
 			}
-			ret[i] = ec.marshalNCoordinates2goᚗstevenxieᚗmeᚋapiᚋlocationᚐCoordinates(ctx, sel, v[i])
+			ret[i] = ec.marshalNCoordinates2goᚗstevenxieᚗmeᚋapiᚋv2ᚋlocationᚐCoordinates(ctx, sel, v[i])
 		}
 		if isLen1 {
 			f(i)
@@ -11169,11 +11169,11 @@ func (ec *executionContext) marshalOCoordinates2ᚕgoᚗstevenxieᚗmeᚋapiᚋl
 	return ret
 }
 
-func (ec *executionContext) marshalOCurrentlyPlayingMusic2goᚗstevenxieᚗmeᚋapiᚋmusicᚐCurrentlyPlaying(ctx context.Context, sel ast.SelectionSet, v music.CurrentlyPlaying) graphql.Marshaler {
+func (ec *executionContext) marshalOCurrentlyPlayingMusic2goᚗstevenxieᚗmeᚋapiᚋv2ᚋmusicᚐCurrentlyPlaying(ctx context.Context, sel ast.SelectionSet, v music.CurrentlyPlaying) graphql.Marshaler {
 	return ec._CurrentlyPlayingMusic(ctx, sel, &v)
 }
 
-func (ec *executionContext) marshalOCurrentlyPlayingMusic2ᚖgoᚗstevenxieᚗmeᚋapiᚋmusicᚐCurrentlyPlaying(ctx context.Context, sel ast.SelectionSet, v *music.CurrentlyPlaying) graphql.Marshaler {
+func (ec *executionContext) marshalOCurrentlyPlayingMusic2ᚖgoᚗstevenxieᚗmeᚋapiᚋv2ᚋmusicᚐCurrentlyPlaying(ctx context.Context, sel ast.SelectionSet, v *music.CurrentlyPlaying) graphql.Marshaler {
 	if v == nil {
 		return graphql.Null
 	}
@@ -11203,11 +11203,11 @@ func (ec *executionContext) marshalOFloat2ᚖfloat64(ctx context.Context, sel as
 	return ec.marshalOFloat2float64(ctx, sel, *v)
 }
 
-func (ec *executionContext) marshalOGitCommitAuthor2goᚗstevenxieᚗmeᚋapiᚋgitᚐCommitAuthor(ctx context.Context, sel ast.SelectionSet, v git.CommitAuthor) graphql.Marshaler {
+func (ec *executionContext) marshalOGitCommitAuthor2goᚗstevenxieᚗmeᚋapiᚋv2ᚋgitᚐCommitAuthor(ctx context.Context, sel ast.SelectionSet, v git.CommitAuthor) graphql.Marshaler {
 	return ec._GitCommitAuthor(ctx, sel, &v)
 }
 
-func (ec *executionContext) marshalOGitCommitAuthor2ᚖgoᚗstevenxieᚗmeᚋapiᚋgitᚐCommitAuthor(ctx context.Context, sel ast.SelectionSet, v *git.CommitAuthor) graphql.Marshaler {
+func (ec *executionContext) marshalOGitCommitAuthor2ᚖgoᚗstevenxieᚗmeᚋapiᚋv2ᚋgitᚐCommitAuthor(ctx context.Context, sel ast.SelectionSet, v *git.CommitAuthor) graphql.Marshaler {
 	if v == nil {
 		return graphql.Null
 	}
@@ -11237,7 +11237,7 @@ func (ec *executionContext) marshalOInt2ᚖint(ctx context.Context, sel ast.Sele
 	return ec.marshalOInt2int(ctx, sel, *v)
 }
 
-func (ec *executionContext) marshalOMusicTrack2ᚕgoᚗstevenxieᚗmeᚋapiᚋmusicᚐTrack(ctx context.Context, sel ast.SelectionSet, v []music.Track) graphql.Marshaler {
+func (ec *executionContext) marshalOMusicTrack2ᚕgoᚗstevenxieᚗmeᚋapiᚋv2ᚋmusicᚐTrack(ctx context.Context, sel ast.SelectionSet, v []music.Track) graphql.Marshaler {
 	if v == nil {
 		return graphql.Null
 	}
@@ -11264,7 +11264,7 @@ func (ec *executionContext) marshalOMusicTrack2ᚕgoᚗstevenxieᚗmeᚋapiᚋmu
 			if !isLen1 {
 				defer wg.Done()
 			}
-			ret[i] = ec.marshalNMusicTrack2goᚗstevenxieᚗmeᚋapiᚋmusicᚐTrack(ctx, sel, v[i])
+			ret[i] = ec.marshalNMusicTrack2goᚗstevenxieᚗmeᚋapiᚋv2ᚋmusicᚐTrack(ctx, sel, v[i])
 		}
 		if isLen1 {
 			f(i)
@@ -11323,11 +11323,11 @@ func (ec *executionContext) marshalOTime2ᚖtimeᚐTime(ctx context.Context, sel
 	return ec.marshalOTime2timeᚐTime(ctx, sel, *v)
 }
 
-func (ec *executionContext) marshalOTimeZone2goᚗstevenxieᚗmeᚋapiᚋlocationᚋlocgqlᚐTimeZone(ctx context.Context, sel ast.SelectionSet, v locgql.TimeZone) graphql.Marshaler {
+func (ec *executionContext) marshalOTimeZone2goᚗstevenxieᚗmeᚋapiᚋv2ᚋlocationᚋlocgqlᚐTimeZone(ctx context.Context, sel ast.SelectionSet, v locgql.TimeZone) graphql.Marshaler {
 	return ec._TimeZone(ctx, sel, &v)
 }
 
-func (ec *executionContext) marshalOTimeZone2ᚖgoᚗstevenxieᚗmeᚋapiᚋlocationᚋlocgqlᚐTimeZone(ctx context.Context, sel ast.SelectionSet, v *locgql.TimeZone) graphql.Marshaler {
+func (ec *executionContext) marshalOTimeZone2ᚖgoᚗstevenxieᚗmeᚋapiᚋv2ᚋlocationᚋlocgqlᚐTimeZone(ctx context.Context, sel ast.SelectionSet, v *locgql.TimeZone) graphql.Marshaler {
 	if v == nil {
 		return graphql.Null
 	}

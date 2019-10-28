@@ -7,7 +7,7 @@ import (
 
 	"github.com/cockroachdb/errors"
 	"github.com/google/go-github/v25/github"
-	"go.stevenxie.me/api/about"
+	"go.stevenxie.me/api/v2/about"
 )
 
 // NewStaticSource creates a new about.StaticSource that reads from a GitHub

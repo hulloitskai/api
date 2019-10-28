@@ -4,7 +4,7 @@ import (
 	"context"
 	"strings"
 
-	"go.stevenxie.me/api/auth"
+	"go.stevenxie.me/api/v2/auth"
 )
 
 // NewQuery creates a new Query.

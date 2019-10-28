@@ -7,9 +7,9 @@ import (
 	"go.stevenxie.me/gopkg/logutil"
 	"go.stevenxie.me/gopkg/zero"
 
-	"go.stevenxie.me/api/location"
-	"go.stevenxie.me/api/pkg/basic"
-	"go.stevenxie.me/api/pkg/poll"
+	"go.stevenxie.me/api/v2/location"
+	"go.stevenxie.me/api/v2/pkg/basic"
+	"go.stevenxie.me/api/v2/pkg/poll"
 )
 
 // NewHistoryServicePrecacher creates a new HistoryServicePrecacher.

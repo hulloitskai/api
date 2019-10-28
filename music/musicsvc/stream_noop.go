@@ -6,8 +6,8 @@ import (
 	"github.com/sirupsen/logrus"
 	"go.stevenxie.me/gopkg/logutil"
 
-	"go.stevenxie.me/api/music"
-	"go.stevenxie.me/api/pkg/basic"
+	"go.stevenxie.me/api/v2/music"
+	"go.stevenxie.me/api/v2/pkg/basic"
 )
 
 // NewNoopCurrentStreamer creates a no-op music.CurrentStreamer.

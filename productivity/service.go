@@ -1,4 +1,4 @@
-package productivity // import "go.stevenxie.me/api/productivity"
+package productivity // import "go.stevenxie.me/api/v2/productivity"
 
 import (
 	"context"

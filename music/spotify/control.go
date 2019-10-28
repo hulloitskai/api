@@ -5,7 +5,7 @@ import (
 
 	"github.com/cockroachdb/errors"
 	"github.com/zmb3/spotify"
-	"go.stevenxie.me/api/music"
+	"go.stevenxie.me/api/v2/music"
 )
 
 // NewController creates a new music.Controller.

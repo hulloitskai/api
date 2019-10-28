@@ -3,8 +3,8 @@ package transgql
 import (
 	"context"
 
-	"go.stevenxie.me/api/assist/transit"
-	"go.stevenxie.me/api/location/locgql"
+	"go.stevenxie.me/api/v2/assist/transit"
+	"go.stevenxie.me/api/v2/location/locgql"
 )
 
 // NewQuery creates a new Query.

@@ -3,7 +3,7 @@ package gitgql
 import (
 	"context"
 
-	"go.stevenxie.me/api/git"
+	"go.stevenxie.me/api/v2/git"
 )
 
 // NewQuery creates a new Query.

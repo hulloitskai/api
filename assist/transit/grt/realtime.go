@@ -19,9 +19,9 @@ import (
 	"go.stevenxie.me/gopkg/logutil"
 	"go.stevenxie.me/gopkg/name"
 
-	"go.stevenxie.me/api/assist/transit"
-	"go.stevenxie.me/api/assist/transit/transutil"
-	"go.stevenxie.me/api/pkg/httputil"
+	"go.stevenxie.me/api/v2/assist/transit"
+	"go.stevenxie.me/api/v2/assist/transit/transutil"
+	"go.stevenxie.me/api/v2/pkg/httputil"
 )
 
 const (

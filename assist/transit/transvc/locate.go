@@ -9,9 +9,9 @@ import (
 	"go.stevenxie.me/gopkg/logutil"
 	"go.stevenxie.me/gopkg/name"
 
-	"go.stevenxie.me/api/assist/transit"
-	"go.stevenxie.me/api/location"
-	"go.stevenxie.me/api/pkg/basic"
+	"go.stevenxie.me/api/v2/assist/transit"
+	"go.stevenxie.me/api/v2/location"
+	"go.stevenxie.me/api/v2/pkg/basic"
 )
 
 // NewLocatorService creates a new transit.LocatorService.

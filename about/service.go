@@ -1,4 +1,4 @@
-package about // import "go.stevenxie.me/api/about"
+package about // import "go.stevenxie.me/api/v2/about"
 
 import "context"
 

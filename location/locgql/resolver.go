@@ -3,8 +3,8 @@ package locgql
 import (
 	"context"
 
-	"go.stevenxie.me/api/location"
-	"go.stevenxie.me/api/pkg/timeutil"
+	"go.stevenxie.me/api/v2/location"
+	"go.stevenxie.me/api/v2/pkg/timeutil"
 	"go.stevenxie.me/gopkg/zero"
 )
 

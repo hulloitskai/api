@@ -1,19 +1,19 @@
 package svcgql
 
 import (
-	"go.stevenxie.me/api/assist/transit"
-	"go.stevenxie.me/api/assist/transit/transgql"
+	"go.stevenxie.me/api/v2/assist/transit"
+	"go.stevenxie.me/api/v2/assist/transit/transgql"
 
-	"go.stevenxie.me/api/about"
-	"go.stevenxie.me/api/about/aboutgql"
+	"go.stevenxie.me/api/v2/about"
+	"go.stevenxie.me/api/v2/about/aboutgql"
 
-	"go.stevenxie.me/api/auth"
-	"go.stevenxie.me/api/git"
-	"go.stevenxie.me/api/graphql"
-	"go.stevenxie.me/api/location"
-	"go.stevenxie.me/api/music"
-	"go.stevenxie.me/api/productivity"
-	"go.stevenxie.me/api/scheduling"
+	"go.stevenxie.me/api/v2/auth"
+	"go.stevenxie.me/api/v2/git"
+	"go.stevenxie.me/api/v2/graphql"
+	"go.stevenxie.me/api/v2/location"
+	"go.stevenxie.me/api/v2/music"
+	"go.stevenxie.me/api/v2/productivity"
+	"go.stevenxie.me/api/v2/scheduling"
 )
 
 // NewResolverRoot creates a new graphql.ResolverRoot

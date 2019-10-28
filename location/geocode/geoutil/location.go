@@ -5,8 +5,8 @@ import (
 	"time"
 
 	"github.com/cockroachdb/errors"
-	"go.stevenxie.me/api/location"
-	"go.stevenxie.me/api/location/geocode"
+	"go.stevenxie.me/api/v2/location"
+	"go.stevenxie.me/api/v2/location/geocode"
 )
 
 // TimeLocation returns the time.Location that corresponds to a particular

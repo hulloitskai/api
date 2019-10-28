@@ -1,8 +1,8 @@
 package svcgql
 
 import (
-	"go.stevenxie.me/api/graphql"
-	"go.stevenxie.me/api/productivity/prodgql"
+	"go.stevenxie.me/api/v2/graphql"
+	"go.stevenxie.me/api/v2/productivity/prodgql"
 )
 
 type productivityResolvers struct {

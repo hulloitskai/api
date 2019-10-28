@@ -1,11 +1,11 @@
-package transit // import "go.stevenxie.me/api/assist/transit"
+package transit // import "go.stevenxie.me/api/v2/assist/transit"
 
 import (
 	"context"
 
 	"github.com/cockroachdb/errors"
 	validation "github.com/go-ozzo/ozzo-validation"
-	"go.stevenxie.me/api/location"
+	"go.stevenxie.me/api/v2/location"
 )
 
 // FindWithGroupByStation enables the grouping of results by station for a

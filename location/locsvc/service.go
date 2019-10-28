@@ -10,9 +10,9 @@ import (
 	"go.stevenxie.me/gopkg/logutil"
 	"go.stevenxie.me/gopkg/name"
 
-	"go.stevenxie.me/api/location"
-	"go.stevenxie.me/api/location/geocode"
-	"go.stevenxie.me/api/location/geocode/geoutil"
+	"go.stevenxie.me/api/v2/location"
+	"go.stevenxie.me/api/v2/location/geocode"
+	"go.stevenxie.me/api/v2/location/geocode/geoutil"
 )
 
 // NewService creates a new location.Service using a HistoryService and

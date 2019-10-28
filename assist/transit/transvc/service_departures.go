@@ -20,9 +20,9 @@ import (
 	"go.stevenxie.me/gopkg/name"
 	"go.stevenxie.me/gopkg/zero"
 
-	"go.stevenxie.me/api/assist/assistutil"
-	"go.stevenxie.me/api/assist/transit"
-	"go.stevenxie.me/api/location"
+	"go.stevenxie.me/api/v2/assist/assistutil"
+	"go.stevenxie.me/api/v2/assist/transit"
+	"go.stevenxie.me/api/v2/location"
 )
 
 // FindDepartures implements transit.Service.FindDepartures.

@@ -9,8 +9,8 @@ import (
 	"go.stevenxie.me/gopkg/logutil"
 	"go.stevenxie.me/gopkg/zero"
 
-	"go.stevenxie.me/api/music"
-	"go.stevenxie.me/api/pkg/poll"
+	"go.stevenxie.me/api/v2/music"
+	"go.stevenxie.me/api/v2/pkg/poll"
 )
 
 func newCurrentStreamActor(

@@ -1,6 +1,6 @@
 package locgql
 
-import "go.stevenxie.me/api/location"
+import "go.stevenxie.me/api/v2/location"
 
 // A CoordinatesInput is a location.Coordinates with an optional Y component.
 type CoordinatesInput struct {

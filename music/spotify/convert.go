@@ -4,7 +4,7 @@ import (
 	"time"
 
 	"github.com/zmb3/spotify"
-	"go.stevenxie.me/api/music"
+	"go.stevenxie.me/api/v2/music"
 )
 
 func tracksFromSpotify(dst *[]music.Track, src []spotify.SimpleTrack) {

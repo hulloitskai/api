@@ -9,21 +9,21 @@ model:
   filename: model_gen.go
 
 autobind:
-  - go.stevenxie.me/api/music
-  - go.stevenxie.me/api/music/musicgql
-  - go.stevenxie.me/api/location
-  - go.stevenxie.me/api/location/locgql
-  - go.stevenxie.me/api/about
-  - go.stevenxie.me/api/scheduling
-  - go.stevenxie.me/api/scheduling/schedgql
-  - go.stevenxie.me/api/git
-  - go.stevenxie.me/api/git/gitgql
-  - go.stevenxie.me/api/productivity
-  - go.stevenxie.me/api/productivity/prodgql
-  - go.stevenxie.me/api/auth/authgql
-  - go.stevenxie.me/api/assist/assistgql
-  - go.stevenxie.me/api/assist/transit
-  - go.stevenxie.me/api/assist/transit/transgql
+  - go.stevenxie.me/api/v2/music
+  - go.stevenxie.me/api/v2/music/musicgql
+  - go.stevenxie.me/api/v2/location
+  - go.stevenxie.me/api/v2/location/locgql
+  - go.stevenxie.me/api/v2/about
+  - go.stevenxie.me/api/v2/scheduling
+  - go.stevenxie.me/api/v2/scheduling/schedgql
+  - go.stevenxie.me/api/v2/git
+  - go.stevenxie.me/api/v2/git/gitgql
+  - go.stevenxie.me/api/v2/productivity
+  - go.stevenxie.me/api/v2/productivity/prodgql
+  - go.stevenxie.me/api/v2/auth/authgql
+  - go.stevenxie.me/api/v2/assist/assistgql
+  - go.stevenxie.me/api/v2/assist/transit
+  - go.stevenxie.me/api/v2/assist/transit/transgql
 
 models:
   AuthQuery:

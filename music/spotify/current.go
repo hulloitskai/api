@@ -13,8 +13,8 @@ import (
 	"go.stevenxie.me/gopkg/logutil"
 	"go.stevenxie.me/gopkg/name"
 
-	"go.stevenxie.me/api/music"
-	"go.stevenxie.me/api/pkg/basic"
+	"go.stevenxie.me/api/v2/music"
+	"go.stevenxie.me/api/v2/pkg/basic"
 )
 
 // NewCurrentService creates a new music.CurrentSource.

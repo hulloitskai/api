@@ -8,9 +8,9 @@ import (
 	"go.stevenxie.me/gopkg/configutil"
 	"go.stevenxie.me/gopkg/name"
 
-	"go.stevenxie.me/api/internal"
-	"go.stevenxie.me/api/pkg/gqlutil"
-	"go.stevenxie.me/api/pkg/httputil"
+	"go.stevenxie.me/api/v2/internal"
+	"go.stevenxie.me/api/v2/pkg/gqlutil"
+	"go.stevenxie.me/api/v2/pkg/httputil"
 )
 
 func (srv *Server) registerRoutes() error {

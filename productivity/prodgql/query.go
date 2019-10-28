@@ -3,7 +3,7 @@ package prodgql
 import (
 	"context"
 
-	"go.stevenxie.me/api/productivity"
+	"go.stevenxie.me/api/v2/productivity"
 )
 
 // NewQuery creates a new Query.

@@ -4,7 +4,7 @@ import (
 	"context"
 
 	"github.com/99designs/gqlgen/graphql"
-	"go.stevenxie.me/api/music"
+	"go.stevenxie.me/api/v2/music"
 )
 
 // NewSubscriptionResolver creates a new SubscriptionResolver.

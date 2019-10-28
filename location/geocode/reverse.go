@@ -1,7 +1,7 @@
 package geocode
 
 import (
-	"go.stevenxie.me/api/location"
+	"go.stevenxie.me/api/v2/location"
 )
 
 type (

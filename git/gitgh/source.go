@@ -8,8 +8,8 @@ import (
 	ghlib "github.com/google/go-github/v25/github"
 	"go.stevenxie.me/gopkg/zero"
 
-	"go.stevenxie.me/api/git"
-	"go.stevenxie.me/api/pkg/github"
+	"go.stevenxie.me/api/v2/git"
+	"go.stevenxie.me/api/v2/pkg/github"
 )
 
 const _homeURL = "https://github.com"

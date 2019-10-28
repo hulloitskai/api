@@ -3,19 +3,19 @@ package svcgql
 import (
 	"context"
 
-	"go.stevenxie.me/api/productivity"
-	"go.stevenxie.me/api/productivity/prodgql"
+	"go.stevenxie.me/api/v2/productivity"
+	"go.stevenxie.me/api/v2/productivity/prodgql"
 
-	"go.stevenxie.me/api/about"
-	"go.stevenxie.me/api/about/aboutgql"
+	"go.stevenxie.me/api/v2/about"
+	"go.stevenxie.me/api/v2/about/aboutgql"
 
-	"go.stevenxie.me/api/assist/assistgql"
-	"go.stevenxie.me/api/auth/authgql"
-	"go.stevenxie.me/api/git/gitgql"
-	"go.stevenxie.me/api/graphql"
-	"go.stevenxie.me/api/location/locgql"
-	"go.stevenxie.me/api/music/musicgql"
-	"go.stevenxie.me/api/scheduling/schedgql"
+	"go.stevenxie.me/api/v2/assist/assistgql"
+	"go.stevenxie.me/api/v2/auth/authgql"
+	"go.stevenxie.me/api/v2/git/gitgql"
+	"go.stevenxie.me/api/v2/graphql"
+	"go.stevenxie.me/api/v2/location/locgql"
+	"go.stevenxie.me/api/v2/music/musicgql"
+	"go.stevenxie.me/api/v2/scheduling/schedgql"
 )
 
 func newQueryResolver(svcs Services) graphql.QueryResolver {

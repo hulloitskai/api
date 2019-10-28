@@ -1,9 +1,9 @@
 package svcgql
 
 import (
-	"go.stevenxie.me/api/graphql"
-	"go.stevenxie.me/api/music"
-	"go.stevenxie.me/api/music/musicgql"
+	"go.stevenxie.me/api/v2/graphql"
+	"go.stevenxie.me/api/v2/music"
+	"go.stevenxie.me/api/v2/music/musicgql"
 )
 
 func newMusicResolvers(svc music.Service) *musicResolvers {

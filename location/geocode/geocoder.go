@@ -3,7 +3,7 @@ package geocode
 import (
 	"context"
 
-	"go.stevenxie.me/api/location"
+	"go.stevenxie.me/api/v2/location"
 )
 
 // A Geocoder can look up geographical features that correspond to a set of
