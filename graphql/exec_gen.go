@@ -1470,8 +1470,6 @@ type MaskedAbout implements PartialAbout {
   permissions(code: String!): [String!]!
 }
 `},
-	&ast.Source{Name: "schema/common.graphql", Input: `scalar Time
-`},
 	&ast.Source{Name: "schema/git.graphql", Input: `type GitQuery {
   recentCommits(limit: Int): [GitCommit!]!
 }
@@ -1738,6 +1736,11 @@ type Subscription {
   music: CurrentlyPlayingMusic
 }
 `},
+	&ast.Source{Name: "schema/scalars.graphql", Input: `"""
+A Time represents an instant in time.
+"""
+scalar Time
+`},
 	&ast.Source{Name: "schema/scheduling.graphql", Input: `"""
 A ` + "`" + `TimeSpan` + "`" + ` represents a span of time.
 """
@@ -1767,6 +1770,9 @@ type SchedulingQuery {
   nearbyTransports(coords: CoordinatesInput!, radius: Int, limit: Int): [Transport!]!
 }
 
+"""
+A ` + "`" + `NearbyTransitDeparture` + "`" + ` is a ` + "`" + `TransitDeparture` + "`" + ` that is happening nearby.
+"""
 type NearbyTransitDeparture {
   departure: TransitDeparture!
 
@@ -1776,6 +1782,10 @@ type NearbyTransitDeparture {
   distance: Int!
 }
 
+"""
+A ` + "`" + `TransitDeparture` + "`" + ` contains information about the departure of a ` + "`" + `Transport` + "`" + `
+from a particular ` + "`" + `Station` + "`" + `.
+"""
 type TransitDeparture {
   times: [Time!]!
   transport: Transport!
@@ -1788,6 +1798,9 @@ type TransitDeparture {
   realtime: Boolean!
 }
 
+"""
+A ` + "`" + `Transport` + "`" + ` is a vehicle travelling on a transit route.
+"""
 type Transport {
   route: String!
   direction: String!
@@ -1795,11 +1808,17 @@ type Transport {
   operator: TransitOperator!
 }
 
+"""
+An ` + "`" + `Operator` + "`" + ` represents a transit system operator.
+"""
 type TransitOperator {
   code: String!
   name: String!
 }
 
+"""
+A ` + "`" + `Station` + "`" + ` is a place where one can board a ` + "`" + `Transport` + "`" + `.
+"""
 type TransitStation {
   id: String!
   name: String!

@@ -6,7 +6,7 @@ import (
 	"go.stevenxie.me/api/location"
 )
 
-// A Station is a place where one can board a transit vehicle.
+// A Station is a place where one can board a Transport.
 type Station struct {
 	ID          string               `json:"id"`
 	Name        string               `json:"name"`
