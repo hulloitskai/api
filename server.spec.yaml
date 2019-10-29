@@ -1,77 +1,64 @@
-shutdownTimeout: Duration
-debug: Bool
-
 tracer:
-  enabled: Bool
+  enabled: bool
   jaeger:
-    sampler:
-      type: String
-      param: Float
-      samplingServerURL: String
-      maxOperations: Int
-      samplingRefreshInterval: Duration
-    reporter:
-      queueSize: Int
-      logSpans: Bool
-      localAgentHostPort: String
-      collectorEndpoint: String
-      user: String
+    sampler: jaeger-client-go/config.SamplerConfig?
+    reporter: jaeger-client-go/config.ReporterConfig?
 
 about:
   gist:
-    id: String
-    file: String
+    id: string
+    file: string
 
 location:
   precacher:
-    enabled: Bool      # default: True
-    interval: Duration # default: 1m
+    enabled: bool           # default: true
+    interval: time.Duration # default: 1m
 
   here:
-    appId: String
+    appId: string
 
   currentRegion:
-    # One of:
+    # The string representation of a location/geocode.Level. One of:
     #  - Country
     #  - State
     #  - County
     #  - City
     #  - District
     #  - Postcode
-    geocodeLevel: GeocodeLevel
+    geocodeLevel: string
 
 music:
   streamer:
-    enabled: Bool          # default: True
-    pollInterval: Duration # default: 1s
+    enabled: bool               # default: true
+    pollInterval: time.Duration # default: 1s
 
 scheduling:
   gcal:
     calendarIDs:
-      - String # Calendar ID
+      - string # represents a GCal ID
 
 git:
   precacher:
-    enabled: Bool      # default: "True"
-    interval: Duration # default: 10m
-    limit: Int?
+    enabled: bool           # default: "true"
+    interval: time.Duration # default: 10m
+    limit: int?
 
 auth:
   airtable:
     codes:
       selector:
-        viewSelector: &viewSelector
-          baseID: String
-          tableName: String
-          viewName: String
+        viewSelector: &viewSelector # auth/airtable.ViewSelector
+          baseID: string
+          tableName: string
+          viewName: string
         fieldSelector:
-          code: String  # default: "code"
-          perms: String # default: "perms"
+          code: string  # default: "code"
+          perms: string # default: "perms"
     accessRecords:
       enabled: Boolean
       selector:
-        viewSelector: *viewSelector
+        viewSelector: *viewSelector # auth/airtable.ViewSelector
         fieldSelector:
-          time: String          # default: "time"
-          perm: String          # default: "perm"
-          codeRecordID: String # default: "perms-record-id"
+          time: string         # default: "time"
+          perm: string         # default: "perm"
+          codeRecordID: string # default: "perms-record-id"

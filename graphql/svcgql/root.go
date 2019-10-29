@@ -33,20 +33,7 @@ func NewResolverRoot(svcs Services, strms Streamers) graphql.ResolverRoot {
 }
 
 type (
-	resolverRoot struct {
-		query        graphql.QueryResolver
-		mutation     graphql.MutationResolver
-		subscription graphql.SubscriptionResolver
-
-		*musicResolvers
-		locationResolvers
-		productivityResolvers
-
-		fullAbout        graphql.FullAboutResolver
-		transitDeparture graphql.TransitDepartureResolver
-	}
-
-	// Services handles requests for a graphql.ResolverRoot.
+	// Services handle the underlying requests for a graphql.ResolverRoot.
 	Services struct {
 		Git          git.Service
 		Auth         auth.Service
@@ -63,6 +50,19 @@ type (
 		Music music.Streamer
 	}
 )
+
+type resolverRoot struct {
+	query        graphql.QueryResolver
+	mutation     graphql.MutationResolver
+	subscription graphql.SubscriptionResolver
+
+	*musicResolvers
+	locationResolvers
+	productivityResolvers
+
+	fullAbout        graphql.FullAboutResolver
+	transitDeparture graphql.TransitDepartureResolver
+}
 
 var _ graphql.ResolverRoot = (*resolverRoot)(nil)
 

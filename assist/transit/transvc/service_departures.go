@@ -46,6 +46,7 @@ func (svc *service) FindDepartures(
 
 	// Validate inputs.
 	if routeQuery == "" {
+		log.Error("Empty route.")
 		return nil, errors.New("transvc: route is empty")
 	}
 
@@ -57,7 +58,8 @@ func (svc *service) FindDepartures(
 		apply(&opt)
 	}
 	if err := opt.Validate(); err != nil {
-		return nil, errors.Wrap(err, "transvc: validating config")
+		log.WithError(err).Error("Invalid options.")
+		return nil, errors.Wrap(err, "transvc: validate options")
 	}
 	{
 		fields := logrus.Fields{

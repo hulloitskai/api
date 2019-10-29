@@ -6,6 +6,7 @@ import (
 	"io"
 	"net/http"
 	"os"
+	"time"
 
 	"github.com/cockroachdb/errors"
 	sentry "github.com/getsentry/sentry-go"
@@ -84,10 +85,16 @@ func main() {
 	// Configure flags.
 	app.Flags = []cli.Flag{
 		cli.IntFlag{
-			Name:        "gql-port",
-			Usage:       "port that the GraphQL server listens on",
+			Name:        "port,p",
+			Usage:       "port that the server listens on",
 			Value:       3000,
-			Destination: &flags.GQLPort,
+			Destination: &flags.Port,
+		},
+
+		cli.BoolFlag{
+			Name:        "debug",
+			Usage:       "enable debug server",
+			Destination: &flags.Debug,
 		},
 		cli.IntFlag{
 			Name:        "debug-port",
@@ -95,6 +102,14 @@ func main() {
 			Value:       6060,
 			Destination: &flags.DebugPort,
 		},
+
+		cli.DurationFlag{
+			Name:        "shutdown-timeout",
+			Usage:       "timeout for server shutdown",
+			Value:       -1 * time.Second,
+			Destination: &flags.ShutdownTimeout,
+		},
+
 		cli.BoolFlag{
 			Name:  "help,h",
 			Usage: "show help",
@@ -108,7 +123,10 @@ func main() {
 }
 
 var flags struct {
-	GQLPort   int
+	ShutdownTimeout time.Duration
+	Port            int
+
+	Debug     bool
 	DebugPort int
 }
 
@@ -148,12 +166,20 @@ func run(*cli.Context) (err error) {
 	// Init tracer.
 	var tracer opentracing.Tracer
 	if cfg := cfg.Tracer; cfg.Enabled {
-		var closer io.Closer
-		tracer, closer, err = jaeger.NewTracer(
-			cmdinternal.Namespace,
-			jaeger.WithSamplerConfig(cfg.Jaeger.Sampler),
-			jaeger.WithReporterConfig(cfg.Jaeger.Reporter),
+		var (
+			closer io.Closer
+			opts   []jaeger.Option
 		)
+		{
+			j := cfg.Jaeger
+			if s := j.Sampler; s != nil {
+				opts = append(opts, jaeger.WithSamplerConfig(s))
+			}
+			if r := j.Reporter; r != nil {
+				opts = append(opts, jaeger.WithReporterConfig(r))
+			}
+			tracer, closer, err = jaeger.NewTracer(cmdinternal.Namespace, opts...)
+		}
 		if err != nil {
 			return errors.Wrap(err, "creating Jaeger tracer")
 		}
@@ -427,10 +453,10 @@ func run(*cli.Context) (err error) {
 			log = log
 			ctx = context.Background()
 		)
-		if timeout := cfg.ShutdownTimeout; timeout != nil {
-			log = log.WithField("timeout", *timeout)
+		if timeout := flags.ShutdownTimeout; timeout > 0 {
+			log = log.WithField("timeout", timeout)
 			var cancel context.CancelFunc
-			ctx, cancel = context.WithTimeout(ctx, *timeout)
+			ctx, cancel = context.WithTimeout(ctx, timeout)
 			defer cancel()
 		}
 		log.Info("Shutting down GraphQL server...")
@@ -439,7 +465,7 @@ func run(*cli.Context) (err error) {
 	})
 	group.Go(func() error {
 		var (
-			addr = fmt.Sprintf("%s:%d", host, flags.GQLPort)
+			addr = fmt.Sprintf("%s:%d", host, flags.Port)
 			err  = gqlServer.ListenAndServe(addr)
 		)
 		if !errors.Is(err, http.ErrServerClosed) {
@@ -450,17 +476,17 @@ func run(*cli.Context) (err error) {
 	})
 
 	// Start debug server.
-	if cfg.Debug {
+	if flags.Debug {
 		debugServer := debugsrv.NewServer(basic.WithLogger(log))
 		guillo.AddFinalizer(func() error {
 			var (
 				log = log
 				ctx = context.Background()
 			)
-			if timeout := cfg.ShutdownTimeout; timeout != nil {
-				log = log.WithField("timeout", *timeout)
+			if timeout := flags.ShutdownTimeout; timeout > 0 {
+				log = log.WithField("timeout", timeout)
 				var cancel context.CancelFunc
-				ctx, cancel = context.WithTimeout(ctx, *timeout)
+				ctx, cancel = context.WithTimeout(ctx, timeout)
 				defer cancel()
 			}
 			log.Info("Shutting down debug server...")

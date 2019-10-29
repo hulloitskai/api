@@ -10,9 +10,8 @@ import (
 	"strings"
 	"time"
 
-	"github.com/cockroachdb/errors/exthttp"
-
 	"github.com/cockroachdb/errors"
+	"github.com/cockroachdb/errors/exthttp"
 	opentracing "github.com/opentracing/opentracing-go"
 	"github.com/sirupsen/logrus"
 

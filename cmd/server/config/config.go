@@ -13,9 +13,6 @@ import (
 // Config maps to a configuration YAML that can configure programs in this
 // package.
 type Config struct {
-	ShutdownTimeout *time.Duration `yaml:"shutdownTimeout"`
-	Debug           bool           `yaml:"debug"`
-
 	Tracer struct {
 		Enabled bool           `yaml:"enabled"`
 		Jaeger  jaeger.Options `yaml:"jaeger"`
