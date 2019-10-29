@@ -147,11 +147,12 @@ func run(*cli.Context) (err error) {
 
 	// Init tracer.
 	var tracer opentracing.Tracer
-	if t := cfg.Tracer; t.Enabled {
+	if cfg := cfg.Tracer; cfg.Enabled {
 		var closer io.Closer
 		tracer, closer, err = jaeger.NewTracer(
 			cmdinternal.Namespace,
-			jaeger.WithOverrides(&t.Jaeger),
+			jaeger.WithSamplerConfig(cfg.Jaeger.Sampler),
+			jaeger.WithReporterConfig(cfg.Jaeger.Reporter),
 		)
 		if err != nil {
 			return errors.Wrap(err, "creating Jaeger tracer")
@@ -323,14 +324,14 @@ func run(*cli.Context) (err error) {
 			basic.WithTracer(tracer),
 		)
 
-		if pc := cfg.Git.Precacher; pc.Enabled {
+		if cfg := cfg.Git.Precacher; cfg.Enabled {
 			precacher := gitsvc.NewServicePrecacher(
 				gitService,
-				pc.Interval,
-				func(cfg *gitsvc.ServicePrecacherConfig) {
-					cfg.Logger = log
-					if l := pc.Limit; l != nil {
-						cfg.Limit = l
+				cfg.Interval,
+				func(opt *gitsvc.ServicePrecacherOptions) {
+					opt.Logger = log
+					if l := cfg.Limit; l != nil {
+						opt.Limit = l
 					}
 				},
 			)
@@ -355,15 +356,15 @@ func run(*cli.Context) (err error) {
 
 	var authService auth.Service
 	{
-		at := cfg.Auth.Airtable
+		cfg := cfg.Auth.Airtable
 		authService = airtable.NewService(
 			airtableClient,
-			at.Codes.Selector,
+			cfg.Codes.Selector,
 			airtable.WithLogger(log),
 			airtable.WithTracer(tracer),
-			func(cfg *airtable.ServiceConfig) {
-				if access := at.AccessRecords; access.Enabled {
-					cfg.AccessSelector = &access.Selector
+			func(opt *airtable.ServiceOptions) {
+				if access := cfg.AccessRecords; access.Enabled {
+					opt.AccessSelector = &access.Selector
 				}
 			},
 		)

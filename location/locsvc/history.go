@@ -23,7 +23,7 @@ func NewHistoryService(
 	geo geocode.Geocoder,
 	opts ...basic.Option,
 ) location.HistoryService {
-	cfg := basic.BuildConfig(opts...)
+	cfg := basic.BuildOptions(opts...)
 	return &historyService{
 		hist:   hist,
 		geo:    geo,

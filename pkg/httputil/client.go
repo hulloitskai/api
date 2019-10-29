@@ -37,15 +37,15 @@ func (c client) Get(url string) (*http.Response, error) {
 
 // BasicWithHTTPClient configures a BasicClient to make HTTP requests using c.
 func BasicWithHTTPClient(c *http.Client) BasicClientOption {
-	return func(cfg *BasicClientConfig) { cfg.HTTPClient = c }
+	return func(cfg *BasicClientOptions) { cfg.HTTPClient = c }
 }
 
 type (
-	// A BasicClientConfig configures a BasicClient.
-	BasicClientConfig struct {
+	// A BasicClientOptions configures a BasicClient.
+	BasicClientOptions struct {
 		HTTPClient *http.Client
 	}
 
-	// A BasicClientOption modifies a BasicClientConfig.
-	BasicClientOption func(*BasicClientConfig)
+	// A BasicClientOption modifies a BasicClientOptions.
+	BasicClientOption func(*BasicClientOptions)
 )

@@ -13,7 +13,7 @@ import (
 
 // NewServer creates a new Server.
 func NewServer(opts ...basic.Option) Server {
-	cfg := basic.BuildConfig(opts...)
+	cfg := basic.BuildOptions(opts...)
 	mux := http.NewServeMux()
 	return Server{
 		http: &http.Server{Handler: mux},

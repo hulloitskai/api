@@ -33,19 +33,19 @@ const (
 //
 // If c == nil, a zero-value http.Client will be used.
 func NewRealtimeSource(opts ...RealtimeSourceOption) (transit.RealtimeSource, error) {
-	cfg := RealtimeSourceConfig{
+	opt := RealTimeSourceOptions{
 		HTTPClient: new(http.Client),
 		Logger:     logutil.NoopEntry(),
 	}
-	for _, opt := range opts {
-		opt(&cfg)
+	for _, apply := range opts {
+		apply(&opt)
 	}
 
 	// Create log with component name.
-	log := logutil.WithComponent(cfg.Logger, (*realtimeSource)(nil))
+	log := logutil.WithComponent(opt.Logger, (*realtimeSource)(nil))
 
 	// Use custom caching round-tripper.
-	client := cfg.HTTPClient
+	client := opt.HTTPClient
 	cache, err := httputil.NewCachingTripper(
 		client.Transport,
 		httputil.CachingTripperWithLogger(log),
@@ -59,7 +59,7 @@ func NewRealtimeSource(opts ...RealtimeSourceOption) (transit.RealtimeSource, er
 	return &realtimeSource{
 		client: client,
 		log:    log,
-		tracer: cfg.Tracer,
+		tracer: opt.Tracer,
 		cache:  cache,
 	}, nil
 }
@@ -67,12 +67,12 @@ func NewRealtimeSource(opts ...RealtimeSourceOption) (transit.RealtimeSource, er
 // WithLogger configures a transit.RealtimeSource to write logs with
 // log.
 func WithLogger(log *logrus.Entry) RealtimeSourceOption {
-	return func(cfg *RealtimeSourceConfig) { cfg.Logger = log }
+	return func(opt *RealTimeSourceOptions) { opt.Logger = log }
 }
 
 // WithTracer configures a transit.RealtimeSource to trace calls with t.
 func WithTracer(t opentracing.Tracer) RealtimeSourceOption {
-	return func(cfg *RealtimeSourceConfig) { cfg.Tracer = t }
+	return func(opt *RealTimeSourceOptions) { opt.Tracer = t }
 }
 
 type (
@@ -85,15 +85,15 @@ type (
 		cacheTimestamp time.Time
 	}
 
-	// A RealtimeSourceConfig configures a transit.RealtimeSource.
-	RealtimeSourceConfig struct {
+	// A RealTimeSourceOptions configures a transit.RealtimeSource.
+	RealTimeSourceOptions struct {
 		HTTPClient *http.Client
 		Logger     *logrus.Entry
 		Tracer     opentracing.Tracer
 	}
 
-	// A RealtimeSourceOption modifies a RealtimeServiceConfig.
-	RealtimeSourceOption func(*RealtimeSourceConfig)
+	// A RealtimeSourceOption modifies a RealtimeServiceOptions.
+	RealtimeSourceOption func(*RealTimeSourceOptions)
 )
 
 var _ transit.RealtimeSource = (*realtimeSource)(nil)

@@ -28,7 +28,7 @@ func NewCachingTripper(
 		underlying = http.DefaultTransport
 	}
 
-	cfg := CachingTripperConfig{
+	opt := CachingTripperOptions{
 		Logger: logutil.NoopEntry(),
 		Ristretto: ristretto.Config{
 			NumCounters: 64,             // keys to track frequency of
@@ -36,33 +36,33 @@ func NewCachingTripper(
 			BufferItems: 64,
 		},
 	}
-	for _, opt := range opts {
-		opt(&cfg)
+	for _, apply := range opts {
+		apply(&opt)
 	}
 
-	cache, err := ristretto.NewCache(&cfg.Ristretto)
+	cache, err := ristretto.NewCache(&opt.Ristretto)
 	if err != nil {
 		return nil, errors.Wrap(err, "httputil: creating Ristretto cache")
 	}
 	return &CachingTripper{
 		Tripper: underlying,
-		log:     logutil.WithComponent(cfg.Logger, (*CachingTripper)(nil)),
+		log:     logutil.WithComponent(opt.Logger, (*CachingTripper)(nil)),
 
-		expiresFunc: cfg.ExpiresFunc,
+		expiresFunc: opt.ExpiresFunc,
 		cache:       cache,
 	}, nil
 }
 
 // CachingTripperWithLogger configures a CachingTripper to write logs with log.
 func CachingTripperWithLogger(log *logrus.Entry) CachingTripperOption {
-	return func(cfg *CachingTripperConfig) { cfg.Logger = log }
+	return func(opt *CachingTripperOptions) { opt.Logger = log }
 }
 
 // CachingTripperWithMaxAge configures a CachingTripper to expire each response
 // after age (the amount of time since the response was received).
 func CachingTripperWithMaxAge(age time.Duration) CachingTripperOption {
-	return func(cfg *CachingTripperConfig) {
-		cfg.ExpiresFunc = func(_ *http.Request, timestamp time.Time) *time.Time {
+	return func(opt *CachingTripperOptions) {
+		opt.ExpiresFunc = func(_ *http.Request, timestamp time.Time) *time.Time {
 			t := timestamp.Add(age)
 			return &t
 		}
@@ -80,15 +80,15 @@ type (
 		cache       *ristretto.Cache
 	}
 
-	// A CachingTripperConfig configures a CachingTripper.
-	CachingTripperConfig struct {
+	// A CachingTripperOptions configures a CachingTripper.
+	CachingTripperOptions struct {
 		Logger      *logrus.Entry
 		ExpiresFunc ExpiresFunc
 		Ristretto   ristretto.Config
 	}
 
-	// CachingTripperOption modifies a CachingTripperConfig.
-	CachingTripperOption func(*CachingTripperConfig)
+	// A CachingTripperOption modifies a CachingTripperOptions.
+	CachingTripperOption func(*CachingTripperOptions)
 
 	// ExpiresFunc determines the time at which the cached response for a request
 	// must expire.

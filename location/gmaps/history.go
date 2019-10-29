@@ -21,7 +21,7 @@ import (
 // NewHistorian creates a new location.Historian that can load
 // location history from Google Maps.
 func NewHistorian(client TimelineClient, opts ...basic.Option) location.Historian {
-	cfg := basic.BuildConfig(opts...)
+	cfg := basic.BuildOptions(opts...)
 	return historian{
 		client: client,
 		tracer: cfg.Tracer,

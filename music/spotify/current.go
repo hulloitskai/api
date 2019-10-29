@@ -22,7 +22,7 @@ func NewCurrentService(
 	c *spotify.Client,
 	opts ...basic.Option,
 ) music.CurrentService {
-	cfg := basic.BuildConfig(opts...)
+	cfg := basic.BuildOptions(opts...)
 	return currentService{
 		client: c,
 		log:    logutil.WithComponent(cfg.Logger, (*currentService)(nil)),

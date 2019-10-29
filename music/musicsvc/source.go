@@ -17,7 +17,7 @@ func NewSourceService(
 	src music.Source,
 	opts ...basic.Option,
 ) music.SourceService {
-	cfg := basic.BuildConfig(opts...)
+	cfg := basic.BuildOptions(opts...)
 	return sourceService{
 		src:    src,
 		log:    logutil.WithComponent(cfg.Logger, (*sourceService)(nil)),
@@ -72,23 +72,23 @@ func (svc sourceService) GetAlbumTracks(
 	)
 	defer span.Finish()
 
-	cfg := music.PaginationConfig{
+	opt := music.PaginationOptions{
 		Limit:  _defaultLimit,
 		Offset: 0,
 	}
-	for _, opt := range opts {
-		opt(&cfg)
+	for _, apply := range opts {
+		apply(&opt)
 	}
 
 	log := svc.log.WithFields(logrus.Fields{
 		logutil.MethodKey: name.OfMethod(sourceService.GetAlbumTracks),
 		"id":              id,
-		"limit":           cfg.Limit,
-		"offset":          cfg.Offset,
+		"limit":           opt.Limit,
+		"offset":          opt.Offset,
 	}).WithContext(ctx)
 
 	log.Trace("Getting album tracks...")
-	ts, err := svc.src.GetAlbumTracks(ctx, id, cfg)
+	ts, err := svc.src.GetAlbumTracks(ctx, id, opt)
 	if err != nil {
 		log.WithError(err).Error("Failed to get album tracks.")
 		return nil, err
@@ -109,23 +109,23 @@ func (svc sourceService) GetArtistAlbums(
 	)
 	defer span.Finish()
 
-	cfg := music.PaginationConfig{
+	opt := music.PaginationOptions{
 		Limit:  _defaultLimit,
 		Offset: 0,
 	}
-	for _, opt := range opts {
-		opt(&cfg)
+	for _, apply := range opts {
+		apply(&opt)
 	}
 
 	log := svc.log.WithFields(logrus.Fields{
 		logutil.MethodKey: name.OfMethod(sourceService.GetArtistAlbums),
 		"id":              id,
-		"limit":           cfg.Limit,
-		"offset":          cfg.Offset,
+		"limit":           opt.Limit,
+		"offset":          opt.Offset,
 	}).WithContext(ctx)
 
 	log.Trace("Getting artist albums...")
-	as, err := svc.src.GetArtistAlbums(ctx, id, cfg)
+	as, err := svc.src.GetArtistAlbums(ctx, id, opt)
 	if err != nil {
 		log.WithError(err).Error("Failed to get artist albums.")
 		return nil, err

@@ -11,21 +11,21 @@ import (
 // FindWithGroupByStation enables the grouping of results by station for a
 // Service.FindDepartures request.
 func FindWithGroupByStation(enable bool) FindDeparturesOption {
-	return func(cfg *FindDeparturesConfig) { cfg.FuzzyMatch = enable }
+	return func(opt *FindDeparturesOptions) { opt.FuzzyMatch = enable }
 }
 
 // FindWithFuzzyMatch enables fuzzy-matching on the route for a
 // Service.FindDepartures request.
 func FindWithFuzzyMatch(enable bool) FindDeparturesOption {
-	return func(cfg *FindDeparturesConfig) { cfg.FuzzyMatch = enable }
+	return func(opt *FindDeparturesOptions) { opt.FuzzyMatch = enable }
 }
 
 // FindWithRadius configures a Service.FindDepartures request to limit search
 // to departures within r meters of the provided position.
 func FindWithRadius(r int) FindDeparturesOption {
-	return func(cfg *FindDeparturesConfig) {
+	return func(opt *FindDeparturesOptions) {
 		if r > 0 {
-			cfg.Radius = r
+			opt.Radius = r
 		}
 	}
 }
@@ -33,15 +33,15 @@ func FindWithRadius(r int) FindDeparturesOption {
 // FindWithOperator restricts the search to the Operator with the specified
 // code.
 func FindWithOperator(opCode string) FindDeparturesOption {
-	return func(cfg *FindDeparturesConfig) { cfg.OperatorCode = opCode }
+	return func(opt *FindDeparturesOptions) { opt.OperatorCode = opCode }
 }
 
 // FindWithLimit limits the number of results from a Service.FindDepartures
 // request.
 func FindWithLimit(l int) FindDeparturesOption {
-	return func(cfg *FindDeparturesConfig) {
+	return func(opt *FindDeparturesOptions) {
 		if l > 0 {
-			cfg.Limit = l
+			opt.Limit = l
 		}
 	}
 }
@@ -49,7 +49,7 @@ func FindWithLimit(l int) FindDeparturesOption {
 // FindSingleSet instructs a Service.FindDepartures call to only include
 // a single set of results that are unique by direction.
 func FindSingleSet(enable bool) FindDeparturesOption {
-	return func(cfg *FindDeparturesConfig) { cfg.SingleSet = enable }
+	return func(opt *FindDeparturesOptions) { opt.SingleSet = enable }
 }
 
 type (
@@ -72,8 +72,9 @@ type (
 		) ([]Transport, error)
 	}
 
-	// A FindDeparturesConfig configures a Service.FindDepartures request.
-	FindDeparturesConfig struct {
+	// A FindDeparturesOptions are option parameters for a
+	// Service.FindDepartures request.
+	FindDeparturesOptions struct {
 		OperatorCode string // filter by operator code
 
 		Realtime   bool // make extra queries for realtime data
@@ -89,35 +90,36 @@ type (
 		MaxStations int // max number of stations to search
 	}
 
-	// A FindDeparturesOption modifies a FindDeparturesConfig.
-	FindDeparturesOption func(*FindDeparturesConfig)
+	// A FindDeparturesOption modifies a FindDeparturesOptions.
+	FindDeparturesOption func(*FindDeparturesOptions)
 
-	// A NearbyTransportsConfig configures a Service.NearbyTransports request.
-	NearbyTransportsConfig struct {
+	// NearbyTransportsOptions are option parameters for a
+	// Service.NearbyTransports request.
+	NearbyTransportsOptions struct {
 		Radius      int
 		Limit       int
 		MaxStations int
 	}
 
-	// A NearbyTransportsOption modifies a NearbyTransportsConfig.
-	NearbyTransportsOption func(*NearbyTransportsConfig)
+	// A NearbyTransportsOption modifies a NearbyTransportsOption.
+	NearbyTransportsOption func(*NearbyTransportsOptions)
 )
 
-// Validate returns an error if the FindDeparrturesConfig is not valid.
-func (cfg *FindDeparturesConfig) Validate() error {
+// Validate returns an error if the FindDeparrturesOption is not valid.
+func (opt *FindDeparturesOptions) Validate() error {
 	minZeroFields := []*int{
-		&cfg.Limit, &cfg.TimesLimit,
-		&cfg.Radius, &cfg.MaxStations,
+		&opt.Limit, &opt.TimesLimit,
+		&opt.Radius, &opt.MaxStations,
 	}
 	rules := make([]*validation.FieldRules, len(minZeroFields))
 	for i, f := range minZeroFields {
 		rules[i] = validation.Field(f, validation.Min(0))
 	}
-	if err := validation.ValidateStruct(cfg, rules...); err != nil {
+	if err := validation.ValidateStruct(opt, rules...); err != nil {
 		return err
 	}
 
-	if l := cfg.Limit; cfg.SingleSet && l > 0 {
+	if l := opt.Limit; opt.SingleSet && l > 0 {
 		return errors.Newf("Limit (%d) cannot be set when SingleSet is true", l)
 	}
 	return nil

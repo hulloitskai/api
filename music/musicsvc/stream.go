@@ -17,17 +17,17 @@ func NewCurrentStreamer(
 	curr music.CurrentService,
 	opts ...CurrentStreamerOption,
 ) CurrentStreamer {
-	cfg := CurrentStreamerConfig{
+	opt := CurrentStreamerOptions{
 		Logger: logutil.NoopEntry(),
 	}
-	for _, opt := range opts {
-		opt(&cfg)
+	for _, apply := range opts {
+		apply(&opt)
 	}
-	log := logutil.WithComponent(cfg.Logger, (*CurrentStreamer)(nil))
+	log := logutil.WithComponent(opt.Logger, (*CurrentStreamer)(nil))
 	var (
 		actor  = newCurrentStreamActor(curr, log)
 		poller = poll.NewPoller(
-			actor, cfg.PollInterval,
+			actor, opt.PollInterval,
 			poll.PollerWithLogger(log),
 		)
 	)
@@ -42,13 +42,13 @@ func NewCurrentStreamer(
 // StreamerWithLogger configures a CurrentStreamer to write logs with
 // log.
 func StreamerWithLogger(log *logrus.Entry) CurrentStreamerOption {
-	return func(cfg *CurrentStreamerConfig) { cfg.Logger = log }
+	return func(opt *CurrentStreamerOptions) { opt.Logger = log }
 }
 
 // StreamerWithPollInterval configures the interval at which a
 // CurrentStreamer polls for changes.
 func StreamerWithPollInterval(interval time.Duration) CurrentStreamerOption {
-	return func(cfg *CurrentStreamerConfig) { cfg.PollInterval = interval }
+	return func(opt *CurrentStreamerOptions) { opt.PollInterval = interval }
 }
 
 type (
@@ -60,14 +60,14 @@ type (
 		log  *logrus.Entry
 	}
 
-	// A CurrentStreamerConfig configures a Service.
-	CurrentStreamerConfig struct {
+	// A CurrentStreamerOptions configures a Service.
+	CurrentStreamerOptions struct {
 		Logger       *logrus.Entry
 		PollInterval time.Duration
 	}
 
-	// A CurrentStreamerOption modifies a ServiceConfig.
-	CurrentStreamerOption func(*CurrentStreamerConfig)
+	// A CurrentStreamerOption modifies a CurrentStreamerOptions.
+	CurrentStreamerOption func(*CurrentStreamerOptions)
 )
 
 var _ music.CurrentStreamer = (*CurrentStreamer)(nil)

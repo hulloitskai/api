@@ -55,12 +55,12 @@ func (res AlbumResolver) Tracks(
 	return res.svc.GetAlbumTracks(
 		ctx,
 		a.ID,
-		func(cfg *music.PaginationConfig) {
+		func(opt *music.PaginationOptions) {
 			if limit != nil {
-				cfg.Limit = *limit
+				opt.Limit = *limit
 			}
 			if offset != nil {
-				cfg.Offset = *offset
+				opt.Offset = *offset
 			}
 		},
 	)
@@ -85,12 +85,12 @@ func (res ArtistResolver) Albums(
 	return res.svc.GetArtistAlbums(
 		ctx,
 		t.ID,
-		func(cfg *music.PaginationConfig) {
+		func(opt *music.PaginationOptions) {
 			if limit != nil {
-				cfg.Limit = *limit
+				opt.Limit = *limit
 			}
 			if offset != nil {
-				cfg.Offset = *offset
+				opt.Offset = *offset
 			}
 		},
 	)

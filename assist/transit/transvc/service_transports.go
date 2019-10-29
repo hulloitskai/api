@@ -32,19 +32,19 @@ func (svc *service) NearbyTransports(
 		"coordinates":     coords,
 	}).WithContext(ctx)
 
-	var cfg transit.NearbyTransportsConfig
-	for _, opt := range opts {
-		opt(&cfg)
+	var opt transit.NearbyTransportsOptions
+	for _, apply := range opts {
+		apply(&opt)
 	}
 	{
 		fields := make(logrus.Fields)
-		if r := cfg.Radius; r > 0 {
+		if r := opt.Radius; r > 0 {
 			fields["radius"] = r
 		}
-		if l := cfg.Limit; l > 0 {
+		if l := opt.Limit; l > 0 {
 			fields["limit"] = l
 		}
-		if m := cfg.MaxStations; m > 0 {
+		if m := opt.MaxStations; m > 0 {
 			fields["max_stations"] = m
 		}
 		log = log.WithFields(fields)
@@ -54,13 +54,13 @@ func (svc *service) NearbyTransports(
 	nds, err := svc.loc.NearbyDepartures(
 		ctx,
 		coords,
-		func(ndCfg *transit.NearbyDeparturesConfig) {
-			ndCfg.MaxPerTransport = 1
-			if r := cfg.Radius; r > 0 {
-				ndCfg.Radius = r
+		func(ndOpt *transit.NearbyDeparturesOptions) {
+			ndOpt.MaxPerTransport = 1
+			if r := opt.Radius; r > 0 {
+				ndOpt.Radius = r
 			}
-			if m := cfg.MaxStations; m > 0 {
-				ndCfg.MaxStations = m
+			if m := opt.MaxStations; m > 0 {
+				ndOpt.MaxStations = m
 			}
 		},
 	)
@@ -105,7 +105,7 @@ func (svc *service) NearbyTransports(
 	log.WithField("transports", tps).Trace("Built sorted transports list.")
 
 	// Apply limit.
-	if l := cfg.Limit; len(nds) > l {
+	if l := opt.Limit; len(nds) > l {
 		nds = nds[:l]
 		log.
 			WithField("transports", tps).

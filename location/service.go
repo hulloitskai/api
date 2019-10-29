@@ -24,13 +24,14 @@ type (
 		) (*Place, error)
 	}
 
-	// A CurrentRegionConfig configures a PostionService.CurrentRegion request.
-	CurrentRegionConfig struct {
+	// CurrentRegionOptions are option parameters for
+	// PostionService.CurrentRegion.
+	CurrentRegionOptions struct {
 		IncludeTimeZone bool
 	}
 
-	// A CurrentRegionOption modifies a CurrentRegionConfig.
-	CurrentRegionOption func(*CurrentRegionConfig)
+	// A CurrentRegionOption modifies a CurrentRegionOptions.
+	CurrentRegionOption func(*CurrentRegionOptions)
 )
 
 // A TimeZoneService can get my current time zone.

@@ -13,7 +13,7 @@ import (
 //
 // It produces new values at an interval of n.
 func NewPoller(a Actor, n time.Duration, opts ...PollerOption) *Poller {
-	cfg := PollerConfig{
+	cfg := PollerOptions{
 		Logger: logutil.NoopEntry(),
 	}
 	for _, opt := range opts {
@@ -32,7 +32,7 @@ func NewPoller(a Actor, n time.Duration, opts ...PollerOption) *Poller {
 
 // PollerWithLogger configures a Poller to write logs with log.
 func PollerWithLogger(log *logrus.Entry) PollerOption {
-	return func(cfg *PollerConfig) { cfg.Logger = log }
+	return func(opt *PollerOptions) { opt.Logger = log }
 }
 
 type (
@@ -48,13 +48,13 @@ type (
 		destructor sync.Once
 	}
 
-	// PollerConfig configures a Poller.
-	PollerConfig struct {
+	// PollerOptions configures a Poller.
+	PollerOptions struct {
 		Logger *logrus.Entry
 	}
 
-	// A PollerOption modifies a PollerConfig.
-	PollerOption func(*PollerConfig)
+	// A PollerOption modifies a PollerOptions.
+	PollerOption func(*PollerOptions)
 
 	result struct {
 		Value zero.Interface

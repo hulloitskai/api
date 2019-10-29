@@ -17,15 +17,15 @@ func NewPrecacher(
 	n time.Duration,
 	opts ...PrecacherOption,
 ) *Precacher {
-	cfg := PrecacherConfig{
+	opt := PrecacherOptions{
 		Logger: logutil.NoopEntry(),
 	}
-	for _, opt := range opts {
-		opt(&cfg)
+	for _, apply := range opts {
+		apply(&opt)
 	}
 
 	var (
-		log = logutil.WithComponent(cfg.Logger, (*Precacher)(nil))
+		log = logutil.WithComponent(opt.Logger, (*Precacher)(nil))
 		ca  = newCacheActor(p, log)
 	)
 	return &Precacher{
@@ -39,7 +39,7 @@ func NewPrecacher(
 
 // PrecacherWithLogger configures a Precacher to write logs with log.
 func PrecacherWithLogger(log *logrus.Entry) PrecacherOption {
-	return func(cfg *PrecacherConfig) { cfg.Logger = log }
+	return func(opt *PrecacherOptions) { opt.Logger = log }
 }
 
 type (
@@ -49,13 +49,13 @@ type (
 		ca *cacheActor
 	}
 
-	// A PrecacherConfig configures a Precacher.
-	PrecacherConfig struct {
+	// A PrecacherOptions configures a Precacher.
+	PrecacherOptions struct {
 		Logger *logrus.Entry
 	}
 
-	// A PrecacherOption modifies a PrecacherConfig.
-	PrecacherOption func(*PrecacherConfig)
+	// A PrecacherOption modifies a PrecacherOptions.
+	PrecacherOption func(*PrecacherOptions)
 )
 
 // Results returns the latest cached results.

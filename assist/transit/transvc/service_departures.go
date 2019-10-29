@@ -49,25 +49,25 @@ func (svc *service) FindDepartures(
 		return nil, errors.New("transvc: route is empty")
 	}
 
-	cfg := transit.FindDeparturesConfig{
+	opt := transit.FindDeparturesOptions{
 		Realtime:   true,
 		TimesLimit: 3,
 	}
-	for _, opt := range opts {
-		opt(&cfg)
+	for _, apply := range opts {
+		apply(&opt)
 	}
-	if err := cfg.Validate(); err != nil {
+	if err := opt.Validate(); err != nil {
 		return nil, errors.Wrap(err, "transvc: validating config")
 	}
 	{
 		fields := logrus.Fields{
-			"realtime":         cfg.Realtime,
-			"fuzzy_match":      cfg.FuzzyMatch,
-			"group_by_station": cfg.GroupByStation,
-			"limit":            cfg.Limit,
-			"times_limit":      cfg.TimesLimit,
+			"realtime":         opt.Realtime,
+			"fuzzy_match":      opt.FuzzyMatch,
+			"group_by_station": opt.GroupByStation,
+			"limit":            opt.Limit,
+			"times_limit":      opt.TimesLimit,
 		}
-		if c := cfg.OperatorCode; c != "" {
+		if c := opt.OperatorCode; c != "" {
 			fields["operator_code"] = c
 		}
 		log = log.WithFields(fields)
@@ -77,13 +77,13 @@ func (svc *service) FindDepartures(
 	nds, err := svc.loc.NearbyDepartures(
 		ctx,
 		coords,
-		func(ndCfg *transit.NearbyDeparturesConfig) {
-			ndCfg.MaxPerTransport = cfg.TimesLimit
-			if r := cfg.Radius; r > 0 {
-				ndCfg.Radius = r
+		func(ndOpt *transit.NearbyDeparturesOptions) {
+			ndOpt.MaxPerTransport = opt.TimesLimit
+			if r := opt.Radius; r > 0 {
+				ndOpt.Radius = r
 			}
-			if m := cfg.MaxStations; m > 0 {
-				ndCfg.MaxStations = m
+			if m := opt.MaxStations; m > 0 {
+				ndOpt.MaxStations = m
 			}
 		},
 	)
@@ -94,7 +94,7 @@ func (svc *service) FindDepartures(
 	log.WithField("departures", nds).Trace("Got nearby departures.")
 
 	// Filter based on operator, if applicable.
-	if code := cfg.OperatorCode; code != "" {
+	if code := opt.OperatorCode; code != "" {
 		var filtered []transit.NearbyDeparture
 		for i := range nds {
 			if nds[i].Transport.Operator.Code == code {
@@ -110,7 +110,7 @@ func (svc *service) FindDepartures(
 
 	// If fuzzy-matching, update route to the closest matching route.
 	var route string
-	if cfg.FuzzyMatch {
+	if opt.FuzzyMatch {
 		// Input normalization.
 		route = strings.ToLower(routeQuery)
 		route = strings.TrimSpace(route)
@@ -164,7 +164,7 @@ func (svc *service) FindDepartures(
 	{
 		var filtered []transit.NearbyDeparture
 		for i := range nds {
-			if code := cfg.OperatorCode; code != "" {
+			if code := opt.OperatorCode; code != "" {
 				if nds[i].Transport.Operator.Code != code {
 					continue
 				}
@@ -187,7 +187,7 @@ func (svc *service) FindDepartures(
 	}
 
 	// Group by station, if enabled.
-	if cfg.GroupByStation {
+	if opt.GroupByStation {
 		var (
 			sids    = make(map[string]zero.Struct)
 			grouped = make([]transit.NearbyDeparture, 0, len(nds))
@@ -218,7 +218,7 @@ func (svc *service) FindDepartures(
 	}
 
 	// Filter to a single set that is unique by direction.
-	if cfg.SingleSet {
+	if opt.SingleSet {
 		var (
 			dirs     = make(map[string]zero.Struct)
 			filtered = make([]transit.NearbyDeparture, 0, len(nds))
@@ -238,7 +238,7 @@ func (svc *service) FindDepartures(
 	}
 
 	// Apply limit.
-	if l := cfg.Limit; (l > 0) && (len(nds) > l) {
+	if l := opt.Limit; (l > 0) && (len(nds) > l) {
 		nds = nds[:l]
 		log.WithFields(logrus.Fields{
 			"limit":      l,
@@ -247,7 +247,7 @@ func (svc *service) FindDepartures(
 	}
 
 	// Update with realtime departures times, if available.
-	if cfg.Realtime {
+	if opt.Realtime {
 		log.
 			WithField("realtime_sources", svc.rts).
 			Trace("Updating results with realtime data...")

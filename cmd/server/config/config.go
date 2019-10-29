@@ -17,8 +17,8 @@ type Config struct {
 	Debug           bool           `yaml:"debug"`
 
 	Tracer struct {
-		Enabled bool          `yaml:"enabled"`
-		Jaeger  jaeger.Config `yaml:"jaeger"`
+		Enabled bool           `yaml:"enabled"`
+		Jaeger  jaeger.Options `yaml:"jaeger"`
 	} `yaml:"tracer"`
 
 	About struct {

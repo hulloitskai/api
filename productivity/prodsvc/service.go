@@ -23,7 +23,7 @@ func NewService(
 	zones location.TimeZoneService,
 	opts ...basic.Option,
 ) productivity.Service {
-	cfg := basic.BuildConfig(opts...)
+	cfg := basic.BuildOptions(opts...)
 	return service{
 		records: records,
 		zones:   zones,

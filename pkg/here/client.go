@@ -28,11 +28,11 @@ func NewClient(
 	appID string,
 	opts ...httputil.BasicClientOption,
 ) (Client, error) {
-	cfg := httputil.BasicClientConfig{
+	opt := httputil.BasicClientOptions{
 		HTTPClient: new(http.Client),
 	}
-	for _, opt := range opts {
-		opt(&cfg)
+	for _, apply := range opts {
+		apply(&opt)
 	}
 
 	var code string
@@ -47,7 +47,7 @@ func NewClient(
 	}
 
 	return client{
-		httpc: cfg.HTTPClient,
+		httpc: opt.HTTPClient,
 		id:    appID,
 		code:  code,
 	}, nil

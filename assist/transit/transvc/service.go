@@ -15,34 +15,34 @@ func NewService(
 	loc transit.LocatorService,
 	opts ...ServiceOption,
 ) transit.Service {
-	cfg := ServiceConfig{
+	opt := ServiceOptions{
 		Logger:                  logutil.NoopEntry(),
 		Tracer:                  new(opentracing.NoopTracer),
 		RealtimeSources:         make(map[string]transit.RealtimeSource),
 		MaxRealtimeDepartureGap: 3 * time.Hour,
 	}
-	for _, opt := range opts {
-		opt(&cfg)
+	for _, apply := range opts {
+		apply(&opt)
 	}
 	return &service{
 		loc: loc,
-		rts: cfg.RealtimeSources,
+		rts: opt.RealtimeSources,
 
-		maxRTDepGap: cfg.MaxRealtimeDepartureGap,
+		maxRTDepGap: opt.MaxRealtimeDepartureGap,
 
-		log:    logutil.WithComponent(cfg.Logger, (*service)(nil)),
-		tracer: cfg.Tracer,
+		log:    logutil.WithComponent(opt.Logger, (*service)(nil)),
+		tracer: opt.Tracer,
 	}
 }
 
 // WithLogger configures a transit.Service to write logs with log.
 func WithLogger(log *logrus.Entry) ServiceOption {
-	return func(cfg *ServiceConfig) { cfg.Logger = log }
+	return func(opt *ServiceOptions) { opt.Logger = log }
 }
 
 // WithTracer configures a transit.Service to trace calls with t.
 func WithTracer(t opentracing.Tracer) ServiceOption {
-	return func(cfg *ServiceConfig) { cfg.Tracer = t }
+	return func(opt *ServiceOptions) { opt.Tracer = t }
 }
 
 // WithRealtimeSource configures a transit.Service to use transit.RealtimeSource
@@ -51,9 +51,9 @@ func WithRealtimeSource(
 	src transit.RealtimeSource,
 	opCodes ...string,
 ) ServiceOption {
-	return func(cfg *ServiceConfig) {
+	return func(opt *ServiceOptions) {
 		for _, code := range opCodes {
-			cfg.RealtimeSources[code] = src
+			opt.RealtimeSources[code] = src
 		}
 	}
 }
@@ -69,8 +69,8 @@ type (
 		tracer opentracing.Tracer
 	}
 
-	// A ServiceConfig configures a transit.Service.
-	ServiceConfig struct {
+	// A ServiceOptions configures a transit.Service.
+	ServiceOptions struct {
 		Logger *logrus.Entry
 		Tracer opentracing.Tracer
 
@@ -82,8 +82,8 @@ type (
 		MaxRealtimeDepartureGap time.Duration
 	}
 
-	// A ServiceOption modifies a ServiceConfig.
-	ServiceOption func(*ServiceConfig)
+	// A ServiceOption modifies a ServiceOptions.
+	ServiceOption func(*ServiceOptions)
 )
 
 var _ transit.Service = (*service)(nil)

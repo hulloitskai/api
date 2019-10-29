@@ -33,32 +33,33 @@ func NewService(
 	}
 
 	// Configure and build service.
-	cfg := ServiceConfig{
+	opt := ServiceOptions{
 		Logger: logutil.NoopEntry(),
 		Tracer: new(opentracing.NoopTracer),
 	}
-	for _, opt := range opts {
-		opt(&cfg)
+	for _, apply := range opts {
+		apply(&opt)
 	}
+
 	return &service{
 		client: c,
 		selectors: serviceSelectors{
 			codes:  &sel,
-			access: cfg.AccessSelector,
+			access: opt.AccessSelector,
 		},
-		log:    logutil.WithComponent(cfg.Logger, (*service)(nil)),
-		tracer: cfg.Tracer,
+		log:    logutil.WithComponent(opt.Logger, (*service)(nil)),
+		tracer: opt.Tracer,
 	}
 }
 
 // WithLogger configures an auth.Service to write logs with log.
 func WithLogger(log *logrus.Entry) ServiceOption {
-	return func(cfg *ServiceConfig) { cfg.Logger = log }
+	return func(opt *ServiceOptions) { opt.Logger = log }
 }
 
 // WithTracer configures an auth.Service to write logs with log.
 func WithTracer(t opentracing.Tracer) ServiceOption {
-	return func(cfg *ServiceConfig) { cfg.Tracer = t }
+	return func(opt *ServiceOptions) { opt.Tracer = t }
 }
 
 type (
@@ -75,8 +76,8 @@ type (
 		access *AccessSelector
 	}
 
-	// A ServiceConfig configures a auth.Service.
-	ServiceConfig struct {
+	// A ServiceOptions configures a auth.Service.
+	ServiceOptions struct {
 		// If provided, permissions access records will be saved in the
 		// corresponding fields.
 		AccessSelector *AccessSelector
@@ -85,8 +86,8 @@ type (
 		Tracer opentracing.Tracer
 	}
 
-	// A ServiceOption modifies a ServiceConfig.
-	ServiceOption func(*ServiceConfig)
+	// A ServiceOption modifies a ServiceOptions.
+	ServiceOption func(*ServiceOptions)
 )
 
 var _ auth.Service = (*service)(nil)

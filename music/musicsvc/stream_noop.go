@@ -12,9 +12,9 @@ import (
 
 // NewNoopCurrentStreamer creates a no-op music.CurrentStreamer.
 func NewNoopCurrentStreamer(opts ...basic.Option) music.CurrentStreamer {
-	cfg := basic.BuildConfig(opts...)
+	opt := basic.BuildOptions(opts...)
 	return noopCurrentStreamer{
-		log: logutil.WithComponent(cfg.Logger, (*noopCurrentStreamer)(nil)),
+		log: logutil.WithComponent(opt.Logger, (*noopCurrentStreamer)(nil)),
 	}
 }
 

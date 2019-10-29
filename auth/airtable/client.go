@@ -25,11 +25,11 @@ type (
 
 // NewClient creates a new Client.
 func NewClient(opts ...httputil.BasicClientOption) (Client, error) {
-	cfg := httputil.BasicClientConfig{
+	opt := httputil.BasicClientOptions{
 		HTTPClient: new(http.Client),
 	}
-	for _, opt := range opts {
-		opt(&cfg)
+	for _, apply := range opts {
+		apply(&opt)
 	}
 
 	var (
@@ -41,7 +41,7 @@ func NewClient(opts ...httputil.BasicClientOption) (Client, error) {
 	}
 
 	c := client{
-		httpc: cfg.HTTPClient,
+		httpc: opt.HTTPClient,
 		token: token,
 	}
 	return c, nil

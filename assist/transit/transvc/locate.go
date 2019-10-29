@@ -19,11 +19,11 @@ func NewLocatorService(
 	loc transit.Locator,
 	opts ...basic.Option,
 ) transit.LocatorService {
-	cfg := basic.BuildConfig(opts...)
+	opt := basic.BuildOptions(opts...)
 	return locatorService{
 		loc:    loc,
-		log:    logutil.WithComponent(cfg.Logger, (*locatorService)(nil)),
-		tracer: cfg.Tracer,
+		log:    logutil.WithComponent(opt.Logger, (*locatorService)(nil)),
+		tracer: opt.Tracer,
 	}
 }
 
@@ -52,29 +52,29 @@ func (svc locatorService) NearbyDepartures(
 	})
 
 	// Derive config, add log fields.
-	var cfg transit.NearbyDeparturesConfig
-	for _, opt := range opts {
-		opt(&cfg)
+	var opt transit.NearbyDeparturesOptions
+	for _, apply := range opts {
+		apply(&opt)
 	}
 	{
 		fields := make(logrus.Fields)
-		if r := cfg.Radius; r > 0 {
+		if r := opt.Radius; r > 0 {
 			fields["radius"] = r
 		}
-		if m := cfg.MaxStations; m > 0 {
+		if m := opt.MaxStations; m > 0 {
 			fields["max_stations"] = m
 		}
-		if m := cfg.MaxPerStation; m > 0 {
+		if m := opt.MaxPerStation; m > 0 {
 			fields["max_per_station"] = m
 		}
-		if m := cfg.MaxPerTransport; m > 0 {
+		if m := opt.MaxPerTransport; m > 0 {
 			fields["max_per_transport"] = m
 		}
 		log = logrus.WithFields(fields)
 	}
 
 	log.Trace("Getting nearby departures...")
-	nds, err := svc.loc.NearbyDepartures(ctx, pos, cfg)
+	nds, err := svc.loc.NearbyDepartures(ctx, pos, opt)
 	if err != nil {
 		log.WithError(err).Error("Failed to get nearby departures.")
 		return nil, err

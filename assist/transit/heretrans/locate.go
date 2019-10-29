@@ -34,10 +34,10 @@ var _ transit.Locator = (*locator)(nil)
 func (l locator) NearbyDepartures(
 	ctx context.Context,
 	coords location.Coordinates,
-	cfg transit.NearbyDeparturesConfig,
+	opt transit.NearbyDeparturesOptions,
 ) ([]transit.NearbyDeparture, error) {
 	// Build and perform request.
-	url := buildNearbyDeparturesURL(coords, &cfg)
+	url := buildNearbyDeparturesURL(coords, &opt)
 	req, err := http.NewRequestWithContext(ctx, http.MethodGet, url, nil)
 	if err != nil {
 		return nil, errors.Wrap(err, "heretrans: create request")
@@ -243,7 +243,7 @@ const _multiboardURL = "https://transit.api.here.com/v3/multiboard/" +
 
 func buildNearbyDeparturesURL(
 	pos location.Coordinates,
-	cfg *transit.NearbyDeparturesConfig,
+	opt *transit.NearbyDeparturesOptions,
 ) string {
 	u, err := url.Parse(_multiboardURL)
 	if err != nil {
@@ -255,16 +255,16 @@ func buildNearbyDeparturesURL(
 	ps.Set("time", time.Now().Format(time.RFC3339))
 	ps.Set("center", fmt.Sprintf("%f,%f", pos.Y, pos.X))
 
-	if r := cfg.Radius; r > 0 {
+	if r := opt.Radius; r > 0 {
 		ps.Set("radius", formatInt(r))
 	}
-	if m := cfg.MaxPerStation; m > 0 {
+	if m := opt.MaxPerStation; m > 0 {
 		ps.Set("max", formatInt(m))
 	}
-	if m := cfg.MaxStations; m > 0 {
+	if m := opt.MaxStations; m > 0 {
 		ps.Set("maxStn", formatInt(m))
 	}
-	if m := cfg.MaxPerTransport; m > 0 {
+	if m := opt.MaxPerTransport; m > 0 {
 		ps.Set("maxPerTransport", formatInt(m))
 	}
 

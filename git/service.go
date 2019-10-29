@@ -11,11 +11,11 @@ type (
 		) ([]Commit, error)
 	}
 
-	// A RecentCommitsConfig configures a Service.RecentCommits method.
-	RecentCommitsConfig struct {
+	// RecentCommitsOptions are option parameters for Service.RecentCommits.
+	RecentCommitsOptions struct {
 		Limit int
 	}
 
-	// A RecentCommitsOption modifies a RecentCommitsConfig.
-	RecentCommitsOption func(*RecentCommitsConfig)
+	// A RecentCommitsOption modifies a RecentCommitsOptions.
+	RecentCommitsOption func(*RecentCommitsOptions)
 )

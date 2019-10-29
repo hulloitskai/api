@@ -17,7 +17,7 @@ func NewControlService(
 	ctrl music.Controller,
 	opts ...basic.Option,
 ) music.ControlService {
-	cfg := basic.BuildConfig(opts...)
+	cfg := basic.BuildOptions(opts...)
 	return controlService{
 		ctrl:   ctrl,
 		log:    logutil.WithComponent(cfg.Logger, (*controlService)(nil)),
@@ -47,19 +47,19 @@ func (svc controlService) Play(
 		WithMethod(svc.log, controlService.Play).
 		WithContext(ctx)
 
-	var cfg music.PlayConfig
-	for _, opt := range opts {
-		opt(&cfg)
+	var opt music.PlayOptions
+	for _, apply := range opts {
+		apply(&opt)
 	}
 
-	if u := cfg.URI; u != nil {
+	if u := opt.URI; u != nil {
 		log.
 			WithField("resource", u).
 			Trace("Playing the requested resource...")
 	} else {
 		log.Trace("Resuming the current track...")
 	}
-	if err := svc.ctrl.Play(ctx, cfg.URI); err != nil {
+	if err := svc.ctrl.Play(ctx, opt.URI); err != nil {
 		log.WithError(err).Error("Failed to play resource.")
 		return err
 	}

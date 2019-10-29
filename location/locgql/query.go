@@ -32,10 +32,10 @@ type Query struct {
 func (q Query) Region(ctx context.Context) (*location.Place, error) {
 	return q.svc.CurrentRegion(
 		ctx,
-		func(cfg *location.CurrentRegionConfig) {
+		func(opt *location.CurrentRegionOptions) {
 			fields := graphql.CollectAllFields(ctx)
 			if funk.ContainsString(fields, "timeZone") {
-				cfg.IncludeTimeZone = true
+				opt.IncludeTimeZone = true
 			}
 		},
 	)

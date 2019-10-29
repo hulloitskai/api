@@ -23,7 +23,7 @@ import (
 // set by Google when you log in to Google Maps (check your web console for the
 // cookies named 'SID', 'HSID', and 'SSID').
 func NewTimelineClient(opts ...httputil.BasicClientOption) (TimelineClient, error) {
-	var cfg httputil.BasicClientConfig
+	var cfg httputil.BasicClientOptions
 	for _, opt := range opts {
 		opt(&cfg)
 	}

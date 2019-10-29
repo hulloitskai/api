@@ -13,7 +13,7 @@ import (
 
 // NewTracer creates a new jaeger.Tracer.
 func NewTracer(name string, opts ...Option) (opentracing.Tracer, io.Closer, error) {
-	cfg := Config{
+	opt := Options{
 		Sampler: &config.SamplerConfig{
 			Type:  "const",
 			Param: 1,
@@ -22,8 +22,8 @@ func NewTracer(name string, opts ...Option) (opentracing.Tracer, io.Closer, erro
 			LogSpans: true,
 		},
 	}
-	for _, opt := range opts {
-		opt(&cfg)
+	for _, apply := range opts {
+		apply(&opt)
 	}
 
 	// Construct c from env, and merge cfg with overwrite.
@@ -39,8 +39,8 @@ func NewTracer(name string, opts ...Option) (opentracing.Tracer, io.Closer, erro
 		Dst  zero.Interface
 		Src  zero.Interface
 	}{
-		{Name: "Sampler", Dst: c.Sampler, Src: cfg.Sampler},
-		{Name: "Reporter", Dst: c.Reporter, Src: cfg.Reporter},
+		{Name: "Sampler", Dst: c.Sampler, Src: opt.Sampler},
+		{Name: "Reporter", Dst: c.Reporter, Src: opt.Reporter},
 	}
 	for _, m := range merges {
 		if m.Dst == nil || m.Src == nil {
@@ -54,22 +54,33 @@ func NewTracer(name string, opts ...Option) (opentracing.Tracer, io.Closer, erro
 	return c.New(name)
 }
 
-// WithOverrides merges in a Config that overrides the pre-existing settings.
-func WithOverrides(overrides *Config) Option {
-	return func(cfg *Config) {
-		if err := mergo.Merge(cfg, overrides, mergo.WithOverride); err != nil {
+// WithSamplerConfig configures a jaeger.Tracer to use the provided
+// config.SamplerConfig.
+func WithSamplerConfig(cfg *config.SamplerConfig) Option {
+	return func(opt *Options) {
+		if err := mergo.Merge(opt.Sampler, cfg, mergo.WithOverride); err != nil {
+			panic(errors.Wrap(err, "jaeger: failed to merge configs"))
+		}
+	}
+}
+
+// WithReporterConfig configures a jaeger.Tracer to use the provided
+// config.ReporterConfig.
+func WithReporterConfig(cfg *config.ReporterConfig) Option {
+	return func(opt *Options) {
+		if err := mergo.Merge(opt.Reporter, cfg, mergo.WithOverride); err != nil {
 			panic(errors.Wrap(err, "jaeger: failed to merge configs"))
 		}
 	}
 }
 
 type (
-	// A Config is a susbet of a config.Configuration.
-	Config struct {
+	// An Options is a susbet of a config.Configuration.
+	Options struct {
 		Sampler  *config.SamplerConfig  `yaml:"sampler"`
 		Reporter *config.ReporterConfig `yaml:"reporter"`
 	}
 
-	// A Option modifies a SimpleConfig.
-	Option func(*Config)
+	// An Option modifies an Options.
+	Option func(*Options)
 )

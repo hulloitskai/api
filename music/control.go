@@ -11,7 +11,7 @@ type Controller interface {
 // PlayURI configures the ControlService.Play method to play the specified
 // resource.
 func PlayURI(uri string) PlayOption {
-	return func(cfg *PlayConfig) { cfg.URI = &uri }
+	return func(cfg *PlayOptions) { cfg.URI = &uri }
 }
 
 type (
@@ -21,11 +21,11 @@ type (
 		Pause(ctx context.Context) error
 	}
 
-	// A PlayConfig configures the ControlService.Play method.
-	PlayConfig struct {
+	// PlayOptions are option parameters for ControlService.Play.
+	PlayOptions struct {
 		URI *string
 	}
 
-	// A PlayOption modifies a PlayConfig.
-	PlayOption func(*PlayConfig)
+	// A PlayOption modifies a PlayOptions.
+	PlayOption func(*PlayOptions)
 )

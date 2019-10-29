@@ -28,14 +28,14 @@ func (q Query) FindDepartures(
 	return q.svc.FindDepartures(
 		ctx,
 		route, locgql.CoordinatesFromInput(coords),
-		func(cfg *transit.FindDeparturesConfig) {
-			cfg.FuzzyMatch = true
-			cfg.GroupByStation = true
+		func(opt *transit.FindDeparturesOptions) {
+			opt.FuzzyMatch = true
+			opt.GroupByStation = true
 			if singleSet != nil {
-				cfg.SingleSet = *singleSet
+				opt.SingleSet = *singleSet
 			}
 			if radius != nil {
-				cfg.Radius = *radius
+				opt.Radius = *radius
 			}
 		},
 	)
@@ -51,12 +51,12 @@ func (q Query) NearbyTransports(
 	return q.svc.NearbyTransports(
 		ctx,
 		locgql.CoordinatesFromInput(coords),
-		func(cfg *transit.NearbyTransportsConfig) {
+		func(opt *transit.NearbyTransportsOptions) {
 			if radius != nil {
-				cfg.Radius = *radius
+				opt.Radius = *radius
 			}
 			if limit != nil {
-				cfg.Limit = *limit
+				opt.Limit = *limit
 			}
 		},
 	)

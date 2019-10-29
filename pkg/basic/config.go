@@ -8,47 +8,47 @@ import (
 
 // WithLogger configures a basic component to write logs using log.
 func WithLogger(log *logrus.Entry) Option {
-	return func(cfg *Config) { cfg.Logger = log }
+	return func(opt *Options) { opt.Logger = log }
 }
 
 // WithTracer configures a basic component to trace calls with t.
 func WithTracer(t opentracing.Tracer) Option {
-	return func(cfg *Config) { cfg.Tracer = t }
+	return func(opt *Options) { opt.Tracer = t }
 }
 
 type (
-	// A Config configures a basic component.
-	Config struct {
+	// Options configures a basic component.
+	Options struct {
 		Logger *logrus.Entry
 		Tracer opentracing.Tracer
 	}
 
-	// A Option modifies a BasicConfig.
-	Option func(*Config)
+	// An Option modifies an Options.
+	Option func(*Options)
 )
 
-// DefaultConfig creates a Config with sensible defaults.
-func DefaultConfig() Config {
-	return Config{
+// DefaultOptions creates an Options with sensible defaults.
+func DefaultOptions() Options {
+	return Options{
 		Logger: logutil.NoopEntry(),
 		Tracer: new(opentracing.NoopTracer),
 	}
 }
 
-// BuildConfig builds a Config from a set of Options.
+// BuildOptions builds an Options from opts.
 //
-// It uses DefaultConfig as a base.
-func BuildConfig(opts ...Option) Config {
-	cfg := DefaultConfig()
-	for _, opt := range opts {
-		opt(&cfg)
+// It uses DefaultOptions as a base.
+func BuildOptions(opts ...Option) Options {
+	opt := DefaultOptions()
+	for _, apply := range opts {
+		apply(&opt)
 	}
-	return cfg
+	return opt
 }
 
-// Configure configures a Config with a set of Options.
-func Configure(cfg *Config, opts ...Option) {
-	for _, opt := range opts {
-		opt(cfg)
+// ApplyOptions applies opts to opt.
+func ApplyOptions(opt *Options, opts ...Option) {
+	for _, apply := range opts {
+		apply(opt)
 	}
 }

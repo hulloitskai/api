@@ -22,7 +22,7 @@ import (
 
 // NewGeocoder creates a new geocode.Geocoder.
 func NewGeocoder(c here.Client, opts ...basic.Option) geocode.Geocoder {
-	cfg := basic.BuildConfig(opts...)
+	cfg := basic.BuildOptions(opts...)
 	return geocoder{
 		client: c,
 		tracer: cfg.Tracer,
@@ -48,16 +48,16 @@ func (g geocoder) ReverseGeocode(
 	defer span.Finish()
 
 	// Build and validate config.
-	var cfg geocode.ReverseGeocodeConfig
-	for _, opt := range opts {
-		opt(&cfg)
+	var opt geocode.ReverseGeocodeOptions
+	for _, apply := range opts {
+		apply(&opt)
 	}
-	if err := validateReverseGeocodeConfig(&cfg); err != nil {
+	if err := validateReverseGeocodeOptions(&opt); err != nil {
 		return nil, errors.Wrap(err, "heregeo: invalid config")
 	}
 
 	// Create and perform request.
-	url := buildReverseGeocodeURL(coord, &cfg)
+	url := buildReverseGeocodeURL(coord, &opt)
 	req, err := http.NewRequestWithContext(ctx, http.MethodGet, url, nil)
 	if err != nil {
 		return nil, errors.Wrap(err, "heregeo: create request")
@@ -175,8 +175,8 @@ func (g geocoder) ReverseGeocode(
 	return results, nil
 }
 
-func validateReverseGeocodeConfig(cfg *geocode.ReverseGeocodeConfig) error {
-	if cfg.IncludeShape && (cfg.Level == 0) {
+func validateReverseGeocodeOptions(opt *geocode.ReverseGeocodeOptions) error {
+	if opt.IncludeShape && (opt.Level == 0) {
 		return errors.New("cannot include area shape without level selection")
 	}
 	return nil
@@ -187,7 +187,7 @@ const _reverseGeocodeURL = "https://reverse.geocoder.api.here.com/6.2/" +
 
 func buildReverseGeocodeURL(
 	coord location.Coordinates,
-	cfg *geocode.ReverseGeocodeConfig,
+	opt *geocode.ReverseGeocodeOptions,
 ) string {
 	// Build request URL.
 	url, err := url.Parse(_reverseGeocodeURL)
@@ -202,28 +202,28 @@ func buildReverseGeocodeURL(
 	// Set location attributes.
 	{
 		attrs := []string{"address"}
-		if cfg.IncludeTimeZone {
+		if opt.IncludeTimeZone {
 			attrs = append(attrs, "timeZone")
 		}
 		params.Set("locationattributes", strings.Join(attrs, ","))
 	}
-	if cfg.IncludeShape {
+	if opt.IncludeShape {
 		params.Set("additionalData", "IncludeShapeLevel,default")
 	}
 
 	// Set geocoding proximity.
 	{
 		var radius uint = 50
-		if cfg.Radius > 0 {
-			radius = cfg.Radius
+		if opt.Radius > 0 {
+			radius = opt.Radius
 		}
 		params.Set("prox", fmt.Sprintf("%f,%f,%d", coord.Y, coord.X, radius))
 	}
 
 	// Set geocoding level.
-	if cfg.Level > 0 {
-		level := strings.ToLower(cfg.Level.String())
-		if cfg.Level == geocode.PostcodeLevel {
+	if opt.Level > 0 {
+		level := strings.ToLower(opt.Level.String())
+		if opt.Level == geocode.PostcodeLevel {
 			level = "postalCode"
 		}
 		params.Set("level", level)

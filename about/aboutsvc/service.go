@@ -23,13 +23,13 @@ func NewService(
 	locations location.Service,
 	opts ...basic.Option,
 ) about.Service {
-	cfg := basic.BuildConfig(opts...)
+	opt := basic.BuildOptions(opts...)
 	return service{
 		static:    static,
 		locations: locations,
 
-		log:    logutil.WithComponent(cfg.Logger, (*service)(nil)),
-		tracer: cfg.Tracer,
+		log:    logutil.WithComponent(opt.Logger, (*service)(nil)),
+		tracer: opt.Tracer,
 	}
 }
 

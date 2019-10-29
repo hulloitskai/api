@@ -22,38 +22,38 @@ func NewService(
 	geo geocode.Geocoder,
 	opts ...ServiceOption,
 ) location.Service {
-	cfg := ServiceConfig{
+	opt := ServiceOptions{
 		Logger:             logutil.NoopEntry(),
 		Tracer:             new(opentracing.NoopTracer),
 		RegionGeocodeLevel: geocode.CityLevel,
 	}
-	for _, opt := range opts {
-		opt(&cfg)
+	for _, apply := range opts {
+		apply(&opt)
 	}
 	return service{
 		HistoryService: hist,
 		geo:            geo,
-		regionLevel:    cfg.RegionGeocodeLevel,
+		regionLevel:    opt.RegionGeocodeLevel,
 
-		log:    logutil.WithComponent(cfg.Logger, (*service)(nil)),
-		tracer: cfg.Tracer,
+		log:    logutil.WithComponent(opt.Logger, (*service)(nil)),
+		tracer: opt.Tracer,
 	}
 }
 
 // WithLogger configures a Service to write logs with log.
 func WithLogger(log *logrus.Entry) ServiceOption {
-	return func(cfg *ServiceConfig) { cfg.Logger = log }
+	return func(opt *ServiceOptions) { opt.Logger = log }
 }
 
 // WithTracer configures a Service to trace calls with t.
 func WithTracer(t opentracing.Tracer) ServiceOption {
-	return func(cfg *ServiceConfig) { cfg.Tracer = t }
+	return func(opt *ServiceOptions) { opt.Tracer = t }
 }
 
 // WithRegionGeocodeLevel configures the geocoding level that a Service uses
 // to reverse-geocode my current region.
 func WithRegionGeocodeLevel(l geocode.Level) ServiceOption {
-	return func(cfg *ServiceConfig) { cfg.RegionGeocodeLevel = l }
+	return func(opt *ServiceOptions) { opt.RegionGeocodeLevel = l }
 }
 
 type (
@@ -66,16 +66,16 @@ type (
 		tracer opentracing.Tracer
 	}
 
-	// A ServiceConfig configures a Service.
-	ServiceConfig struct {
+	// A ServiceOptions configures a Service.
+	ServiceOptions struct {
 		Logger *logrus.Entry
 		Tracer opentracing.Tracer
 
 		RegionGeocodeLevel geocode.Level
 	}
 
-	// A ServiceOption modifies a ServiceConfig.
-	ServiceOption func(*ServiceConfig)
+	// A ServiceOption modifies a ServiceOptions.
+	ServiceOption func(*ServiceOptions)
 )
 
 var _ location.Service = (*service)(nil)
@@ -163,14 +163,14 @@ func (svc service) CurrentRegion(
 	)
 
 	defer span.Finish()
-	var cfg location.CurrentRegionConfig
-	for _, opt := range opts {
-		opt(&cfg)
+	var opt location.CurrentRegionOptions
+	for _, apply := range opts {
+		apply(&opt)
 	}
 
 	log := svc.log.WithFields(logrus.Fields{
 		logutil.MethodKey:  name.OfMethod(service.CurrentRegion),
-		"include_timezone": cfg.IncludeTimeZone,
+		"include_timezone": opt.IncludeTimeZone,
 	}).WithContext(ctx)
 
 	// Get current position.
@@ -187,10 +187,10 @@ func (svc service) CurrentRegion(
 	res, err := svc.geo.ReverseGeocode(
 		ctx,
 		*coords,
-		func(rgCfg *geocode.ReverseGeocodeConfig) {
-			rgCfg.Level = svc.regionLevel
-			rgCfg.IncludeShape = true
-			rgCfg.IncludeTimeZone = cfg.IncludeTimeZone
+		func(rgOpt *geocode.ReverseGeocodeOptions) {
+			rgOpt.Level = svc.regionLevel
+			rgOpt.IncludeShape = true
+			rgOpt.IncludeTimeZone = opt.IncludeTimeZone
 		},
 	)
 	if err != nil {

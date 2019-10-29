@@ -23,9 +23,9 @@ func (q Query) RecentCommits(
 ) ([]git.Commit, error) {
 	return q.svc.RecentCommits(
 		ctx,
-		func(cfg *git.RecentCommitsConfig) {
+		func(opt *git.RecentCommitsOptions) {
 			if limit != nil {
-				cfg.Limit = *limit
+				opt.Limit = *limit
 			}
 		},
 	)

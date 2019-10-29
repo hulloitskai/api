@@ -9,13 +9,13 @@ type Source interface {
 	GetAlbumTracks(
 		ctx context.Context,
 		id string,
-		cfg PaginationConfig,
+		opt PaginationOptions,
 	) ([]Track, error)
 
 	GetArtistAlbums(
 		ctx context.Context,
 		id string,
-		cfg PaginationConfig,
+		opt PaginationOptions,
 	) ([]Album, error)
 }
 
@@ -37,12 +37,12 @@ type (
 		) ([]Album, error)
 	}
 
-	// PaginationConfig configures a paginated request.
-	PaginationConfig struct {
+	// PaginationOptions are option parameters for a paginated request.
+	PaginationOptions struct {
 		Limit  int
 		Offset int
 	}
 
-	// PaginationOption modifies a PaginationConfig.
-	PaginationOption func(*PaginationConfig)
+	// PaginationOption modifies a PaginationOptions.
+	PaginationOption func(*PaginationOptions)
 )

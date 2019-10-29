@@ -14,7 +14,7 @@ import (
 
 // NewService creates a new git.Service.
 func NewService(src git.Source, opts ...basic.Option) git.Service {
-	cfg := basic.BuildConfig(opts...)
+	cfg := basic.BuildOptions(opts...)
 	return service{
 		src:    src,
 		log:    logutil.WithComponent(cfg.Logger, (*service)(nil)),
@@ -40,20 +40,20 @@ func (svc service) RecentCommits(
 	)
 	defer span.Finish()
 
-	cfg := git.RecentCommitsConfig{
+	opt := git.RecentCommitsOptions{
 		Limit: 10,
 	}
-	for _, opt := range opts {
-		opt(&cfg)
+	for _, apply := range opts {
+		apply(&opt)
 	}
 
 	log := svc.log.WithFields(logrus.Fields{
 		logutil.MethodKey: name.OfMethod(service.RecentCommits),
-		"limit":           cfg.Limit,
+		"limit":           opt.Limit,
 	}).WithContext(ctx)
 
 	log.Trace("Getting recent commits...")
-	cms, err := svc.src.RecentCommits(ctx, cfg.Limit)
+	cms, err := svc.src.RecentCommits(ctx, opt.Limit)
 	if err != nil {
 		log.WithError(err).Error("Failed to get recent Git commits.")
 		return nil, err

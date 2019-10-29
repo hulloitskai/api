@@ -20,7 +20,11 @@ type Mutation struct {
 func (q Mutation) Play(ctx context.Context, uri *string) (bool, error) {
 	if err := q.svc.Play(
 		ctx,
-		func(cfg *music.PlayConfig) { cfg.URI = uri },
+		func(opt *music.PlayOptions) {
+			if uri != nil {
+				opt.URI = uri
+			}
+		},
 	); err != nil {
 		return false, err
 	}

@@ -27,7 +27,7 @@ import (
 
 // NewServer creates a new Server.
 func NewServer(svcs Services, strms Streamers, opts ...ServerOption) *Server {
-	cfg := ServerConfig{
+	cfg := ServerOptions{
 		Logger:          logutil.NoopEntry(),
 		ComplexityLimit: 5,
 	}
@@ -69,18 +69,18 @@ func NewServer(svcs Services, strms Streamers, opts ...ServerOption) *Server {
 
 // WithLogger configures a Server to write logs with log.
 func WithLogger(log *logrus.Entry) ServerOption {
-	return func(cfg *ServerConfig) { cfg.Logger = log }
+	return func(opt *ServerOptions) { opt.Logger = log }
 }
 
 // WithSentry configures a server to capture handler panics with rc.
 func WithSentry(c *sentry.Client) ServerOption {
-	return func(cfg *ServerConfig) { cfg.Sentry = c }
+	return func(opt *ServerOptions) { opt.Sentry = c }
 }
 
 // WithComplexityLimit configures a Server to limit GraphQL queries by
 // complexity.
 func WithComplexityLimit(limit int) ServerOption {
-	return func(cfg *ServerConfig) { cfg.ComplexityLimit = limit }
+	return func(opt *ServerOptions) { opt.ComplexityLimit = limit }
 }
 
 type (
@@ -113,8 +113,8 @@ type (
 		Music music.Streamer
 	}
 
-	// An ServerConfig configures a Server.
-	ServerConfig struct {
+	// A ServerOptions configures a Server.
+	ServerOptions struct {
 		Logger *logrus.Entry
 		Sentry *sentry.Client
 
@@ -122,8 +122,8 @@ type (
 		ComplexityLimit int
 	}
 
-	// An ServerOption modifies a ServerConfig.
-	ServerOption func(*ServerConfig)
+	// An ServerOption modifies a ServerOptions.
+	ServerOption func(*ServerOptions)
 )
 
 // ListenAndServe listens and serves on the specified address.

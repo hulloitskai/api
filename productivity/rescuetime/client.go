@@ -18,7 +18,7 @@ const Namespace = "rescuetime"
 // It reads 'RESCUETIME_KEY' (an API key) from the environment; if no such
 // variable is found, an error will be returned.
 func NewClient(opts ...httputil.BasicClientOption) (Client, error) {
-	cfg := httputil.BasicClientConfig{
+	cfg := httputil.BasicClientOptions{
 		HTTPClient: new(http.Client),
 	}
 	for _, opt := range opts {
