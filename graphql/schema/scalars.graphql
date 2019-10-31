@@ -1,4 +1,4 @@
 """
-A Time represents an instant in time.
+A `Time` represents an instant in time.
 """
 scalar Time

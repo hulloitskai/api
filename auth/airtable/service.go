@@ -63,19 +63,6 @@ func WithTracer(t opentracing.Tracer) ServiceOption {
 }
 
 type (
-	service struct {
-		client    Client
-		selectors serviceSelectors
-
-		log    *logrus.Entry
-		tracer opentracing.Tracer
-	}
-
-	serviceSelectors struct {
-		codes  *CodesSelector
-		access *AccessSelector
-	}
-
 	// A ServiceOptions configures a auth.Service.
 	ServiceOptions struct {
 		// If provided, permissions access records will be saved in the
@@ -88,6 +75,21 @@ type (
 
 	// A ServiceOption modifies a ServiceOptions.
 	ServiceOption func(*ServiceOptions)
+)
+
+type (
+	service struct {
+		client    Client
+		selectors serviceSelectors
+
+		log    *logrus.Entry
+		tracer opentracing.Tracer
+	}
+
+	serviceSelectors struct {
+		codes  *CodesSelector
+		access *AccessSelector
+	}
 )
 
 var _ auth.Service = (*service)(nil)

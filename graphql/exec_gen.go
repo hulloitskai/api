@@ -1737,7 +1737,7 @@ type Subscription {
 }
 `},
 	&ast.Source{Name: "schema/scalars.graphql", Input: `"""
-A Time represents an instant in time.
+A ` + "`" + `Time` + "`" + ` represents an instant in time.
 """
 scalar Time
 `},

@@ -13,16 +13,6 @@ import (
 // Namespace is the package namespace used for things like envvar prefixes.
 const Namespace = "airtable"
 
-type (
-	// A Client can make authenticated requests to the Airtable API.
-	Client httputil.BasicClient
-
-	client struct {
-		httpc *http.Client
-		token string
-	}
-)
-
 // NewClient creates a new Client.
 func NewClient(opts ...httputil.BasicClientOption) (Client, error) {
 	opt := httputil.BasicClientOptions{
@@ -52,3 +42,13 @@ func (c client) Do(req *http.Request) (*http.Response, error) {
 	req.Header.Set("Authorization", fmt.Sprintf("Bearer %s", c.token))
 	return c.httpc.Do(req)
 }
+
+type (
+	// A Client can make authenticated requests to the Airtable API.
+	Client httputil.BasicClient
+
+	client struct {
+		httpc *http.Client
+		token string
+	}
+)

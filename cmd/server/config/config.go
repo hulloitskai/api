@@ -117,7 +117,7 @@ func (cfg *Config) Validate() error {
 			validation.Field(&gist.ID, validation.Required),
 			validation.Field(&gist.File, validation.Required),
 		); err != nil {
-			return errors.Wrap(err, "validating About.Gist")
+			return errors.Wrap(err, "validate About.Gist")
 		}
 	}
 
@@ -127,7 +127,7 @@ func (cfg *Config) Validate() error {
 			location.Here.AppID,
 			validation.Required,
 		); err != nil {
-			return errors.Wrap(err, "validating Location.Here.AppID")
+			return errors.Wrap(err, "validate Location.Here.AppID")
 		}
 
 		if err := validation.Validate(
@@ -136,7 +136,7 @@ func (cfg *Config) Validate() error {
 		); err != nil {
 			return errors.Wrap(
 				err,
-				"validating Location.CurrentRegion.GeocodeLevel",
+				"validate Location.CurrentRegion.GeocodeLevel",
 			)
 		}
 
@@ -144,7 +144,7 @@ func (cfg *Config) Validate() error {
 			location.Precacher.Interval,
 			validation.Min(1),
 		); err != nil {
-			return errors.Wrap(err, "validating Location.Precacher.Interval")
+			return errors.Wrap(err, "validate Location.Precacher.Interval")
 		}
 	}
 
@@ -152,16 +152,16 @@ func (cfg *Config) Validate() error {
 		cfg.Scheduling.GCal.CalendarIDs,
 		validation.Required,
 	); err != nil {
-		return errors.Wrap(err, "validating Scheduling.GCal.CalendarIDs")
+		return errors.Wrap(err, "validate Scheduling.GCal.CalendarIDs")
 	}
 
 	{
 		at := &cfg.Auth.Airtable
 		if err := validation.Validate(&at.Codes.Selector); err != nil {
-			return errors.Wrap(err, "validating Auth.Airtable.Selector")
+			return errors.Wrap(err, "validate Auth.Airtable.Selector")
 		}
 		if err := validation.Validate(&at.AccessRecords.Selector); err != nil {
-			return errors.Wrap(err, "validating Auth.Airtable.Access.Selector")
+			return errors.Wrap(err, "validate Auth.Airtable.Access.Selector")
 		}
 	}
 

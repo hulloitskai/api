@@ -58,7 +58,7 @@ var (
 // Validate returns an error if the PermsSelector is not valid.
 func (sel *CodesSelector) Validate() error {
 	if err := validation.Validate(&sel.ViewSelector); err != nil {
-		return errors.Wrap(err, "validating ViewSelector")
+		return errors.Wrap(err, "validate ViewSelector")
 	}
 	{
 		fields := &sel.FieldSelector
@@ -67,7 +67,7 @@ func (sel *CodesSelector) Validate() error {
 			validation.Field(&fields.Code, validation.Required),
 			validation.Field(&fields.Perms, validation.Required),
 		); err != nil {
-			return errors.Wrap(err, "validating FieldSelector")
+			return errors.Wrap(err, "validate FieldSelector")
 		}
 	}
 	return nil
@@ -76,7 +76,7 @@ func (sel *CodesSelector) Validate() error {
 // Validate returns an error if the AccessSelector is not valid.
 func (sel *AccessSelector) Validate() error {
 	if err := validation.Validate(&sel.ViewSelector); err != nil {
-		return errors.Wrap(err, "validating ViewSelector")
+		return errors.Wrap(err, "validate ViewSelector")
 	}
 	{
 		fields := &sel.FieldSelector
@@ -85,7 +85,7 @@ func (sel *AccessSelector) Validate() error {
 			validation.Field(&fields.Time, validation.Required),
 			validation.Field(&fields.CodeRecordID, validation.Required),
 		); err != nil {
-			return errors.Wrap(err, "validating FieldSelector")
+			return errors.Wrap(err, "validate FieldSelector")
 		}
 	}
 	return nil

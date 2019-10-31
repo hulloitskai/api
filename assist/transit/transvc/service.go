@@ -59,16 +59,6 @@ func WithRealtimeSource(
 }
 
 type (
-	service struct {
-		loc transit.LocatorService
-		rts map[string]transit.RealtimeSource // map of op codes to sources
-
-		maxRTDepGap time.Duration
-
-		log    *logrus.Entry
-		tracer opentracing.Tracer
-	}
-
 	// A ServiceOptions configures a transit.Service.
 	ServiceOptions struct {
 		Logger *logrus.Entry
@@ -85,5 +75,15 @@ type (
 	// A ServiceOption modifies a ServiceOptions.
 	ServiceOption func(*ServiceOptions)
 )
+
+type service struct {
+	loc transit.LocatorService
+	rts map[string]transit.RealtimeSource // map of op codes to sources
+
+	maxRTDepGap time.Duration
+
+	log    *logrus.Entry
+	tracer opentracing.Tracer
+}
 
 var _ transit.Service = (*service)(nil)
