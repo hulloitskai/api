@@ -16,7 +16,7 @@ func (Resolver) Score(
 	_ context.Context,
 	p *productivity.Productivity,
 ) (*int, error) {
-	if p == nil {
+	if p.Score == nil {
 		return nil, nil
 	}
 	return pointy.Int(int(*p.Score)), nil
