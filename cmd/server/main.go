@@ -133,15 +133,15 @@ var flags struct {
 func run(*cli.Context) (err error) {
 	// Init logger, and Sentry client.
 	//
-	// TODO: Use Logrus hook that uses the sentry-go client.
+	// TODO: Use Logrus hook that uses the sty-go client.
 	var (
-		log    *logrus.Entry
-		sentry *sentry.Client
+		log *logrus.Entry
+		sty *sentry.Client
 	)
 	{
 		opt := cmdutil.WithRelease(internal.Version)
 		raven := cmdutil.NewRaven(opt)
-		sentry = cmdutil.NewSentry(opt)
+		sty = cmdutil.NewSentry(opt)
 		log = cmdutil.NewLogger(cmdutil.WithSentryHook(raven))
 	}
 
@@ -446,66 +446,58 @@ func run(*cli.Context) (err error) {
 			Music: musicStreamer,
 		},
 		gqlsrv.WithLogger(log),
-		gqlsrv.WithSentry(sentry),
+		gqlsrv.WithSentry(sentry.NewHub(sty, sentry.NewScope())),
 	)
-	guillo.AddFinalizer(func() error {
-		var (
-			log = log
-			ctx = context.Background()
-		)
+	guillo.AddFinalizer(shutdownFinalizer(gqlServer, "GraphQL server", log))
+	group.Go(startServerFunc(gqlServer, host, flags.Port, guillo))
+
+	// Start debug server.
+	if flags.Debug {
+		debugServer := debugsrv.NewServer(basic.WithLogger(log))
+		guillo.AddFinalizer(shutdownFinalizer(debugServer, "debug server", log))
+		group.Go(startServerFunc(debugServer, host, flags.DebugPort, guillo))
+	}
+
+	// Wait for process group to finish.
+	return group.Wait()
+}
+
+type server interface {
+	ListenAndServe(addr string) error
+	Shutdown(ctx context.Context) error
+}
+
+func shutdownFinalizer(
+	srv server, name string,
+	log *logrus.Entry,
+) guillotine.Finalizer {
+	return func() error {
+		ctx := context.Background()
 		if timeout := flags.ShutdownTimeout; timeout > 0 {
 			log = log.WithField("timeout", timeout)
 			var cancel context.CancelFunc
 			ctx, cancel = context.WithTimeout(ctx, timeout)
 			defer cancel()
 		}
-		log.Info("Shutting down GraphQL server...")
-		err := gqlServer.Shutdown(ctx)
-		return errors.Wrap(err, "shutting down GraphQL server")
-	})
-	group.Go(func() error {
+		log.Infof("Shutting down %s...", name)
+		err := srv.Shutdown(ctx)
+		return errors.Wrapf(err, "shutdown %s", name)
+	}
+}
+
+func startServerFunc(
+	srv server, host string, port int,
+	guillo *guillotine.Guillotine,
+) func() error {
+	return func() error {
 		var (
-			addr = fmt.Sprintf("%s:%d", host, flags.Port)
-			err  = gqlServer.ListenAndServe(addr)
+			addr = fmt.Sprintf("%s:%d", host, port)
+			err  = srv.ListenAndServe(addr)
 		)
 		if !errors.Is(err, http.ErrServerClosed) {
 			guillo.Trigger()
-			return errors.Wrap(err, "starting GraphQL server")
+			return errors.Wrap(err, "start auth server")
 		}
 		return nil
-	})
-
-	// Start debug server.
-	if flags.Debug {
-		debugServer := debugsrv.NewServer(basic.WithLogger(log))
-		guillo.AddFinalizer(func() error {
-			var (
-				log = log
-				ctx = context.Background()
-			)
-			if timeout := flags.ShutdownTimeout; timeout > 0 {
-				log = log.WithField("timeout", timeout)
-				var cancel context.CancelFunc
-				ctx, cancel = context.WithTimeout(ctx, timeout)
-				defer cancel()
-			}
-			log.Info("Shutting down debug server...")
-			err := debugServer.Shutdown(ctx)
-			return errors.Wrap(err, "shutting down debug server")
-		})
-		group.Go(func() error {
-			var (
-				addr = fmt.Sprintf("%s:%d", host, flags.DebugPort)
-				err  = debugServer.ListenAndServe(addr)
-			)
-			if !errors.Is(err, http.ErrServerClosed) {
-				guillo.Trigger()
-				return errors.Wrap(err, "starting debug server")
-			}
-			return nil
-		})
 	}
-
-	// Wait for process group to finish.
-	return group.Wait()
 }

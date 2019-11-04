@@ -42,10 +42,13 @@ func (srv *Server) gqlHandler() http.Handler {
 			WriteBufferSize: 1024,
 		}),
 	}
-	if s := srv.sentry; s != nil {
+	if hub := srv.sentry; hub != nil {
 		handlerOpts = append(
 			handlerOpts,
-			handler.RecoverFunc(gqlutil.SentryRecoverFunc(s, srv.log)),
+			handler.RecoverFunc(gqlutil.SentryRecoverFunc(
+				hub,
+				gqlutil.SentryWithLogger(srv.log),
+			)),
 		)
 	}
 

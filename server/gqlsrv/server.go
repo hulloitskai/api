@@ -48,6 +48,7 @@ func NewServer(svcs Services, strms Streamers, opts ...ServerOption) *Server {
 			RedirectCode: http.StatusPermanentRedirect,
 		},
 	))
+	echo.Use(middleware.Recover())
 
 	// Enable Access-Control-Allow-Origin: * during development.
 	if configutil.GetGoEnv() == configutil.GoEnvDevelopment {
@@ -72,9 +73,9 @@ func WithLogger(log *logrus.Entry) ServerOption {
 	return func(opt *ServerOptions) { opt.Logger = log }
 }
 
-// WithSentry configures a server to capture handler panics with rc.
-func WithSentry(c *sentry.Client) ServerOption {
-	return func(opt *ServerOptions) { opt.Sentry = c }
+// WithSentry configures a server to capture handler panics with hub.
+func WithSentry(hub *sentry.Hub) ServerOption {
+	return func(opt *ServerOptions) { opt.Sentry = hub }
 }
 
 // WithComplexityLimit configures a Server to limit GraphQL queries by
@@ -88,7 +89,7 @@ type (
 	Server struct {
 		echo   *echo.Echo
 		log    *logrus.Entry
-		sentry *sentry.Client
+		sentry *sentry.Hub
 
 		svcs  Services
 		strms Streamers
@@ -116,7 +117,7 @@ type (
 	// A ServerOptions configures a Server.
 	ServerOptions struct {
 		Logger *logrus.Entry
-		Sentry *sentry.Client
+		Sentry *sentry.Hub
 
 		// Complexity limit for GraphQL queries.
 		ComplexityLimit int
