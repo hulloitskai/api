@@ -21,6 +21,7 @@ func ErrorHandler(log *logrus.Entry) echo.HTTPErrorHandler {
 			Error   string   `json:"error"`
 			Cause   string   `json:"cause,omitempty"`
 			Details []string `json:"details,omitempty"`
+			Hints   []string `json:"hints,omitempty"`
 		}
 
 		// Check if error contains a status code.
@@ -38,11 +39,16 @@ func ErrorHandler(log *logrus.Entry) echo.HTTPErrorHandler {
 
 		// Build error response.
 		data.Error = err.Error()
-		if cause := errors.UnwrapAll(err); cause != err {
-			data.Cause = cause.Error()
+		if cause := errors.UnwrapAll(err); !errors.Is(cause, err) {
+			if cause.Error() != err.Error() {
+				data.Cause = cause.Error()
+			}
 		}
 		if details := errors.GetAllDetails(err); len(details) > 0 {
 			data.Details = details
+		}
+		if hints := errors.GetAllHints(err); len(hints) > 0 {
+			data.Hints = hints
 		}
 
 	Send:
