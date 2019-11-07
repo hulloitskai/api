@@ -3,10 +3,8 @@ package musicsvc
 import (
 	"context"
 
-	opentracing "github.com/opentracing/opentracing-go"
 	"github.com/sirupsen/logrus"
 	"go.stevenxie.me/gopkg/logutil"
-	"go.stevenxie.me/gopkg/name"
 
 	"go.stevenxie.me/api/v2/music"
 	"go.stevenxie.me/api/v2/pkg/basic"
@@ -17,18 +15,16 @@ func NewControlService(
 	ctrl music.Controller,
 	opts ...basic.Option,
 ) music.ControlService {
-	cfg := basic.BuildOptions(opts...)
+	opt := basic.BuildOptions(opts...)
 	return controlService{
-		ctrl:   ctrl,
-		log:    logutil.WithComponent(cfg.Logger, (*controlService)(nil)),
-		tracer: cfg.Tracer,
+		ctrl: ctrl,
+		log:  logutil.WithComponent(opt.Logger, (*controlService)(nil)),
 	}
 }
 
 type controlService struct {
-	ctrl   music.Controller
-	log    *logrus.Entry
-	tracer opentracing.Tracer
+	ctrl music.Controller
+	log  *logrus.Entry
 }
 
 var _ music.ControlService = (*controlService)(nil)
@@ -37,12 +33,6 @@ func (svc controlService) Play(
 	ctx context.Context,
 	opts ...music.PlayOption,
 ) error {
-	span, ctx := opentracing.StartSpanFromContextWithTracer(
-		ctx, svc.tracer,
-		name.OfFunc(controlService.Play),
-	)
-	defer span.Finish()
-
 	log := logutil.
 		WithMethod(svc.log, controlService.Play).
 		WithContext(ctx)
@@ -52,14 +42,15 @@ func (svc controlService) Play(
 		apply(&opt)
 	}
 
-	if u := opt.URI; u != nil {
+	s := opt.Selector
+	if s != nil {
 		log.
-			WithField("resource", u).
-			Trace("Playing the requested resource...")
+			WithField("selector", s).
+			Trace("Playing the selected resource...")
 	} else {
 		log.Trace("Resuming the current track...")
 	}
-	if err := svc.ctrl.Play(ctx, opt.URI); err != nil {
+	if err := svc.ctrl.Play(ctx, s); err != nil {
 		log.WithError(err).Error("Failed to play resource.")
 		return err
 	}
@@ -67,12 +58,6 @@ func (svc controlService) Play(
 }
 
 func (svc controlService) Pause(ctx context.Context) error {
-	span, ctx := opentracing.StartSpanFromContextWithTracer(
-		ctx, svc.tracer,
-		name.OfFunc(controlService.Pause),
-	)
-	defer span.Finish()
-
 	log := logutil.
 		WithMethod(svc.log, controlService.Pause).
 		WithContext(ctx)

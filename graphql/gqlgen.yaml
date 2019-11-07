@@ -35,6 +35,10 @@ models:
     model: musicgql.Mutation
   CurrentlyPlayingMusic:
     model: music.CurrentlyPlaying
+  MusicSelector:
+    model: music.Selector
+  MusicResource:
+    model: music.Resource
   MusicTrack:
     model: music.Track
     fields:

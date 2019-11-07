@@ -65,7 +65,7 @@ type TransitOperator {
 A `Station` is a place where one can board a `Transport`.
 """
 type TransitStation {
-  id: String!
+  id: ID!
   name: String!
   coordinates: Coordinates!
 }

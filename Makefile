@@ -19,6 +19,7 @@ LDFLAGS = -X $(GOMODULE)/internal.Version=$(VERSION)
 # Project variables:
 GOENV        ?= development
 GODEFAULTCMD =  server
+GOREGEX      = \.(yaml|go)
 
 
 # == Targets ==

@@ -4,16 +4,32 @@ type MusicQuery {
 
 type MusicMutation {
   """
-  Play a resource, as defined by its URI.
-
-  If no URI is specified, this method resumes playback for the current track.
+  Play a specified resource, or resume playback for the current track.
   """
-  play(uri: String): Boolean!
+  play(resource: MusicSelector): Boolean!
 
   """
   Pause playback for the current track.
   """
   pause: Boolean!
+}
+
+"""
+A `MusicSelector` is used to select a music resource.
+"""
+input MusicSelector {
+  uri: String
+  track: MusicResource
+  album: MusicResource
+  artist: MusicResource
+  playlist: MusicResource
+}
+
+"""
+A `MusicResource` specifies a music resource by its ID.
+"""
+input MusicResource {
+  id: ID!
 }
 
 """

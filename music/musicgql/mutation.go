@@ -17,12 +17,12 @@ type Mutation struct {
 }
 
 // Play plays a resource.
-func (mut Mutation) Play(ctx context.Context, uri *string) (bool, error) {
+func (mut Mutation) Play(ctx context.Context, resource *music.Selector) (bool, error) {
 	if err := mut.svc.Play(
 		ctx,
 		func(opt *music.PlayOptions) {
-			if uri != nil {
-				opt.URI = uri
+			if resource != nil {
+				opt.Selector = resource
 			}
 		},
 	); err != nil {

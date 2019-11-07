@@ -188,6 +188,11 @@ func run(*cli.Context) (err error) {
 		tracer = new(opentracing.NoopTracer)
 	}
 
+	basicOpts := []basic.Option{
+		basic.WithLogger(log),
+		basic.WithTracer(tracer),
+	}
+
 	// Connect to data sources.
 	log.Info("Connecting to data sources...")
 
@@ -234,18 +239,14 @@ func run(*cli.Context) (err error) {
 		var (
 			geoc    = heregeo.NewGeocoder(hereClient, basic.WithTracer(tracer))
 			hist    = gmaps.NewHistorian(timelineClient, basic.WithTracer(tracer))
-			histsvc = locsvc.NewHistoryService(
-				hist, geoc,
-				basic.WithLogger(log),
-				basic.WithTracer(tracer),
-			)
+			histsvc = locsvc.NewHistoryService(hist, geoc, basicOpts...)
 		)
 
 		if cfg := cfg.Location.Precacher; cfg.Enabled {
 			historyPrecacher := locsvc.NewHistoryServicePrecacher(
 				histsvc,
 				cfg.Interval,
-				basic.WithLogger(log),
+				basicOpts...,
 			)
 			guillo.AddFunc(
 				historyPrecacher.Stop,
@@ -277,11 +278,7 @@ func run(*cli.Context) (err error) {
 				gist.ID, gist.File,
 			)
 		)
-		aboutService = aboutsvc.NewService(
-			src, locationService,
-			basic.WithLogger(log),
-			basic.WithTracer(tracer),
-		)
+		aboutService = aboutsvc.NewService(src, locationService, basicOpts...)
 	}
 
 	var musicService music.Service
@@ -289,19 +286,11 @@ func run(*cli.Context) (err error) {
 		var (
 			src            = spotify.NewSource(spotifyClient)
 			srcsvc         = musicsvc.NewSourceService(src, basic.WithLogger(log))
-			currentService = spotify.NewCurrentService(
-				spotifyClient,
-				basic.WithLogger(log),
-				basic.WithTracer(tracer),
-			)
+			currentService = spotify.NewCurrentService(spotifyClient, basicOpts...)
 		)
 		var (
-			ctrl    = spotify.NewController(spotifyClient)
-			ctrlsvc = musicsvc.NewControlService(
-				ctrl,
-				basic.WithLogger(log),
-				basic.WithTracer(tracer),
-			)
+			ctrl    = spotify.NewController(spotifyClient, basicOpts...)
+			ctrlsvc = musicsvc.NewControlService(ctrl, basicOpts...)
 		)
 		musicService = musicsvc.NewService(
 			srcsvc,
@@ -333,22 +322,13 @@ func run(*cli.Context) (err error) {
 			return errors.Wrap(err, "create Google calendar service")
 		}
 		src := gcal.NewCalendar(calsvc, cfg.Scheduling.GCal.CalendarIDs)
-		schedulingService = schedsvc.NewService(
-			src,
-			locationService,
-			basic.WithLogger(log),
-			basic.WithTracer(tracer),
-		)
+		schedulingService = schedsvc.NewService(src, locationService, basicOpts...)
 	}
 
 	var gitService git.Service
 	{
 		src := gitgh.NewSource(githubClient)
-		gitService = gitsvc.NewService(
-			src,
-			basic.WithLogger(log),
-			basic.WithTracer(tracer),
-		)
+		gitService = gitsvc.NewService(src, basicOpts...)
 
 		if cfg := cfg.Git.Precacher; cfg.Enabled {
 			precacher := gitsvc.NewServicePrecacher(
@@ -372,12 +352,7 @@ func run(*cli.Context) (err error) {
 	var productivityService productivity.Service
 	{
 		src := rescuetime.NewRecordSource(rtimeClient)
-		productivityService = prodsvc.NewService(
-			src,
-			locationService,
-			basic.WithLogger(log),
-			basic.WithTracer(tracer),
-		)
+		productivityService = prodsvc.NewService(src, locationService, basicOpts...)
 	}
 
 	var authService auth.Service
@@ -400,11 +375,7 @@ func run(*cli.Context) (err error) {
 	{
 		var (
 			loc    = heretrans.NewLocator(hereClient)
-			locsvc = transvc.NewLocatorService(
-				loc,
-				basic.WithLogger(log),
-				basic.WithTracer(tracer),
-			)
+			locsvc = transvc.NewLocatorService(loc, basicOpts...)
 		)
 		grt, err := grt.NewRealtimeSource(
 			grt.WithLogger(log),
