@@ -7,6 +7,7 @@ _My personal API, now in GraphQL!_
 [![Go Report Card][grp-img]][grp]
 [![GoDoc][godoc-img]][godoc]
 [![Microbadger][microbadger-img]][microbadger]
+[![FOSSA Status](https://app.fossa.io/api/projects/git%2Bgithub.com%2Fstevenxie%2Fapi.svg?type=shield)](https://app.fossa.io/projects/git%2Bgithub.com%2Fstevenxie%2Fapi?ref=badge_shield)
 
 > **Why?** Well, why... not?
 
@@ -63,3 +64,7 @@ built some shortcuts that let me do that:
 [godoc-img]: https://godoc.org/go.stevenxie.me/api?status.svg
 [microbadger]: https://microbadger.com/images/stevenxie/api
 [microbadger-img]: https://images.microbadger.com/badges/image/stevenxie/api.svg
+
+
+## License
+[![FOSSA Status](https://app.fossa.io/api/projects/git%2Bgithub.com%2Fstevenxie%2Fapi.svg?type=large)](https://app.fossa.io/projects/git%2Bgithub.com%2Fstevenxie%2Fapi?ref=badge_large)
