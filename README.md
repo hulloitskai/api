@@ -6,7 +6,7 @@ _My personal API, now in GraphQL!_
 [![Drone][drone-img]][drone]
 [![Go Report Card][grp-img]][grp]
 [![GoDoc][godoc-img]][godoc]
-[![Microbadger][microbadger-img]][microbadger]
+[![License][license-img]][license]
 
 > **Why?** Well, why... not?
 
@@ -61,5 +61,5 @@ built some shortcuts that let me do that:
 [grp-img]: https://goreportcard.com/badge/go.stevenxie.me/api
 [godoc]: https://godoc.org/go.stevenxie.me/api
 [godoc-img]: https://godoc.org/go.stevenxie.me/api?status.svg
-[microbadger]: https://microbadger.com/images/stevenxie/api
-[microbadger-img]: https://images.microbadger.com/badges/image/stevenxie/api.svg
+[license]: https://creativecommons.org/licenses/by/4.0/
+[license-img]: https://img.shields.io/github/license/stevenxie/api
