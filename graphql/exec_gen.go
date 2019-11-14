@@ -1771,7 +1771,7 @@ type SchedulingQuery {
 `},
 	&ast.Source{Name: "schema/transit.graphql", Input: `type TransitQuery {
   """
-  Find nearby transit departures.
+  Find nearby ` + "`" + `TransitDeparture` + "`" + `s.
 
   Optionally specify a radius (in meters), and whether or not you want to
   restrict results to a single set that is unique by Transport direction.
@@ -1783,7 +1783,11 @@ type SchedulingQuery {
     singleSet: Boolean
   ): [NearbyTransitDeparture!]!
 
-  nearbyTransports(coords: CoordinatesInput!, radius: Int, limit: Int): [Transport!]!
+  nearbyTransports(
+    coords: CoordinatesInput!
+    radius: Int
+    limit: Int
+  ): [Transport!]!
 }
 
 """
@@ -1800,7 +1804,7 @@ type NearbyTransitDeparture {
 
 """
 A ` + "`" + `TransitDeparture` + "`" + ` contains information about the departure of a ` + "`" + `Transport` + "`" + `
-from a particular ` + "`" + `Station` + "`" + `.
+from a particular ` + "`" + `TransitStation` + "`" + `.
 """
 type TransitDeparture {
   times: [Time!]!
@@ -1825,7 +1829,7 @@ type Transport {
 }
 
 """
-An ` + "`" + `Operator` + "`" + ` represents a transit system operator.
+An ` + "`" + `TransitOperator` + "`" + ` represents a transit system operator.
 """
 type TransitOperator {
   code: String!
@@ -1833,7 +1837,7 @@ type TransitOperator {
 }
 
 """
-A ` + "`" + `Station` + "`" + ` is a place where one can board a ` + "`" + `Transport` + "`" + `.
+A ` + "`" + `TranistStation` + "`" + ` is a place where one can board a ` + "`" + `Transport` + "`" + `.
 """
 type TransitStation {
   id: ID!
