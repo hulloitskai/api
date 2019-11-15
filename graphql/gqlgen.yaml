@@ -125,6 +125,3 @@ models:
     model: transit.Operator
   TransitStation:
     model: transit.Station
-
-  CoordinatesInput:
-    model: locgql.CoordinatesInput

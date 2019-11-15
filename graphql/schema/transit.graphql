@@ -7,16 +7,12 @@ type TransitQuery {
   """
   findDepartures(
     route: String!
-    coords: CoordinatesInput!
+    coords: Coordinates!
     radius: Int
     singleSet: Boolean
   ): [NearbyTransitDeparture!]!
 
-  nearbyTransports(
-    coords: CoordinatesInput!
-    radius: Int
-    limit: Int
-  ): [Transport!]!
+  nearbyTransports(coords: Coordinates!, radius: Int, limit: Int): [Transport!]!
 }
 
 """
