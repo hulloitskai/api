@@ -17,18 +17,18 @@ type Query struct {
 	svc transit.Service
 }
 
-// FindDepartures forwards a definition.
-func (q Query) FindDepartures(
+// NearbyDepartures forwards a definition.
+func (q Query) NearbyDepartures(
 	ctx context.Context,
+	position location.Coordinates,
 	route string,
-	coords location.Coordinates,
 	radius *int,
 	singleSet *bool,
 ) ([]transit.NearbyDeparture, error) {
-	return q.svc.FindDepartures(
+	return q.svc.NearbyDepartures(
 		ctx,
-		route, coords,
-		func(opt *transit.FindDeparturesOptions) {
+		position, route,
+		func(opt *transit.NearbyDeparturesOptions) {
 			opt.FuzzyMatch = true
 			opt.GroupByStation = true
 			if singleSet != nil {
@@ -44,13 +44,13 @@ func (q Query) FindDepartures(
 // NearbyTransports forwards a definition.
 func (q Query) NearbyTransports(
 	ctx context.Context,
-	coords location.Coordinates,
+	position location.Coordinates,
 	radius *int,
 	limit *int,
 ) ([]transit.Transport, error) {
 	return q.svc.NearbyTransports(
 		ctx,
-		coords,
+		position,
 		func(opt *transit.NearbyTransportsOptions) {
 			if radius != nil {
 				opt.Radius = *radius

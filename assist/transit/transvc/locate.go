@@ -35,24 +35,24 @@ type locatorService struct {
 
 var _ transit.LocatorService = (*locatorService)(nil)
 
-func (svc locatorService) NearbyDepartures(
+func (svc locatorService) FindDepartures(
 	ctx context.Context,
-	pos location.Coordinates,
-	opts ...transit.NearbyDeparturesOption,
+	near location.Coordinates,
+	opts ...transit.FindDeparturesOption,
 ) ([]transit.NearbyDeparture, error) {
 	span, ctx := opentracing.StartSpanFromContextWithTracer(
 		ctx, svc.tracer,
-		name.OfFunc(locatorService.NearbyDepartures),
+		name.OfFunc(locatorService.FindDepartures),
 	)
 	defer span.Finish()
 
 	log := svc.log.WithFields(logrus.Fields{
-		logutil.MethodKey: name.OfMethod(svc.NearbyDepartures),
-		"position":        pos,
+		logutil.MethodKey: name.OfMethod(svc.FindDepartures),
+		"coordina":        near,
 	})
 
 	// Derive config, add log fields.
-	var opt transit.NearbyDeparturesOptions
+	var opt transit.FindDeparturesOptions
 	for _, apply := range opts {
 		apply(&opt)
 	}
@@ -74,7 +74,7 @@ func (svc locatorService) NearbyDepartures(
 	}
 
 	log.Trace("Getting nearby departures...")
-	nds, err := svc.loc.NearbyDepartures(ctx, pos, opt)
+	nds, err := svc.loc.FindDepartures(ctx, near, opt)
 	if err != nil {
 		log.WithError(err).Error("Failed to get nearby departures.")
 		return nil, err

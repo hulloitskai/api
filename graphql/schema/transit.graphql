@@ -5,14 +5,21 @@ type TransitQuery {
   Optionally specify a radius (in meters), and whether or not you want to
   restrict results to a single set that is unique by Transport direction.
   """
-  findDepartures(
+  nearbyDepartures(
+    position: Coordinates!
     route: String!
-    coords: Coordinates!
     radius: Int
     singleSet: Boolean
   ): [NearbyTransitDeparture!]!
 
-  nearbyTransports(coords: Coordinates!, radius: Int, limit: Int): [Transport!]!
+  """
+  Find nearby `Transport`s.
+  """
+  nearbyTransports(
+    position: Coordinates!
+    radius: Int
+    limit: Int
+  ): [Transport!]!
 }
 
 """

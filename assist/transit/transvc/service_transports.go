@@ -15,10 +15,9 @@ import (
 	"go.stevenxie.me/api/v2/location"
 )
 
-// NearbyTransports implements transit.Service.NearbyTransports.
 func (svc *service) NearbyTransports(
 	ctx context.Context,
-	coords location.Coordinates,
+	pos location.Coordinates,
 	opts ...transit.NearbyTransportsOption,
 ) ([]transit.Transport, error) {
 	span, ctx := opentracing.StartSpanFromContextWithTracer(
@@ -29,7 +28,7 @@ func (svc *service) NearbyTransports(
 
 	log := svc.log.WithFields(logrus.Fields{
 		logutil.MethodKey: name.OfMethod((*service).NearbyTransports),
-		"coordinates":     coords,
+		"position":        pos,
 	}).WithContext(ctx)
 
 	var opt transit.NearbyTransportsOptions
@@ -50,17 +49,17 @@ func (svc *service) NearbyTransports(
 		log = log.WithFields(fields)
 	}
 
-	log.Trace("Getting nearby departures...")
-	nds, err := svc.loc.NearbyDepartures(
+	log.Trace("Finding departures...")
+	nds, err := svc.loc.FindDepartures(
 		ctx,
-		coords,
-		func(ndOpt *transit.NearbyDeparturesOptions) {
-			ndOpt.MaxPerTransport = 1
+		pos,
+		func(findOpt *transit.FindDeparturesOptions) {
+			findOpt.MaxPerTransport = 1
 			if r := opt.Radius; r > 0 {
-				ndOpt.Radius = r
+				findOpt.Radius = r
 			}
 			if m := opt.MaxStations; m > 0 {
-				ndOpt.MaxStations = m
+				findOpt.MaxStations = m
 			}
 		},
 	)

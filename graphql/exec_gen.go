@@ -282,8 +282,8 @@ type ComplexityRoot struct {
 	}
 
 	TransitQuery struct {
-		FindDepartures   func(childComplexity int, route string, coords location.Coordinates, radius *int, singleSet *bool) int
-		NearbyTransports func(childComplexity int, coords location.Coordinates, radius *int, limit *int) int
+		NearbyDepartures func(childComplexity int, position location.Coordinates, route string, radius *int, singleSet *bool) int
+		NearbyTransports func(childComplexity int, position location.Coordinates, radius *int, limit *int) int
 	}
 
 	TransitStation struct {
@@ -1230,17 +1230,17 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.TransitOperator.Name(childComplexity), true
 
-	case "TransitQuery.findDepartures":
-		if e.complexity.TransitQuery.FindDepartures == nil {
+	case "TransitQuery.nearbyDepartures":
+		if e.complexity.TransitQuery.NearbyDepartures == nil {
 			break
 		}
 
-		args, err := ec.field_TransitQuery_findDepartures_args(context.TODO(), rawArgs)
+		args, err := ec.field_TransitQuery_nearbyDepartures_args(context.TODO(), rawArgs)
 		if err != nil {
 			return 0, false
 		}
 
-		return e.complexity.TransitQuery.FindDepartures(childComplexity, args["route"].(string), args["coords"].(location.Coordinates), args["radius"].(*int), args["singleSet"].(*bool)), true
+		return e.complexity.TransitQuery.NearbyDepartures(childComplexity, args["position"].(location.Coordinates), args["route"].(string), args["radius"].(*int), args["singleSet"].(*bool)), true
 
 	case "TransitQuery.nearbyTransports":
 		if e.complexity.TransitQuery.NearbyTransports == nil {
@@ -1252,7 +1252,7 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 			return 0, false
 		}
 
-		return e.complexity.TransitQuery.NearbyTransports(childComplexity, args["coords"].(location.Coordinates), args["radius"].(*int), args["limit"].(*int)), true
+		return e.complexity.TransitQuery.NearbyTransports(childComplexity, args["position"].(location.Coordinates), args["radius"].(*int), args["limit"].(*int)), true
 
 	case "TransitStation.coordinates":
 		if e.complexity.TransitStation.Coordinates == nil {
@@ -1734,14 +1734,21 @@ type SchedulingQuery {
   Optionally specify a radius (in meters), and whether or not you want to
   restrict results to a single set that is unique by Transport direction.
   """
-  findDepartures(
+  nearbyDepartures(
+    position: Coordinates!
     route: String!
-    coords: Coordinates!
     radius: Int
     singleSet: Boolean
   ): [NearbyTransitDeparture!]!
 
-  nearbyTransports(coords: Coordinates!, radius: Int, limit: Int): [Transport!]!
+  """
+  Find nearby ` + "`" + `Transport` + "`" + `s.
+  """
+  nearbyTransports(
+    position: Coordinates!
+    radius: Int
+    limit: Int
+  ): [Transport!]!
 }
 
 """
@@ -1977,25 +1984,25 @@ func (ec *executionContext) field_SchedulingQuery_busyTimes_args(ctx context.Con
 	return args, nil
 }
 
-func (ec *executionContext) field_TransitQuery_findDepartures_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+func (ec *executionContext) field_TransitQuery_nearbyDepartures_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
 	var err error
 	args := map[string]interface{}{}
-	var arg0 string
+	var arg0 location.Coordinates
+	if tmp, ok := rawArgs["position"]; ok {
+		arg0, err = ec.unmarshalNCoordinates2goᚗstevenxieᚗmeᚋapiᚋv2ᚋlocationᚐCoordinates(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["position"] = arg0
+	var arg1 string
 	if tmp, ok := rawArgs["route"]; ok {
-		arg0, err = ec.unmarshalNString2string(ctx, tmp)
+		arg1, err = ec.unmarshalNString2string(ctx, tmp)
 		if err != nil {
 			return nil, err
 		}
 	}
-	args["route"] = arg0
-	var arg1 location.Coordinates
-	if tmp, ok := rawArgs["coords"]; ok {
-		arg1, err = ec.unmarshalNCoordinates2goᚗstevenxieᚗmeᚋapiᚋv2ᚋlocationᚐCoordinates(ctx, tmp)
-		if err != nil {
-			return nil, err
-		}
-	}
-	args["coords"] = arg1
+	args["route"] = arg1
 	var arg2 *int
 	if tmp, ok := rawArgs["radius"]; ok {
 		arg2, err = ec.unmarshalOInt2ᚖint(ctx, tmp)
@@ -2019,13 +2026,13 @@ func (ec *executionContext) field_TransitQuery_nearbyTransports_args(ctx context
 	var err error
 	args := map[string]interface{}{}
 	var arg0 location.Coordinates
-	if tmp, ok := rawArgs["coords"]; ok {
+	if tmp, ok := rawArgs["position"]; ok {
 		arg0, err = ec.unmarshalNCoordinates2goᚗstevenxieᚗmeᚋapiᚋv2ᚋlocationᚐCoordinates(ctx, tmp)
 		if err != nil {
 			return nil, err
 		}
 	}
-	args["coords"] = arg0
+	args["position"] = arg0
 	var arg1 *int
 	if tmp, ok := rawArgs["radius"]; ok {
 		arg1, err = ec.unmarshalOInt2ᚖint(ctx, tmp)
@@ -6472,7 +6479,7 @@ func (ec *executionContext) _TransitOperator_name(ctx context.Context, field gra
 	return ec.marshalNString2string(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) _TransitQuery_findDepartures(ctx context.Context, field graphql.CollectedField, obj *transgql.Query) (ret graphql.Marshaler) {
+func (ec *executionContext) _TransitQuery_nearbyDepartures(ctx context.Context, field graphql.CollectedField, obj *transgql.Query) (ret graphql.Marshaler) {
 	ctx = ec.Tracer.StartFieldExecution(ctx, field)
 	defer func() {
 		if r := recover(); r != nil {
@@ -6489,7 +6496,7 @@ func (ec *executionContext) _TransitQuery_findDepartures(ctx context.Context, fi
 	}
 	ctx = graphql.WithResolverContext(ctx, rctx)
 	rawArgs := field.ArgumentMap(ec.Variables)
-	args, err := ec.field_TransitQuery_findDepartures_args(ctx, rawArgs)
+	args, err := ec.field_TransitQuery_nearbyDepartures_args(ctx, rawArgs)
 	if err != nil {
 		ec.Error(ctx, err)
 		return graphql.Null
@@ -6498,7 +6505,7 @@ func (ec *executionContext) _TransitQuery_findDepartures(ctx context.Context, fi
 	ctx = ec.Tracer.StartFieldResolverExecution(ctx, rctx)
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return obj.FindDepartures(ctx, args["route"].(string), args["coords"].(location.Coordinates), args["radius"].(*int), args["singleSet"].(*bool))
+		return obj.NearbyDepartures(ctx, args["position"].(location.Coordinates), args["route"].(string), args["radius"].(*int), args["singleSet"].(*bool))
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -6542,7 +6549,7 @@ func (ec *executionContext) _TransitQuery_nearbyTransports(ctx context.Context, 
 	ctx = ec.Tracer.StartFieldResolverExecution(ctx, rctx)
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return obj.NearbyTransports(ctx, args["coords"].(location.Coordinates), args["radius"].(*int), args["limit"].(*int))
+		return obj.NearbyTransports(ctx, args["position"].(location.Coordinates), args["radius"].(*int), args["limit"].(*int))
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -9581,7 +9588,7 @@ func (ec *executionContext) _TransitQuery(ctx context.Context, sel ast.Selection
 		switch field.Name {
 		case "__typename":
 			out.Values[i] = graphql.MarshalString("TransitQuery")
-		case "findDepartures":
+		case "nearbyDepartures":
 			field := field
 			out.Concurrently(i, func() (res graphql.Marshaler) {
 				defer func() {
@@ -9589,7 +9596,7 @@ func (ec *executionContext) _TransitQuery(ctx context.Context, sel ast.Selection
 						ec.Error(ctx, ec.Recover(ctx, r))
 					}
 				}()
-				res = ec._TransitQuery_findDepartures(ctx, field, obj)
+				res = ec._TransitQuery_nearbyDepartures(ctx, field, obj)
 				if res == graphql.Null {
 					atomic.AddUint32(&invalids, 1)
 				}

@@ -31,13 +31,13 @@ type locator struct {
 
 var _ transit.Locator = (*locator)(nil)
 
-func (l locator) NearbyDepartures(
+func (l locator) FindDepartures(
 	ctx context.Context,
-	coords location.Coordinates,
-	opt transit.NearbyDeparturesOptions,
+	near location.Coordinates,
+	opt transit.FindDeparturesOptions,
 ) ([]transit.NearbyDeparture, error) {
 	// Build and perform request.
-	url := buildNearbyDeparturesURL(coords, &opt)
+	url := buildFindDeparturesURL(near, &opt)
 	req, err := http.NewRequestWithContext(ctx, http.MethodGet, url, nil)
 	if err != nil {
 		return nil, errors.Wrap(err, "heretrans: create request")
@@ -241,9 +241,9 @@ func (l locator) NearbyDepartures(
 const _multiboardURL = "https://transit.api.here.com/v3/multiboard/" +
 	"by_geocoord.json"
 
-func buildNearbyDeparturesURL(
+func buildFindDeparturesURL(
 	pos location.Coordinates,
-	opt *transit.NearbyDeparturesOptions,
+	opt *transit.FindDeparturesOptions,
 ) string {
 	u, err := url.Parse(_multiboardURL)
 	if err != nil {

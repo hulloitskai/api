@@ -25,23 +25,23 @@ import (
 	"go.stevenxie.me/api/v2/location"
 )
 
-// FindDepartures implements transit.Service.FindDepartures.
-func (svc *service) FindDepartures(
+// NearbyDepartures implements transit.Service.NearbyDepartures.
+func (svc *service) NearbyDepartures(
 	ctx context.Context,
+	pos location.Coordinates,
 	routeQuery string,
-	coords location.Coordinates,
-	opts ...transit.FindDeparturesOption,
+	opts ...transit.NearbyDeparturesOption,
 ) ([]transit.NearbyDeparture, error) {
 	span, ctx := opentracing.StartSpanFromContextWithTracer(
 		ctx, svc.tracer,
-		name.OfFunc((*service).FindDepartures),
+		name.OfFunc((*service).NearbyDepartures),
 	)
 	defer span.Finish()
 
 	log := svc.log.WithFields(logrus.Fields{
-		logutil.MethodKey: name.OfMethod((*service).FindDepartures),
+		logutil.MethodKey: name.OfMethod((*service).NearbyDepartures),
 		"route_query":     routeQuery,
-		"coordinates":     coords,
+		"position":        pos,
 	}).WithContext(ctx)
 
 	// Validate inputs.
@@ -50,7 +50,7 @@ func (svc *service) FindDepartures(
 		return nil, errors.New("transvc: route is empty")
 	}
 
-	opt := transit.FindDeparturesOptions{
+	opt := transit.NearbyDeparturesOptions{
 		Realtime:   true,
 		TimesLimit: 3,
 	}
@@ -75,17 +75,17 @@ func (svc *service) FindDepartures(
 		log = log.WithFields(fields)
 	}
 
-	log.Trace("Getting nearby departures...")
-	nds, err := svc.loc.NearbyDepartures(
+	log.Trace("Finding departures...")
+	nds, err := svc.loc.FindDepartures(
 		ctx,
-		coords,
-		func(ndOpt *transit.NearbyDeparturesOptions) {
-			ndOpt.MaxPerTransport = opt.TimesLimit
+		pos,
+		func(findOpt *transit.FindDeparturesOptions) {
+			findOpt.MaxPerTransport = opt.TimesLimit
 			if r := opt.Radius; r > 0 {
-				ndOpt.Radius = r
+				findOpt.Radius = r
 			}
 			if m := opt.MaxStations; m > 0 {
-				ndOpt.MaxStations = m
+				findOpt.MaxStations = m
 			}
 		},
 	)

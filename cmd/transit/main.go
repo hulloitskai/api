@@ -84,10 +84,10 @@ func main() {
 		)
 	}
 
-	deps, err := svc.FindDepartures(
+	deps, err := svc.NearbyDepartures(
 		context.Background(),
-		os.Args[2],
 		pos,
+		os.Args[2],
 		transit.FindWithFuzzyMatch(true),
 		transit.FindWithGroupByStation(true),
 		transit.FindWithLimit(2),

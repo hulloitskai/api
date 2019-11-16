@@ -9,21 +9,21 @@ import (
 )
 
 // FindWithGroupByStation enables the grouping of results by station for a
-// Service.FindDepartures request.
-func FindWithGroupByStation(enable bool) FindDeparturesOption {
-	return func(opt *FindDeparturesOptions) { opt.FuzzyMatch = enable }
+// Service.NearbyDepartures request.
+func FindWithGroupByStation(enable bool) NearbyDeparturesOption {
+	return func(opt *NearbyDeparturesOptions) { opt.FuzzyMatch = enable }
 }
 
 // FindWithFuzzyMatch enables fuzzy-matching on the route for a
-// Service.FindDepartures request.
-func FindWithFuzzyMatch(enable bool) FindDeparturesOption {
-	return func(opt *FindDeparturesOptions) { opt.FuzzyMatch = enable }
+// Service.NearbyDepartures request.
+func FindWithFuzzyMatch(enable bool) NearbyDeparturesOption {
+	return func(opt *NearbyDeparturesOptions) { opt.FuzzyMatch = enable }
 }
 
-// FindWithRadius configures a Service.FindDepartures request to limit search
+// FindWithRadius configures a Service.NearbyDepartures request to limit search
 // to departures within r meters of the provided position.
-func FindWithRadius(r int) FindDeparturesOption {
-	return func(opt *FindDeparturesOptions) {
+func FindWithRadius(r int) NearbyDeparturesOption {
+	return func(opt *NearbyDeparturesOptions) {
 		if r > 0 {
 			opt.Radius = r
 		}
@@ -32,49 +32,49 @@ func FindWithRadius(r int) FindDeparturesOption {
 
 // FindWithOperator restricts the search to the Operator with the specified
 // code.
-func FindWithOperator(opCode string) FindDeparturesOption {
-	return func(opt *FindDeparturesOptions) { opt.OperatorCode = opCode }
+func FindWithOperator(opCode string) NearbyDeparturesOption {
+	return func(opt *NearbyDeparturesOptions) { opt.OperatorCode = opCode }
 }
 
-// FindWithLimit limits the number of results from a Service.FindDepartures
+// FindWithLimit limits the number of results from a Service.NearbyDepartures
 // request.
-func FindWithLimit(l int) FindDeparturesOption {
-	return func(opt *FindDeparturesOptions) {
+func FindWithLimit(l int) NearbyDeparturesOption {
+	return func(opt *NearbyDeparturesOptions) {
 		if l > 0 {
 			opt.Limit = l
 		}
 	}
 }
 
-// FindSingleSet instructs a Service.FindDepartures call to only include
+// FindSingleSet instructs a Service.NearbyDepartures call to only include
 // a single set of results that are unique by direction.
-func FindSingleSet(enable bool) FindDeparturesOption {
-	return func(opt *FindDeparturesOptions) { opt.SingleSet = enable }
+func FindSingleSet(enable bool) NearbyDeparturesOption {
+	return func(opt *NearbyDeparturesOptions) { opt.SingleSet = enable }
 }
 
 type (
 	// A Service can assist me with my transit needs.
 	Service interface {
-		// FindDepartures finds departures for a particular transit route near
+		// NearbyDepartures finds departures for a particular transit route near
 		// pos.
-		FindDepartures(
+		NearbyDepartures(
 			ctx context.Context,
+			pos location.Coordinates,
 			routeQuery string,
-			coords location.Coordinates,
-			opts ...FindDeparturesOption,
+			opts ...NearbyDeparturesOption,
 		) ([]NearbyDeparture, error)
 
-		// NearbyTransports reports active Transports near a particular position.
+		// NearbyTransports finds active Transports near a particular position.
 		NearbyTransports(
 			ctx context.Context,
-			coords location.Coordinates,
+			pos location.Coordinates,
 			opts ...NearbyTransportsOption,
 		) ([]Transport, error)
 	}
 
-	// A FindDeparturesOptions are option parameters for a
-	// Service.FindDepartures request.
-	FindDeparturesOptions struct {
+	// A NearbyDeparturesOptions are option parameters for a
+	// Service.NearbyDepartures request.
+	NearbyDeparturesOptions struct {
 		OperatorCode string // filter by operator code
 
 		Realtime   bool // make extra queries for realtime data
@@ -90,8 +90,8 @@ type (
 		MaxStations int // max number of stations to search
 	}
 
-	// A FindDeparturesOption modifies a FindDeparturesOptions.
-	FindDeparturesOption func(*FindDeparturesOptions)
+	// A NearbyDeparturesOption modifies a NearbyDeparturesOptions.
+	NearbyDeparturesOption func(*NearbyDeparturesOptions)
 
 	// NearbyTransportsOptions are option parameters for a
 	// Service.NearbyTransports request.
@@ -106,7 +106,7 @@ type (
 )
 
 // Validate returns an error if the FindDeparrturesOption is not valid.
-func (opt *FindDeparturesOptions) Validate() error {
+func (opt *NearbyDeparturesOptions) Validate() error {
 	minZeroFields := []*int{
 		&opt.Limit, &opt.TimesLimit,
 		&opt.Radius, &opt.MaxStations,

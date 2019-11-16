@@ -10,10 +10,10 @@ import (
 type (
 	// A Locator can locate nearby departures.
 	Locator interface {
-		NearbyDepartures(
+		FindDepartures(
 			ctx context.Context,
-			coords location.Coordinates,
-			opt NearbyDeparturesOptions,
+			near location.Coordinates,
+			opt FindDeparturesOptions,
 		) ([]NearbyDeparture, error)
 	}
 
@@ -31,29 +31,29 @@ type (
 	//
 	// Results are sorted in ascending order by distance.
 	LocatorService interface {
-		NearbyDepartures(
+		FindDepartures(
 			ctx context.Context,
-			pos location.Coordinates,
-			opts ...NearbyDeparturesOption,
+			near location.Coordinates,
+			opts ...FindDeparturesOption,
 		) ([]NearbyDeparture, error)
 	}
 
-	// NearbyDeparturesOptions are option parameters for Locator.NearbyDepartures.
-	NearbyDeparturesOptions struct {
+	// FindDeparturesOptions are option parameters for Locator.FindDepartures.
+	FindDeparturesOptions struct {
 		Radius          int // the search radius, in meters
 		MaxStations     int // max number of stations to look up
 		MaxPerStation   int // max number of departures per station
 		MaxPerTransport int // max departures per transport
 	}
 
-	// A NearbyDeparturesOption modifies a NearbyDepartureOptions.
-	NearbyDeparturesOption func(*NearbyDeparturesOptions)
+	// A FindDeparturesOption modifies a FindDepartureOptions.
+	FindDeparturesOption func(*FindDeparturesOptions)
 )
 
-var _ validation.Validatable = (*NearbyDeparturesOptions)(nil)
+var _ validation.Validatable = (*FindDeparturesOptions)(nil)
 
 // Validate returns an error if the config is not valid.
-func (cfg *NearbyDeparturesOptions) Validate() error {
+func (cfg *FindDeparturesOptions) Validate() error {
 	nonNegFields := []*int{&cfg.Radius, &cfg.MaxStations, &cfg.MaxPerStation}
 	rules := make([]*validation.FieldRules, len(nonNegFields))
 	for i, f := range nonNegFields {
