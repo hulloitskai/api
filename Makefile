@@ -120,17 +120,18 @@ __GOVERIFYCMD = \
   fi
 
 
+GOREFLEX ?= off
 GOREGEX  ?= \.go$
 __REFLEX  = reflex -d none
 __GORUN   = go run $(GOBUILDFLAGS) $(GORUNFLAGS) $(__GOCMD) $(__GOARGS)
 
 go-run:
 	@$(__GOENV) && $(__GOVERIFYCMD) && \
-	 if command -v $(__REFLEX) > /dev/null; then \
+	 if [ "$(GOREFLEX)" != off ] && command -v $(__REFLEX) > /dev/null; then \
 	   echo "Running with 'reflex [...] go run'..." && \
 	   $(__REFLEX) -sr '$(GOREGEX)' -- $(__GORUN); \
 	 else \
-	   echo "Running with 'go run'.." && \
+	   echo "Running with 'go run'..." && \
 	   go run $(GOBUILDFLAGS) $(GORUNFLAGS) $(__GOCMD) $(__GOARGS); \
 	 fi
 go-build:
