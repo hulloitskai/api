@@ -19,7 +19,7 @@ LDFLAGS = -X $(GOMODULE)/internal.Version=$(VERSION)
 # Project variables:
 GOENV        ?= development
 GODEFAULTCMD =  server
-GOREGEX      = \.(yaml|go)
+GOREGEX      =  \.(go|yaml)$
 
 
 # == Targets ==
@@ -91,11 +91,11 @@ go-shell: # Launch a shell with a env preset for the Go toolchain.
 go-setup: go-install go-deps
 go-deps: # Verify and tidy project dependencies.
 	@$(__GOENV) && \
-	 echo "Verifying Go module dependencies..." && \
-	 go mod verify && \
-	 $(MAKE) go-install && \
 	 echo "Tidying Go module dependencies..." && \
 	 go mod tidy && \
+	 $(MAKE) go-install && \
+	 echo "Verifying Go module dependencies..." && \
+	 go mod verify && \
 	 echo done
 go-install:
 	@$(__GOENV) && \

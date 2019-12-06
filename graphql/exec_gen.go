@@ -185,11 +185,6 @@ type ComplexityRoot struct {
 		Width  func(childComplexity int) int
 	}
 
-	MusicMutation struct {
-		Pause func(childComplexity int) int
-		Play  func(childComplexity int, resource *music.Selector) int
-	}
-
 	MusicQuery struct {
 		Current func(childComplexity int) int
 	}
@@ -205,7 +200,8 @@ type ComplexityRoot struct {
 	}
 
 	Mutation struct {
-		Music func(childComplexity int, code string) int
+		PauseMusic func(childComplexity int, code string) int
+		PlayMusic  func(childComplexity int, code string, resource *music.Selector) int
 	}
 
 	NearbyTransitDeparture struct {
@@ -329,7 +325,8 @@ type MusicTrackResolver interface {
 	Duration(ctx context.Context, obj *music.Track) (int, error)
 }
 type MutationResolver interface {
-	Music(ctx context.Context, code string) (*musicgql.Mutation, error)
+	PlayMusic(ctx context.Context, code string, resource *music.Selector) (bool, error)
+	PauseMusic(ctx context.Context, code string) (bool, error)
 }
 type PlaceResolver interface {
 	TimeZone(ctx context.Context, obj *location.Place) (*locgql.TimeZone, error)
@@ -874,25 +871,6 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.MusicImage.Width(childComplexity), true
 
-	case "MusicMutation.pause":
-		if e.complexity.MusicMutation.Pause == nil {
-			break
-		}
-
-		return e.complexity.MusicMutation.Pause(childComplexity), true
-
-	case "MusicMutation.play":
-		if e.complexity.MusicMutation.Play == nil {
-			break
-		}
-
-		args, err := ec.field_MusicMutation_play_args(context.TODO(), rawArgs)
-		if err != nil {
-			return 0, false
-		}
-
-		return e.complexity.MusicMutation.Play(childComplexity, args["resource"].(*music.Selector)), true
-
 	case "MusicQuery.current":
 		if e.complexity.MusicQuery.Current == nil {
 			break
@@ -949,17 +927,29 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.MusicTrack.URI(childComplexity), true
 
-	case "Mutation.music":
-		if e.complexity.Mutation.Music == nil {
+	case "Mutation.pauseMusic":
+		if e.complexity.Mutation.PauseMusic == nil {
 			break
 		}
 
-		args, err := ec.field_Mutation_music_args(context.TODO(), rawArgs)
+		args, err := ec.field_Mutation_pauseMusic_args(context.TODO(), rawArgs)
 		if err != nil {
 			return 0, false
 		}
 
-		return e.complexity.Mutation.Music(childComplexity, args["code"].(string)), true
+		return e.complexity.Mutation.PauseMusic(childComplexity, args["code"].(string)), true
+
+	case "Mutation.playMusic":
+		if e.complexity.Mutation.PlayMusic == nil {
+			break
+		}
+
+		args, err := ec.field_Mutation_playMusic_args(context.TODO(), rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Mutation.PlayMusic(childComplexity, args["code"].(string), args["resource"].(*music.Selector)), true
 
 	case "NearbyTransitDeparture.departure":
 		if e.complexity.NearbyTransitDeparture.Departure == nil {
@@ -1554,18 +1544,6 @@ type TimeZone {
   current: CurrentlyPlayingMusic
 }
 
-type MusicMutation {
-  """
-  Play a specified resource, or resume playback for the current track.
-  """
-  play(resource: MusicSelector): Boolean!
-
-  """
-  Pause playback for the current track.
-  """
-  pause: Boolean!
-}
-
 """
 A ` + "`" + `MusicSelector` + "`" + ` is used to select a music resource.
 """
@@ -1708,7 +1686,15 @@ type ProductivityCategory {
 }
 
 type Mutation {
-  music(code: String!): MusicMutation!
+  """
+  Play a specified resource, or resume playback for the current track.
+  """
+  playMusic(code: String!, resource: MusicSelector): Boolean!
+
+  """
+  Pause playback for the current track.
+  """
+  pauseMusic(code: String!): Boolean!
 }
 
 type Subscription {
@@ -1906,21 +1892,7 @@ func (ec *executionContext) field_MusicArtist_albums_args(ctx context.Context, r
 	return args, nil
 }
 
-func (ec *executionContext) field_MusicMutation_play_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
-	var err error
-	args := map[string]interface{}{}
-	var arg0 *music.Selector
-	if tmp, ok := rawArgs["resource"]; ok {
-		arg0, err = ec.unmarshalOMusicSelector2ᚖgoᚗstevenxieᚗmeᚋapiᚋv2ᚋmusicᚐSelector(ctx, tmp)
-		if err != nil {
-			return nil, err
-		}
-	}
-	args["resource"] = arg0
-	return args, nil
-}
-
-func (ec *executionContext) field_Mutation_music_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+func (ec *executionContext) field_Mutation_pauseMusic_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
 	var err error
 	args := map[string]interface{}{}
 	var arg0 string
@@ -1931,6 +1903,28 @@ func (ec *executionContext) field_Mutation_music_args(ctx context.Context, rawAr
 		}
 	}
 	args["code"] = arg0
+	return args, nil
+}
+
+func (ec *executionContext) field_Mutation_playMusic_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+	var err error
+	args := map[string]interface{}{}
+	var arg0 string
+	if tmp, ok := rawArgs["code"]; ok {
+		arg0, err = ec.unmarshalNString2string(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["code"] = arg0
+	var arg1 *music.Selector
+	if tmp, ok := rawArgs["resource"]; ok {
+		arg1, err = ec.unmarshalOMusicSelector2ᚖgoᚗstevenxieᚗmeᚋapiᚋv2ᚋmusicᚐSelector(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["resource"] = arg1
 	return args, nil
 }
 
@@ -4606,87 +4600,6 @@ func (ec *executionContext) _MusicImage_url(ctx context.Context, field graphql.C
 	return ec.marshalNString2string(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) _MusicMutation_play(ctx context.Context, field graphql.CollectedField, obj *musicgql.Mutation) (ret graphql.Marshaler) {
-	ctx = ec.Tracer.StartFieldExecution(ctx, field)
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-		ec.Tracer.EndFieldExecution(ctx)
-	}()
-	rctx := &graphql.ResolverContext{
-		Object:   "MusicMutation",
-		Field:    field,
-		Args:     nil,
-		IsMethod: true,
-	}
-	ctx = graphql.WithResolverContext(ctx, rctx)
-	rawArgs := field.ArgumentMap(ec.Variables)
-	args, err := ec.field_MusicMutation_play_args(ctx, rawArgs)
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	rctx.Args = args
-	ctx = ec.Tracer.StartFieldResolverExecution(ctx, rctx)
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return obj.Play(ctx, args["resource"].(*music.Selector))
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		if !ec.HasError(rctx) {
-			ec.Errorf(ctx, "must not be null")
-		}
-		return graphql.Null
-	}
-	res := resTmp.(bool)
-	rctx.Result = res
-	ctx = ec.Tracer.StartFieldChildExecution(ctx)
-	return ec.marshalNBoolean2bool(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) _MusicMutation_pause(ctx context.Context, field graphql.CollectedField, obj *musicgql.Mutation) (ret graphql.Marshaler) {
-	ctx = ec.Tracer.StartFieldExecution(ctx, field)
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-		ec.Tracer.EndFieldExecution(ctx)
-	}()
-	rctx := &graphql.ResolverContext{
-		Object:   "MusicMutation",
-		Field:    field,
-		Args:     nil,
-		IsMethod: true,
-	}
-	ctx = graphql.WithResolverContext(ctx, rctx)
-	ctx = ec.Tracer.StartFieldResolverExecution(ctx, rctx)
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return obj.Pause(ctx)
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		if !ec.HasError(rctx) {
-			ec.Errorf(ctx, "must not be null")
-		}
-		return graphql.Null
-	}
-	res := resTmp.(bool)
-	rctx.Result = res
-	ctx = ec.Tracer.StartFieldChildExecution(ctx)
-	return ec.marshalNBoolean2bool(ctx, field.Selections, res)
-}
-
 func (ec *executionContext) _MusicQuery_current(ctx context.Context, field graphql.CollectedField, obj *musicgql.Query) (ret graphql.Marshaler) {
 	ctx = ec.Tracer.StartFieldExecution(ctx, field)
 	defer func() {
@@ -4980,7 +4893,7 @@ func (ec *executionContext) _MusicTrack_duration(ctx context.Context, field grap
 	return ec.marshalNInt2int(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) _Mutation_music(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+func (ec *executionContext) _Mutation_playMusic(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
 	ctx = ec.Tracer.StartFieldExecution(ctx, field)
 	defer func() {
 		if r := recover(); r != nil {
@@ -4997,7 +4910,7 @@ func (ec *executionContext) _Mutation_music(ctx context.Context, field graphql.C
 	}
 	ctx = graphql.WithResolverContext(ctx, rctx)
 	rawArgs := field.ArgumentMap(ec.Variables)
-	args, err := ec.field_Mutation_music_args(ctx, rawArgs)
+	args, err := ec.field_Mutation_playMusic_args(ctx, rawArgs)
 	if err != nil {
 		ec.Error(ctx, err)
 		return graphql.Null
@@ -5006,7 +4919,7 @@ func (ec *executionContext) _Mutation_music(ctx context.Context, field graphql.C
 	ctx = ec.Tracer.StartFieldResolverExecution(ctx, rctx)
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Mutation().Music(rctx, args["code"].(string))
+		return ec.resolvers.Mutation().PlayMusic(rctx, args["code"].(string), args["resource"].(*music.Selector))
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -5018,10 +4931,54 @@ func (ec *executionContext) _Mutation_music(ctx context.Context, field graphql.C
 		}
 		return graphql.Null
 	}
-	res := resTmp.(*musicgql.Mutation)
+	res := resTmp.(bool)
 	rctx.Result = res
 	ctx = ec.Tracer.StartFieldChildExecution(ctx)
-	return ec.marshalNMusicMutation2ᚖgoᚗstevenxieᚗmeᚋapiᚋv2ᚋmusicᚋmusicgqlᚐMutation(ctx, field.Selections, res)
+	return ec.marshalNBoolean2bool(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _Mutation_pauseMusic(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	ctx = ec.Tracer.StartFieldExecution(ctx, field)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+		ec.Tracer.EndFieldExecution(ctx)
+	}()
+	rctx := &graphql.ResolverContext{
+		Object:   "Mutation",
+		Field:    field,
+		Args:     nil,
+		IsMethod: true,
+	}
+	ctx = graphql.WithResolverContext(ctx, rctx)
+	rawArgs := field.ArgumentMap(ec.Variables)
+	args, err := ec.field_Mutation_pauseMusic_args(ctx, rawArgs)
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	rctx.Args = args
+	ctx = ec.Tracer.StartFieldResolverExecution(ctx, rctx)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Mutation().PauseMusic(rctx, args["code"].(string))
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !ec.HasError(rctx) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(bool)
+	rctx.Result = res
+	ctx = ec.Tracer.StartFieldChildExecution(ctx)
+	return ec.marshalNBoolean2bool(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _NearbyTransitDeparture_departure(ctx context.Context, field graphql.CollectedField, obj *transit.NearbyDeparture) (ret graphql.Marshaler) {
@@ -8821,56 +8778,6 @@ func (ec *executionContext) _MusicImage(ctx context.Context, sel ast.SelectionSe
 	return out
 }
 
-var musicMutationImplementors = []string{"MusicMutation"}
-
-func (ec *executionContext) _MusicMutation(ctx context.Context, sel ast.SelectionSet, obj *musicgql.Mutation) graphql.Marshaler {
-	fields := graphql.CollectFields(ec.RequestContext, sel, musicMutationImplementors)
-
-	out := graphql.NewFieldSet(fields)
-	var invalids uint32
-	for i, field := range fields {
-		switch field.Name {
-		case "__typename":
-			out.Values[i] = graphql.MarshalString("MusicMutation")
-		case "play":
-			field := field
-			out.Concurrently(i, func() (res graphql.Marshaler) {
-				defer func() {
-					if r := recover(); r != nil {
-						ec.Error(ctx, ec.Recover(ctx, r))
-					}
-				}()
-				res = ec._MusicMutation_play(ctx, field, obj)
-				if res == graphql.Null {
-					atomic.AddUint32(&invalids, 1)
-				}
-				return res
-			})
-		case "pause":
-			field := field
-			out.Concurrently(i, func() (res graphql.Marshaler) {
-				defer func() {
-					if r := recover(); r != nil {
-						ec.Error(ctx, ec.Recover(ctx, r))
-					}
-				}()
-				res = ec._MusicMutation_pause(ctx, field, obj)
-				if res == graphql.Null {
-					atomic.AddUint32(&invalids, 1)
-				}
-				return res
-			})
-		default:
-			panic("unknown field " + strconv.Quote(field.Name))
-		}
-	}
-	out.Dispatch()
-	if invalids > 0 {
-		return graphql.Null
-	}
-	return out
-}
-
 var musicQueryImplementors = []string{"MusicQuery"}
 
 func (ec *executionContext) _MusicQuery(ctx context.Context, sel ast.SelectionSet, obj *musicgql.Query) graphql.Marshaler {
@@ -8994,8 +8901,13 @@ func (ec *executionContext) _Mutation(ctx context.Context, sel ast.SelectionSet)
 		switch field.Name {
 		case "__typename":
 			out.Values[i] = graphql.MarshalString("Mutation")
-		case "music":
-			out.Values[i] = ec._Mutation_music(ctx, field)
+		case "playMusic":
+			out.Values[i] = ec._Mutation_playMusic(ctx, field)
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		case "pauseMusic":
+			out.Values[i] = ec._Mutation_pauseMusic(ctx, field)
 			if out.Values[i] == graphql.Null {
 				invalids++
 			}
@@ -10326,20 +10238,6 @@ func (ec *executionContext) marshalNMusicImage2ᚕgoᚗstevenxieᚗmeᚋapiᚋv2
 	}
 	wg.Wait()
 	return ret
-}
-
-func (ec *executionContext) marshalNMusicMutation2goᚗstevenxieᚗmeᚋapiᚋv2ᚋmusicᚋmusicgqlᚐMutation(ctx context.Context, sel ast.SelectionSet, v musicgql.Mutation) graphql.Marshaler {
-	return ec._MusicMutation(ctx, sel, &v)
-}
-
-func (ec *executionContext) marshalNMusicMutation2ᚖgoᚗstevenxieᚗmeᚋapiᚋv2ᚋmusicᚋmusicgqlᚐMutation(ctx context.Context, sel ast.SelectionSet, v *musicgql.Mutation) graphql.Marshaler {
-	if v == nil {
-		if !ec.HasError(graphql.GetResolverContext(ctx)) {
-			ec.Errorf(ctx, "must not be null")
-		}
-		return graphql.Null
-	}
-	return ec._MusicMutation(ctx, sel, v)
 }
 
 func (ec *executionContext) marshalNMusicQuery2goᚗstevenxieᚗmeᚋapiᚋv2ᚋmusicᚋmusicgqlᚐQuery(ctx context.Context, sel ast.SelectionSet, v musicgql.Query) graphql.Marshaler {

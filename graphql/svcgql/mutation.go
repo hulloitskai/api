@@ -3,40 +3,69 @@ package svcgql
 import (
 	"context"
 
-	"go.stevenxie.me/api/v2/auth"
-	"go.stevenxie.me/api/v2/auth/authutil"
-
 	"github.com/cockroachdb/errors"
 
+	"go.stevenxie.me/api/v2/auth/authutil"
 	"go.stevenxie.me/api/v2/graphql"
 	"go.stevenxie.me/api/v2/music"
-	"go.stevenxie.me/api/v2/music/musicgql"
 )
 
 func newMutationResolver(svcs Services) graphql.MutationResolver {
 	return mutationResolver{
-		music: musicgql.NewMutation(svcs.Music),
-		auth:  svcs.Auth,
+		svcs: svcs,
 	}
 }
 
 type mutationResolver struct {
-	music musicgql.Mutation
-	auth  auth.Service
+	svcs Services
 }
 
 var _ graphql.MutationResolver = (*mutationResolver)(nil)
 
-func (res mutationResolver) Music(
+func (res mutationResolver) PlayMusic(
 	ctx context.Context,
 	code string,
-) (*musicgql.Mutation, error) {
-	ok, err := res.auth.HasPermission(ctx, code, music.PermControl)
+	resource *music.Selector,
+) (bool, error) {
+	if err := res.checkMusicCode(ctx, code); err != nil {
+		return false, err
+	}
+	if err := res.svcs.Music.Play(
+		ctx,
+		func(opt *music.PlayOptions) {
+			if resource != nil {
+				opt.Selector = resource
+			}
+		},
+	); err != nil {
+		return false, err
+	}
+	return true, nil
+}
+
+func (res mutationResolver) PauseMusic(
+	ctx context.Context,
+	code string,
+) (bool, error) {
+	if err := res.checkMusicCode(ctx, code); err != nil {
+		return false, err
+	}
+	if err := res.svcs.Music.Pause(ctx); err != nil {
+		return false, err
+	}
+	return true, nil
+}
+
+func (res mutationResolver) checkMusicCode(
+	ctx context.Context,
+	code string,
+) error {
+	ok, err := res.svcs.Auth.HasPermission(ctx, code, music.PermControl)
 	if err != nil {
-		return nil, errors.Wrap(err, "svcgql: checking permissions")
+		return errors.Wrap(err, "svcgql: check permissions")
 	}
 	if !ok {
-		return nil, authutil.ErrAccessDenied
+		return authutil.ErrAccessDenied
 	}
-	return &res.music, nil
+	return nil
 }

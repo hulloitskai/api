@@ -2,18 +2,6 @@ type MusicQuery {
   current: CurrentlyPlayingMusic
 }
 
-type MusicMutation {
-  """
-  Play a specified resource, or resume playback for the current track.
-  """
-  play(resource: MusicSelector): Boolean!
-
-  """
-  Pause playback for the current track.
-  """
-  pause: Boolean!
-}
-
 """
 A `MusicSelector` is used to select a music resource.
 """

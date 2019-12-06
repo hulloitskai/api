@@ -22,7 +22,15 @@ type Query {
 }
 
 type Mutation {
-  music(code: String!): MusicMutation!
+  """
+  Play a specified resource, or resume playback for the current track.
+  """
+  playMusic(code: String!, resource: MusicSelector): Boolean!
+
+  """
+  Pause playback for the current track.
+  """
+  pauseMusic(code: String!): Boolean!
 }
 
 type Subscription {

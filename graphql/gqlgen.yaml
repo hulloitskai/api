@@ -31,8 +31,6 @@ models:
 
   MusicQuery:
     model: musicgql.Query
-  MusicMutation:
-    model: musicgql.Mutation
   CurrentlyPlayingMusic:
     model: music.CurrentlyPlaying
   MusicSelector:
