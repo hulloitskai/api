@@ -8,9 +8,30 @@ use chrono_humanize::{
 
 #[derive(ConstantObject)]
 struct ContactConstants {
+    first_name: String,
+    last_name: String,
     name: String,
-    about: Option<String>,
     email: String,
+    about: Option<String>,
+}
+
+impl ContactConstants {
+    fn new(model: &ContactModel) -> Self {
+        let ContactModel {
+            first_name,
+            last_name,
+            email,
+            about,
+            ..
+        } = model;
+        ContactConstants {
+            first_name: first_name.to_owned(),
+            last_name: last_name.to_owned(),
+            name: model.name(),
+            email: email.to_string(),
+            about: about.to_owned(),
+        }
+    }
 }
 
 pub struct ContactResolvers {
@@ -27,24 +48,21 @@ impl ContactResolvers {
     }
 }
 
+impl ContactResolvers {
+    fn new(ContactModel { birthday, .. }: &ContactModel) -> Self {
+        ContactResolvers {
+            birthday: birthday.to_owned(),
+        }
+    }
+}
+
 #[derive(CombinedObject)]
 pub struct Contact(ContactConstants, ContactResolvers);
 
 impl Contact {
-    pub fn new(
-        ContactModel {
-            name,
-            about,
-            email,
-            birthday,
-        }: ContactModel,
-    ) -> Self {
-        let constants = ContactConstants {
-            name,
-            about,
-            email: email.to_string(),
-        };
-        let resolvers = ContactResolvers { birthday };
+    pub fn new(model: &ContactModel) -> Self {
+        let constants = ContactConstants::new(model);
+        let resolvers = ContactResolvers::new(model);
         Contact(constants, resolvers)
     }
 }

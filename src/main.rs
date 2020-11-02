@@ -39,7 +39,7 @@ async fn main() -> Result<()> {
         version => Some(version),
     };
     if let Some(version) = version {
-        info!("Starting up (version={})", version);
+        info!("Starting up (version: {})", version);
     } else {
         info!("Starting up");
     }
@@ -60,7 +60,7 @@ async fn main() -> Result<()> {
     let contact = contact_from_env().context("get contact from env")?;
 
     let query =
-        Query::new(timestamp.into(), version.map(ToOwned::to_owned), contact);
+        Query::new(timestamp.into(), version.map(ToOwned::to_owned), &contact);
     let schema = Schema::build(query, EmptyMutation, EmptySubscription)
         .data(context)
         .finish();
@@ -102,7 +102,8 @@ fn connect_db() -> Result<DbPool> {
 }
 
 fn contact_from_env() -> Result<Contact> {
-    let name = env_var("CONTACT_NAME").context("name")?;
+    let first_name = env_var("CONTACT_FIRST_NAME").context("first name")?;
+    let last_name = env_var("CONTACT_LAST_NAME").context("last name")?;
 
     let about = match env_var("CONTACT_ABOUT") {
         Ok(about) => Ok(Some(about)),
@@ -120,7 +121,8 @@ fn contact_from_env() -> Result<Contact> {
     let birthday = Date::from_str(&birthday).context("parse birthday")?;
 
     Ok(Contact {
-        name,
+        first_name,
+        last_name,
         about,
         email,
         birthday,
