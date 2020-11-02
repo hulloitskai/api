@@ -1,0 +1,32 @@
+# == BUILDER ==
+FROM ekidd/rust-musl-builder:1.47.0 AS builder
+
+# Compile dependencies:
+WORKDIR /src
+RUN sudo chown rust:rust ./ && USER=rust cargo init --bin .
+COPY --chown=rust:rust Cargo.toml Cargo.lock ./
+RUN cargo build --release --target x86_64-unknown-linux-musl
+
+# Compile binaries:
+COPY --chown=rust:rust ./src/ ./src/
+COPY --chown=rust:rust build.rs ./
+RUN cargo build --release --target x86_64-unknown-linux-musl
+
+
+# == RUNNER ==
+FROM alpine:3.12
+
+# Install system dependencies:
+RUN apk add --update ca-certificates tzdata curl
+
+# Copy built binary:
+ENV CMD=api
+COPY --from=builder /src/target/x86_64-unknown-linux-musl/release/${CMD} /bin/${CMD}
+
+# Configure ports:
+ENV API_PORT=80
+EXPOSE $API_PORT
+
+# Configure healthcheck and entrypoint:
+HEALTHCHECK --interval=10s --timeout=1s --start-period=5s --retries=3 CMD curl -f http://localhost/ || exit 1
+ENTRYPOINT $CMD

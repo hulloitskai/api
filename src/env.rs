@@ -34,7 +34,7 @@ pub fn load() -> Result<()> {
         "RUST_LOG",
         match var("LOG").ok() {
             Some(s) => s,
-            None => "info,warp::server=warn".to_owned(),
+            None => "warn,api=info".to_owned(),
         },
     );
 

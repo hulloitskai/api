@@ -29,7 +29,7 @@ type ApiSchema = Schema<Query, EmptyMutation, EmptySubscription>;
 
 #[tokio::main]
 async fn main() -> Result<()> {
-    load_env().context("load environment")?;
+    load_env().context("load environment variables")?;
     init_logger().context("init logger")?;
 
     let timestamp = DateTime::parse_from_rfc3339(env!(r"BUILD_TIMESTAMP"))
@@ -39,9 +39,9 @@ async fn main() -> Result<()> {
         version => Some(version),
     };
     if let Some(version) = version {
-        info!("starting up; version={}", version);
+        info!("Starting up (version={})", version);
     } else {
-        info!("starting up");
+        info!("Starting up");
     }
 
     let _guard = match env_var("SENTRY_DSN") {
@@ -50,7 +50,7 @@ async fn main() -> Result<()> {
             Some(guard)
         }
         Err(_) => {
-            info!("missing Sentry DSN; Sentry is disabled");
+            info!("Missing Sentry DSN; Sentry is disabled");
             None
         }
     };
@@ -85,7 +85,7 @@ async fn main() -> Result<()> {
     let server_addr: SocketAddr =
         format!("0.0.0.0:{}", &server_port).parse()?;
 
-    info!("listening on http://{}", server_addr);
+    info!("Listening on http://{}", server_addr);
     warp_serve(filter).run(server_addr).await;
     Ok(())
 }

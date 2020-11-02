@@ -2,6 +2,8 @@
 
 _A personal GraphQL API, implemented in Rust._
 
+![[Build Status][build]][build-img]
+
 > This branch is a **WIP**! For previous implementations in Go, see the [`v2`](https://github.com/stevenxie/api/tree/v2) branch.
 
 <br />
@@ -54,3 +56,6 @@ cargo test
 # Check and lint source code:
 cargo check && cargo clippy
 ```
+
+[build]: https://github.com/stevenxie/api/actions
+[build-img]: https://img.shields.io/github/workflow/status/stevenxie/api/deploy?style=for-the-badge
