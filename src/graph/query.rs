@@ -13,6 +13,6 @@ impl Query {
 
     async fn me(&self, ctx: &Context<'_>) -> FieldResult<Contact> {
         let contact = ctx.data::<ContactModel>()?;
-        Ok(Contact::new(contact))
+        Ok(Contact::new(contact.to_owned()))
     }
 }

@@ -18,6 +18,14 @@ impl Email {
             Err(anyhow!("invalid email address"))
         }
     }
+
+    pub fn as_string(&self) -> &String {
+        &self.0
+    }
+
+    pub fn as_str(&self) -> &str {
+        &self.0
+    }
 }
 
 impl ToString for Email {

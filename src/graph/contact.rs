@@ -16,7 +16,8 @@ struct ContactConstants {
 }
 
 impl ContactConstants {
-    fn new(model: &ContactModel) -> Self {
+    fn new(model: ContactModel) -> Self {
+        let name = model.name();
         let ContactModel {
             first_name,
             last_name,
@@ -25,11 +26,11 @@ impl ContactConstants {
             ..
         } = model;
         ContactConstants {
-            first_name: first_name.to_owned(),
-            last_name: last_name.to_owned(),
-            name: model.name(),
+            first_name,
+            last_name,
+            name,
             email: email.to_string(),
-            about: about.to_owned(),
+            about,
         }
     }
 }
@@ -65,20 +66,18 @@ impl ContactResolvers {
 }
 
 impl ContactResolvers {
-    fn new(model: &ContactModel) -> Self {
-        ContactResolvers {
-            model: model.to_owned(),
-        }
+    fn new(model: ContactModel) -> Self {
+        ContactResolvers { model }
     }
 }
 
 #[derive(CombinedObject)]
-pub struct Contact(ContactConstants, ContactResolvers);
+pub struct Contact(ContactResolvers, ContactConstants);
 
 impl Contact {
-    pub fn new(model: &ContactModel) -> Self {
+    pub fn new(model: ContactModel) -> Self {
+        let resolvers = ContactResolvers::new(model.clone());
         let constants = ContactConstants::new(model);
-        let resolvers = ContactResolvers::new(model);
-        Contact(constants, resolvers)
+        Contact(resolvers, constants)
     }
 }

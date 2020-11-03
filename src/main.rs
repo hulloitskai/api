@@ -73,8 +73,8 @@ async fn main() -> Result<()> {
         .finish();
 
     let graphql = warp_path("graphql")
-        .and(graphql_subscription_filter(schema.to_owned()))
-        .or(graphql_filter(schema.to_owned()).and_then(
+        .and(graphql_subscription_filter(schema.clone()))
+        .or(graphql_filter(schema.clone()).and_then(
             |(schema, request): (ApiSchema, Request)| async move {
                 let response = schema.execute(request).await;
                 Ok::<_, Infallible>(Response::from(response))
