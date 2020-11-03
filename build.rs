@@ -1,6 +1,7 @@
 use anyhow::{Context, Result};
 use chrono::Local;
 use git::{DescribeFormatOptions, DescribeOptions, Repository};
+use semver::Version;
 
 fn main() -> Result<()> {
     // Set build timestamp.
@@ -15,6 +16,7 @@ fn main() -> Result<()> {
             String::new()
         }
     };
+    let version = fmt_version(&version);
     set_env("BUILD_VERSION", &version);
 
     Ok(())
@@ -33,6 +35,22 @@ fn git_version() -> Result<String> {
         DescribeFormatOptions::default().dirty_suffix("-dirty"),
     ))
     .context("format describe result")
+}
+
+fn fmt_version(version: &str) -> String {
+    let trimmed = if let Some(version) = version.strip_prefix("v") {
+        version
+    } else {
+        return version.to_owned();
+    };
+
+    let version = if let Ok(version) = Version::parse(trimmed) {
+        version
+    } else {
+        return trimmed.to_owned();
+    };
+
+    version.to_string()
 }
 
 fn set_env(key: &str, val: &str) {

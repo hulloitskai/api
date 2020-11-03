@@ -31,9 +31,10 @@ lazy_static = "1.4.0"
 
 
 [build-dependencies]
-chrono = "0.4"
 anyhow = "1.0"
+chrono = "0.4"
 git = { package = "git2", version = "0.13" }
+semver = "0.11.0"
 
 [build-dependencies.cargo-husky]
 version = "1"
