@@ -6,8 +6,6 @@ _A personal GraphQL API, implemented in Rust._
 
 > This branch is a **WIP**! For previous implementations in Go, see the [`v2`](https://github.com/stevenxie/api/tree/v2) branch.
 
-<br />
-
 ## Development
 
 ### Setup
@@ -32,7 +30,7 @@ _A personal GraphQL API, implemented in Rust._
     vi .env               # edit template
     ```
 
-4. Install dependencies, setup hooks, and build target:
+4. Install dependencies, set up hooks, and build target:
 
     ```bash
     cargo build
