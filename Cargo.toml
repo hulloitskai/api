@@ -9,7 +9,8 @@ edition = "2018"
 [dependencies]
 anyhow = "1.0"
 chrono = { version = "0.4", features = ["serde"] }
-chrono_humanize = { package = "chrono-humanize", version = "0.1.1" }
+chrono_tz = { package = "chrono-tz", version = "0.5" }
+chrono_humanize = { package = "chrono-humanize", version = "0.1" }
 diesel = { version = "1.4", features = ["postgres", "r2d2", "serde_json"] }
 dotenv = "0.15"
 errors = { package = "thiserror", version = "1.0" }

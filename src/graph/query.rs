@@ -19,10 +19,10 @@ impl Query {
     pub fn new(
         built: DateTime,
         version: Option<String>,
-        contact: &ContactModel,
+        me: &ContactModel,
     ) -> Self {
         let constants = QueryConstants {
-            me: Contact::new(contact),
+            me: Contact::new(me),
             meta: Meta::new(built, version),
         };
         Query(constants)

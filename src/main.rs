@@ -8,10 +8,15 @@ use graphql::http::{
     playground_source as playground,
     GraphQLPlaygroundConfig as PlaygroundConfig,
 };
-use graphql::{EmptyMutation, EmptySubscription, Request, Schema};
-use graphql_warp::{graphql as graphql_filter, Response};
+use graphql::{EmptyMutation, Request, Schema};
+use graphql_warp::{
+    graphql as graphql_filter,
+    graphql_subscription as graphql_subscription_filter, Response,
+};
 
+use warp::header::optional as warp_header;
 use warp::path::end as warp_root;
+use warp::path::{full as warp_full_path, FullPath as WarpFullPath};
 use warp::reply::{html as warp_html, json as warp_json};
 use warp::Filter as WarpFilter;
 use warp::{path as warp_path, serve as warp_serve};
@@ -21,11 +26,11 @@ use logger::try_init as init_logger;
 use sentry::init as init_sentry;
 
 use api::env::{load as load_env, var as env_var};
-use api::graph::{Context as ResolverContext, DbPool, Query};
+use api::graph::{Context as ResolverContext, DbPool, Query, Subscription};
 use api::models::{Contact, Email};
 use api::status::{Health, Status};
 
-type ApiSchema = Schema<Query, EmptyMutation, EmptySubscription>;
+type ApiSchema = Schema<Query, EmptyMutation, Subscription>;
 
 #[tokio::main]
 async fn main() -> Result<()> {
@@ -55,30 +60,40 @@ async fn main() -> Result<()> {
         }
     };
 
+    let me = contact_from_env().context("get contact from env")?;
     let db = connect_db().context("connect database")?;
     let context = ResolverContext::new(db);
-    let contact = contact_from_env().context("get contact from env")?;
 
     let query =
-        Query::new(timestamp.into(), version.map(ToOwned::to_owned), &contact);
-    let schema = Schema::build(query, EmptyMutation, EmptySubscription)
+        Query::new(timestamp.into(), version.map(ToOwned::to_owned), &me);
+    let subscription = Subscription::new(&me);
+    let schema = Schema::build(query, EmptyMutation, subscription)
         .data(context)
         .finish();
 
-    let graphql = warp_path("graphql").and(graphql_filter(schema)).and_then(
-        |(schema, request): (ApiSchema, Request)| async move {
-            let response = schema.execute(request).await;
-            Ok::<_, Infallible>(Response::from(response))
-        },
-    );
+    let graphql = warp_path("graphql")
+        .and(graphql_subscription_filter(schema.to_owned()))
+        .or(graphql_filter(schema.to_owned()).and_then(
+            |(schema, request): (ApiSchema, Request)| async move {
+                let response = schema.execute(request).await;
+                Ok::<_, Infallible>(Response::from(response))
+            },
+        ));
     let healthz = warp_path("healthz").map(|| {
         let health = Health::new(Status::Pass);
         warp_json(&health)
     });
-    let index = warp_root().map(|| {
-        let html = playground(PlaygroundConfig::new("graphql"));
-        warp_html(html)
-    });
+    let index = warp_root()
+        .and(warp_full_path())
+        .and(warp_header::<String>("X-Forwarded-Prefix"))
+        .map(|path: WarpFullPath, prefix: Option<String>| {
+            let prefix = prefix.unwrap_or(path.as_str().to_owned());
+            let path = format!("{}graphql", prefix);
+            let html = playground(
+                PlaygroundConfig::new(&path).subscription_endpoint(&path),
+            );
+            warp_html(html)
+        });
     let filter = index.or(healthz).or(graphql);
 
     let server_port = env_var("PORT").context("get port")?;

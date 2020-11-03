@@ -15,7 +15,7 @@ impl Email {
         if EMAIL_REGEX.is_match(&s) {
             Ok(Email(s))
         } else {
-            Err(format_err!("invalid email address"))
+            Err(anyhow!("invalid email address"))
         }
     }
 }

@@ -1,10 +1,11 @@
 use super::prelude::*;
-use crate::models::Contact as ContactModel;
 use crate::prelude::*;
 
+use crate::models::Contact as ContactModel;
 use chrono_humanize::{
     Accuracy as HumanAccuracy, HumanTime, Tense as HumanTense,
 };
+use chrono_tz::Tz;
 
 #[derive(ConstantObject)]
 struct ContactConstants {
@@ -35,23 +36,39 @@ impl ContactConstants {
 }
 
 pub struct ContactResolvers {
-    birthday: Date,
+    model: ContactModel,
 }
 
 #[ResolverObject]
 impl ContactResolvers {
-    async fn age(&self) -> String {
-        let now = Utc::now().naive_utc().date();
-        let age = now - self.birthday;
-        HumanTime::from(age)
-            .to_text_en(HumanAccuracy::Rough, HumanTense::Present)
+    async fn age(
+        &self,
+        #[graphql(desc = "The time zone of the viewer.", default = "UTC")]
+        time_zone: String,
+    ) -> FieldResult<String> {
+        let time_zone = Tz::from_str(&time_zone)
+            .map_err(|message| anyhow!(message))
+            .context("parse time zone")
+            .map_err(|error| format!("{:#}", error))?;
+        let birthday = self
+            .model
+            .birthday_in_time_zone(time_zone)
+            .map(|date| date.and_hms(0, 0, 0))
+            .context("get birthday in timezone")
+            .map_err(|error| format!("{:#}", error))?;
+        let now: DateTime<Tz> =
+            time_zone.from_utc_datetime(&Utc::now().naive_utc());
+        let age = now - birthday;
+        let age = HumanTime::from(age)
+            .to_text_en(HumanAccuracy::Rough, HumanTense::Present);
+        Ok(age)
     }
 }
 
 impl ContactResolvers {
-    fn new(ContactModel { birthday, .. }: &ContactModel) -> Self {
+    fn new(model: &ContactModel) -> Self {
         ContactResolvers {
-            birthday: birthday.to_owned(),
+            model: model.to_owned(),
         }
     }
 }

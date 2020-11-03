@@ -56,6 +56,7 @@ dependencies = [
  "cargo-husky",
  "chrono",
  "chrono-humanize",
+ "chrono-tz",
  "diesel",
  "dotenv",
  "futures",

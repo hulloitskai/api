@@ -17,7 +17,7 @@ RUN cargo build --release --target x86_64-unknown-linux-musl
 FROM alpine:3.12
 
 # Install system dependencies:
-RUN apk add --update ca-certificates tzdata curl
+RUN apk add --update ca-certificates curl
 
 # Copy built binary:
 ENV CMD=api
