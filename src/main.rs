@@ -50,7 +50,7 @@ async fn main() -> Result<()> {
             Some(guard)
         }
         Err(_) => {
-            info!("Missing Sentry DSN; Sentry is disabled");
+            warn!("Missing Sentry DSN; Sentry is disabled");
             None
         }
     };
@@ -98,7 +98,14 @@ fn connect_db() -> Result<DbPool> {
         manager.is_valid(&mut conn).context("test connection")?;
         manager
     };
-    DbPool::new(manager).context("create connection pool")
+
+    let mut pool = DbPool::builder();
+    if let Ok(size) = env_var("POSTGRES_MAX_CONNECTIONS") {
+        let size: u32 = size.parse().context("parse max connections")?;
+        info!("Limiting to {} Postgres connections", size);
+        pool = pool.max_size(size);
+    }
+    pool.build(manager).context("create connection pool")
 }
 
 fn contact_from_env() -> Result<Contact> {
