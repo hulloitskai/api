@@ -7,9 +7,11 @@ RUN sudo chown rust:rust ./ && USER=rust cargo init --bin .
 COPY --chown=rust:rust Cargo.toml Cargo.lock ./
 RUN cargo build --release --target x86_64-unknown-linux-musl
 
-# Compile binaries:
-COPY --chown=rust:rust ./src/ ./src/
+# Compile binries:
+COPY --chown=rust:rust .git/* .git/
+COPY --chown=rust:rust src/ src/
 COPY --chown=rust:rust build.rs ./
+ARG BUILD_VERSION
 RUN cargo build --release --target x86_64-unknown-linux-musl
 
 

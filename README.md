@@ -56,4 +56,4 @@ cargo check && cargo clippy
 ```
 
 [build]: https://github.com/stevenxie/api/actions
-[build-img]: https://img.shields.io/github/workflow/status/stevenxie/api/build?style=for-the-badge
+[build-img]: https://img.shields.io/github/workflow/status/stevenxie/api/build-test?style=for-the-badge

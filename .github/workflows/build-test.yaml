@@ -1,23 +1,8 @@
-name: build
+name: build-test
 on:
   - push
   - pull_request
 jobs:
-  check:
-    runs-on: ubuntu-latest
-    steps:
-      - name: Set up Rust
-        uses: hecrj/setup-rust-action@v1
-        with:
-          rust-version: stable
-      - name: Checkout
-        uses: actions/checkout@v2
-      - name: Restore cache
-        uses: Swatinem/rust-cache@v1.0.1
-      - name: Test
-        run: cargo test
-      - name: Lint
-        run: cargo clippy && cargo fmt -- --check
   build:
     runs-on: ubuntu-latest
     steps:
@@ -36,6 +21,8 @@ jobs:
           password: ${{ secrets.DOCKER_TOKEN }}
       - name: Checkout
         uses: actions/checkout@v2
+      - name: Fetch tags
+        run: git fetch --tags
       - name: Generate tags
         id: generate-tags
         uses: stevenxie/generate-docker-tags-action@v0.2.0
@@ -44,7 +31,27 @@ jobs:
       - name: Build and push
         uses: docker/build-push-action@v2
         with:
+          context: .
           push: true
           tags: ${{ steps.generate-tags.outputs.tags }}
-          cache-from: type=local,src=/tmp/.buildx-cache
-          cache-to: type=local,dest=/tmp/.buildx-cache,mode=max
+          build-args: |
+            BUILD_VERSION=${{ steps.describe-version.outputs.version }}
+          cache-from: |
+            type=local,src=/tmp/.buildx-cache
+          cache-to: |
+            type=local,dest=/tmp/.buildx-cache,mode=max
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Set up Rust
+        uses: hecrj/setup-rust-action@v1
+        with:
+          rust-version: stable
+      - name: Checkout
+        uses: actions/checkout@v2
+      - name: Restore cache
+        uses: Swatinem/rust-cache@v1.0.1
+      - name: Test
+        run: cargo test
+      - name: Lint
+        run: cargo clippy && cargo fmt -- --check

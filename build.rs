@@ -7,16 +7,15 @@ fn main() -> Result<()> {
     set_env("BUILD_TIMESTAMP", &Local::now().to_rfc3339());
 
     // Set build version from git.
-    set_env(
-        "BUILD_VERSION",
-        match &git_version() {
-            Ok(version) => version,
-            Err(error) => {
-                eprintln!("Failed to describe git version: {}", error);
-                ""
-            }
-        },
-    );
+    let version = git_version();
+    let version = match version {
+        Ok(version) => version,
+        Err(error) => {
+            eprintln!("Failed to describe git version: {}", error);
+            String::new()
+        }
+    };
+    set_env("BUILD_VERSION", &version);
 
     Ok(())
 }
