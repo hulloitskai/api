@@ -88,8 +88,8 @@ async fn main() -> Result<()> {
         .and(warp_full_path())
         .and(warp_header::<String>("X-Forwarded-Prefix"))
         .map(|path: WarpFullPath, prefix: Option<String>| {
-            let prefix = prefix.unwrap_or_else(|| path.as_str().to_owned());
-            let path = format!("{}graphql", prefix);
+            let prefix = prefix.unwrap_or_else(String::new);
+            let path = format!("{}{}graphql", &prefix, path.as_str());
             let html = playground(
                 PlaygroundConfig::new(&path).subscription_endpoint(&path),
             );
