@@ -1,7 +1,9 @@
 use anyhow::{Context, Result};
 use chrono::Local;
-use git::{DescribeFormatOptions, DescribeOptions, Repository};
 use semver::Version;
+
+use git::{DescribeFormatOptions, DescribeOptions, Repository};
+use std::env::{var as get_env, VarError as EnvVarError};
 
 fn main() -> Result<()> {
     // Set build timestamp.
@@ -31,10 +33,30 @@ fn git_version() -> Result<String> {
                 .show_commit_oid_as_fallback(true),
         )
         .context("describe HEAD")?;
-    desc.format(Some(
-        DescribeFormatOptions::default().dirty_suffix("-dirty"),
-    ))
-    .context("format describe result")
+
+    let suffix = get_env("BUILD_VERSION_DIRTY_SUFFIX");
+    let suffix = match suffix {
+        Ok(suffix) => suffix,
+        Err(error) => match error {
+            EnvVarError::NotPresent => "dirty".to_owned(),
+            error => {
+                return Err(error).context("get dirty suffix");
+            }
+        },
+    };
+    let suffix = if !suffix.is_empty() {
+        Some(format!("-{}", suffix))
+    } else {
+        None
+    };
+
+    let mut opts = DescribeFormatOptions::default();
+    let opts = match suffix {
+        Some(suffix) => opts.dirty_suffix(&suffix),
+        None => &opts,
+    };
+
+    desc.format(Some(&opts)).context("format describe result")
 }
 
 fn fmt_version(version: String) -> String {
