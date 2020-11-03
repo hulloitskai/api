@@ -15,3 +15,7 @@ pub use lazy_static::lazy_static;
 
 use chrono::DateTime as ChronoDateTime;
 pub type DateTime<Tz = Utc> = ChronoDateTime<Tz>;
+
+use diesel::r2d2::{ConnectionManager, Pool};
+use diesel::PgConnection;
+pub type DbPool = Pool<ConnectionManager<PgConnection>>;

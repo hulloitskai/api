@@ -1,30 +1,18 @@
 use super::prelude::*;
 use super::{Contact, Meta};
-use crate::prelude::*;
+use crate::models::{Contact as ContactModel, Meta as MetaModel};
 
-use crate::models::Contact as ContactModel;
+pub struct Query;
 
-#[derive(ConstantObject)]
-struct QueryConstants {
-    me: Contact,
-    meta: Meta,
-}
-
-impl QueryConstants {}
-
-#[derive(CombinedObject)]
-pub struct Query(QueryConstants);
-
+#[ResolverObject]
 impl Query {
-    pub fn new(
-        built: DateTime,
-        version: Option<String>,
-        me: &ContactModel,
-    ) -> Self {
-        let constants = QueryConstants {
-            me: Contact::new(me),
-            meta: Meta::new(built, version),
-        };
-        Query(constants)
+    async fn meta(&self, ctx: &Context<'_>) -> FieldResult<Meta> {
+        let meta = ctx.data::<MetaModel>()?;
+        Ok(Meta::new(meta.to_owned()))
+    }
+
+    async fn me(&self, ctx: &Context<'_>) -> FieldResult<Contact> {
+        let contact = ctx.data::<ContactModel>()?;
+        Ok(Contact::new(contact))
     }
 }

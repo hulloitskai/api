@@ -26,8 +26,8 @@ use logger::try_init as init_logger;
 use sentry::init as init_sentry;
 
 use api::env::{load as load_env, var as env_var};
-use api::graph::{Context as ResolverContext, DbPool, Query, Subscription};
-use api::models::{Contact, Email};
+use api::graph::{Query, Subscription};
+use api::models::{Contact, Email, Meta};
 use api::status::{Health, Status};
 
 type ApiSchema = Schema<Query, EmptyMutation, Subscription>;
@@ -41,13 +41,13 @@ async fn main() -> Result<()> {
         .context("parse build timestamp")?;
     let version = match env!(r"BUILD_VERSION") {
         "" => None,
-        version => Some(version),
+        version => Some(version.to_owned()),
     };
-    if let Some(version) = version {
+    if let Some(version) = &version {
         info!("Starting up (version: {})", version);
     } else {
         info!("Starting up");
-    }
+    };
 
     let _guard = match env_var("SENTRY_DSN") {
         Ok(dsn) => {
@@ -60,15 +60,16 @@ async fn main() -> Result<()> {
         }
     };
 
+    let meta = Meta {
+        built: timestamp.into(),
+        version,
+    };
     let me = contact_from_env().context("get contact from env")?;
     let db = connect_db().context("connect database")?;
-    let context = ResolverContext::new(db);
-
-    let query =
-        Query::new(timestamp.into(), version.map(ToOwned::to_owned), &me);
-    let subscription = Subscription::new(&me);
-    let schema = Schema::build(query, EmptyMutation, subscription)
-        .data(context)
+    let schema = Schema::build(Query, EmptyMutation, Subscription)
+        .data(meta)
+        .data(db)
+        .data(me)
         .finish();
 
     let graphql = warp_path("graphql")
@@ -87,7 +88,7 @@ async fn main() -> Result<()> {
         .and(warp_full_path())
         .and(warp_header::<String>("X-Forwarded-Prefix"))
         .map(|path: WarpFullPath, prefix: Option<String>| {
-            let prefix = prefix.unwrap_or(path.as_str().to_owned());
+            let prefix = prefix.unwrap_or_else(|| path.as_str().to_owned());
             let path = format!("{}graphql", prefix);
             let html = playground(
                 PlaygroundConfig::new(&path).subscription_endpoint(&path),

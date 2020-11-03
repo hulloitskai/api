@@ -1,5 +1,5 @@
 use super::prelude::*;
-use crate::prelude::*;
+use crate::models::Meta as MetaModel;
 
 #[derive(ConstantObject)]
 struct MetaConstants {
@@ -11,7 +11,7 @@ struct MetaConstants {
 pub struct Meta(MetaConstants);
 
 impl Meta {
-    pub fn new(built: DateTime, version: Option<String>) -> Self {
+    pub fn new(MetaModel { built, version }: MetaModel) -> Self {
         let constants = MetaConstants { built, version };
         Meta(constants)
     }

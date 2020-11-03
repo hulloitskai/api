@@ -1,7 +1,6 @@
 use super::prelude::*;
-use crate::prelude::*;
-
 use crate::models::Contact as ContactModel;
+
 use chrono_humanize::{
     Accuracy as HumanAccuracy, HumanTime, Tense as HumanTense,
 };
