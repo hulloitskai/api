@@ -27,7 +27,7 @@ use sentry::init as init_sentry;
 
 use api::env::{load as load_env, var as env_var};
 use api::graph::{Query, Subscription};
-use api::models::{Contact, Email, Meta};
+use api::models::{BuildInfo, Contact, Email};
 use api::status::{Health, Status};
 
 type ApiSchema = Schema<Query, EmptyMutation, Subscription>;
@@ -60,8 +60,8 @@ async fn main() -> Result<()> {
         }
     };
 
-    let meta = Meta {
-        built: timestamp.into(),
+    let meta = BuildInfo {
+        timestamp: timestamp.into(),
         version,
     };
     let me = contact_from_env().context("get contact from env")?;

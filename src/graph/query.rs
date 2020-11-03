@@ -1,14 +1,15 @@
 use super::prelude::*;
-use super::{Contact, Meta};
-use crate::models::{Contact as ContactModel, Meta as MetaModel};
+use super::{BuildInfo, Contact};
+use crate::models::{BuildInfo as BuildInfoModel, Contact as ContactModel};
 
 pub struct Query;
 
 #[ResolverObject]
 impl Query {
-    async fn meta(&self, ctx: &Context<'_>) -> FieldResult<Meta> {
-        let meta = ctx.data::<MetaModel>()?;
-        Ok(Meta::new(meta.to_owned()))
+    async fn build(&self, ctx: &Context<'_>) -> FieldResult<BuildInfo> {
+        let model = ctx.data::<BuildInfoModel>()?;
+        let build = BuildInfo::new(model.to_owned());
+        Ok(build)
     }
 
     async fn me(&self, ctx: &Context<'_>) -> FieldResult<Contact> {
