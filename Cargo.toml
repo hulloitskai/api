@@ -16,18 +16,35 @@ diesel = { version = "1.4", features = ["postgres", "r2d2", "serde_json"] }
 dotenv = "0.15"
 errors = { package = "thiserror", version = "1.0" }
 futures = "0.3"
-graphql = { package = "async-graphql", version = "2.0" }
 graphql_warp = { package = "async-graphql-warp", version = "2.0" }
 log = "0.4"
 logger = { package = "pretty_env_logger", version = "0.4.0" }
 regex = "1.4.2"
-sentry = "0.20"
 serde = "1.0"
-tokio = { version = "0.2", features = ["full"] }
+tokio = { version = "0.2", features = ["rt-core", "rt-threaded", "macros"] }
 uuid = "0.8"
 warp = "0.2"
 http = "0.2.1"
 lazy_static = "1.4.0"
+
+[dependencies.sentry]
+version = "0.20"
+default-features = false
+features = [
+  "anyhow",
+  "backtrace",
+  "contexts",
+  "log",
+  "env_logger",
+  "panic",
+  "transport",
+]
+
+[dependencies.graphql]
+package = "async-graphql"
+version = "2.0"
+default-features = false
+features = ["log", "url", "uuid", "chrono", "chrono-tz"]
 
 
 [build-dependencies]
