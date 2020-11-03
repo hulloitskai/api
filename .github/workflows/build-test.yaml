@@ -21,11 +21,15 @@ jobs:
           password: ${{ secrets.DOCKER_TOKEN }}
       - name: Checkout
         uses: actions/checkout@v2
+        with:
+          fetch-depth: 0
       - name: Fetch tags
-        run: git fetch --tags
+        run: |
+          git fetch --tags
+          git describe --tags
       - name: Generate tags
         id: generate-tags
-        uses: stevenxie/generate-docker-tags-action@v0.2.0
+        uses: stevenxie/generate-docker-tags-action@v0.2.1
         with:
           repo: stevenxie/api
       - name: Build and push
@@ -34,8 +38,6 @@ jobs:
           context: .
           push: true
           tags: ${{ steps.generate-tags.outputs.tags }}
-          build-args: |
-            BUILD_VERSION=${{ steps.describe-version.outputs.version }}
           cache-from: |
             type=local,src=/tmp/.buildx-cache
           cache-to: |

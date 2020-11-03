@@ -16,7 +16,7 @@ fn main() -> Result<()> {
             String::new()
         }
     };
-    let version = fmt_version(&version);
+    let version = fmt_version(version);
     set_env("BUILD_VERSION", &version);
 
     Ok(())
@@ -37,11 +37,11 @@ fn git_version() -> Result<String> {
     .context("format describe result")
 }
 
-fn fmt_version(version: &str) -> String {
+fn fmt_version(version: String) -> String {
     let trimmed = if let Some(version) = version.strip_prefix("v") {
         version
     } else {
-        return version.to_owned();
+        return version;
     };
 
     let version = if let Ok(version) = Version::parse(trimmed) {
