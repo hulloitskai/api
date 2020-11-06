@@ -25,6 +25,9 @@ use diesel::r2d2::{ConnectionManager, ManageConnection};
 use logger::try_init as init_logger;
 use sentry::init as init_sentry;
 
+use tokio::main as tokio;
+use tokio_compat::FutureExt;
+
 use api::env::{load as load_env, var as env_var};
 use api::graph::{Query, Subscription};
 use api::models::{BuildInfo, Contact, Email};
@@ -32,7 +35,7 @@ use api::status::{Health, Status};
 
 type ApiSchema = Schema<Query, EmptyMutation, Subscription>;
 
-#[tokio::main]
+#[tokio]
 async fn main() -> Result<()> {
     load_env().context("load environment variables")?;
     init_logger().context("init logger")?;
@@ -102,7 +105,7 @@ async fn main() -> Result<()> {
         format!("0.0.0.0:{}", &server_port).parse()?;
 
     info!("Listening on http://{}", server_addr);
-    warp_serve(filter).run(server_addr).await;
+    warp_serve(filter).run(server_addr).compat().await;
     Ok(())
 }
 
