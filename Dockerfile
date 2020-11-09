@@ -5,7 +5,7 @@ FROM ekidd/rust-musl-builder:1.47.0 AS builder
 WORKDIR /src
 RUN sudo chown rust:rust ./ && USER=rust cargo init --bin .
 COPY --chown=rust:rust Cargo.toml Cargo.lock ./
-RUN cargo build --release --target x86_64-unknown-linux-musl && rm src
+RUN cargo build --release --target x86_64-unknown-linux-musl && rm -rf src
 
 # Copy source:
 COPY --chown=rust:rust .git/ .git/
@@ -28,8 +28,8 @@ ENV CMD=api
 COPY --from=builder /src/target/x86_64-unknown-linux-musl/release/${CMD} /bin/${CMD}
 
 # Configure ports:
-ENV API_PORT=80
-EXPOSE $API_PORT
+ENV API_SERVER_PORT=80
+EXPOSE $API_SERVER_PORT
 
 # Configure healthcheck and entrypoint:
 HEALTHCHECK --interval=10s --timeout=1s --start-period=5s --retries=3 CMD curl -f http://localhost/ || exit 1

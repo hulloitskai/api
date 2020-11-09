@@ -55,5 +55,6 @@ impl Prices {
 }
 #[async_trait]
 pub trait Sailor {
-    async fn get_sale_products(&self) -> Result<Vec<Product>>;
+    async fn get_sale_products(&self, postcode: String)
+        -> Result<Vec<Product>>;
 }

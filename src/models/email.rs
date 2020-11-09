@@ -39,3 +39,11 @@ impl From<Email> for String {
         email.0
     }
 }
+
+impl FromStr for Email {
+    type Err = Error;
+
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        Email::new(s.to_owned())
+    }
+}

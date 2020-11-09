@@ -1,12 +1,12 @@
 use crate::status::{Health, Status};
 
-use std::convert::Infallible;
 use warp::reply::{json, Reply};
-use warp::{any, Filter};
+use warp::{get, head, Filter, Rejection};
 
 pub fn healthz(
-) -> impl Filter<Extract = (impl Reply,), Error = Infallible> + Clone {
-    any().map(|| {
+) -> impl Filter<Extract = (impl Reply,), Error = Rejection> + Clone {
+    let method = get().or(head()).unify();
+    method.map(|| {
         let health = Health::new(Status::Pass);
         json(&health)
     })

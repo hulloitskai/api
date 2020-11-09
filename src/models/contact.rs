@@ -3,7 +3,7 @@ use crate::prelude::*;
 use super::Email;
 use chrono::{Date as TzDate, LocalResult};
 
-#[derive(Debug, Clone, Hash, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct Contact {
     pub first_name: String,
     pub last_name: String,

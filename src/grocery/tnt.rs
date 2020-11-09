@@ -43,12 +43,15 @@ const TNT_API_URL: &str = "https://www.tntsupermarket.com/rest/V1";
 
 #[async_trait]
 impl Sailor for TntSailor {
-    async fn get_sale_products(&self) -> Result<Vec<Product>> {
+    async fn get_sale_products(
+        &self,
+        postcode: String,
+    ) -> Result<Vec<Product>> {
         // Set location.
         // TODO: Split this into a separate helper function.
         let url =
             format!("{}/tntzone/location/getpreferedstorecode", TNT_API_URL);
-        let postcode = "N2L";
+        let postcode: String = postcode.chars().take(3).collect();
         let response = self
             .client
             .get(&url)
@@ -57,8 +60,9 @@ impl Sailor for TntSailor {
             .compat()
             .await
             .context("send request")?;
-        if !response.status().is_success() {
-            bail!("bad response");
+        let status = response.status();
+        if !status.is_success() {
+            warn!("Failed to set preferred store: {}", &status)
         }
 
         // Get weekly specials.
@@ -73,8 +77,9 @@ impl Sailor for TntSailor {
             .compat()
             .await
             .context("send request")?;
-        if !response.status().is_success() {
-            bail!("bad response");
+        let status = response.status();
+        if !status.is_success() {
+            bail!("bad response: {}", &status);
         }
         let value: JsonValue =
             response.json().await.context("parse response")?;

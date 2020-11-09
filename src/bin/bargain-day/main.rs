@@ -1,7 +1,7 @@
 use api::prelude::*;
 
 use logger::try_init as init_logger;
-use std::env::VarError as EnvVarError;
+use std::env::{args, VarError as EnvVarError};
 use tokio::main as tokio;
 
 use api::env::{load as load_env, var as env_var};
@@ -37,8 +37,11 @@ async fn main() -> Result<()> {
         .map_err(|message| anyhow!(message))
         .context("build sailor")?;
 
-    let products =
-        sailor.get_sale_products().await.context("get sale items")?;
+    let postcode = args().nth(1).ok_or_else(|| anyhow!("missing postcode"))?;
+    let products = sailor
+        .get_sale_products(postcode)
+        .await
+        .context("get sale items")?;
     products
         .iter()
         .for_each(|product| match product.discount() {
