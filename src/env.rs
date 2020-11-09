@@ -17,6 +17,17 @@ pub fn var(name: &str) -> Result<String, EnvVarError> {
     env_var(&key)
 }
 
+pub fn var_or(
+    name: &str,
+    default: impl Into<String>,
+) -> Result<String, EnvVarError> {
+    let key = key(name);
+    env_var(&key).or_else(|error| match error {
+        EnvVarError::NotPresent => Ok(default.into()),
+        error => Err(error),
+    })
+}
+
 pub fn load() -> Result<()> {
     if let Err(dotenv::Error::Io(error)) = dotenv() {
         if error.kind() != IoErrorKind::NotFound {

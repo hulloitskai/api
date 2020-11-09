@@ -5,7 +5,7 @@ FROM ekidd/rust-musl-builder:1.47.0 AS builder
 WORKDIR /src
 RUN sudo chown rust:rust ./ && USER=rust cargo init --bin .
 COPY --chown=rust:rust Cargo.toml Cargo.lock ./
-RUN cargo build --release --target x86_64-unknown-linux-musl
+RUN cargo build --release --target x86_64-unknown-linux-musl && rm src
 
 # Copy source:
 COPY --chown=rust:rust .git/ .git/

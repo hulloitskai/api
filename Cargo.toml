@@ -3,18 +3,26 @@ name = "api"
 version = "0.1.0"
 authors = ["Steven Xie <dev@stevenxie.me>"]
 edition = "2018"
+default-run = "api"
 
 
 [dependencies]
 anyhow = "1.0"
+async_trait = { package = "async-trait", version = "0.1.41" }
+bigdecimal = { version = "0.2.0", features = ["serde"] }
 chrono = { version = "0.4", features = ["serde"] }
 chrono_tz = { package = "chrono-tz", version = "0.5" }
 chrono_humanize = { package = "chrono-humanize", version = "0.1" }
+derive_builder = "0.9.0"
 diesel = { version = "1.4", features = ["postgres", "r2d2", "serde_json"] }
 dotenv = "0.15"
 errors = { package = "thiserror", version = "1.0" }
 futures = "0.3"
 graphql_warp = { package = "async-graphql-warp", version = "2.0" }
+http = "0.2.1"
+json = { package = "serde_json", version = "1.0.59" }
+json_dotpath = "1.0.3"
+lazy_static = "1.4.0"
 log = "0.4"
 logger = { package = "pretty_env_logger", version = "0.4.0" }
 regex = "1.4.2"
@@ -23,8 +31,6 @@ tokio = { version = "0.3", features = ["rt", "rt-multi-thread", "time", "macros"
 tokio_compat = { package = "tokio-compat-02", version = "0.1.2" }
 uuid = "0.8"
 warp = "0.2"
-http = "0.2.1"
-lazy_static = "1.4.0"
 
 [dependencies.sentry]
 version = "0.20"
@@ -39,9 +45,14 @@ features = [
   "transport",
 ]
 
+[dependencies.request]
+package = "reqwest"
+version = "0.10.8"
+features = ["json", "cookies"]
+
 [dependencies.graphql]
 package = "async-graphql"
-version = "2.0"
+version = "2.1"
 default-features = false
 features = ["log", "url", "uuid", "chrono", "chrono-tz"]
 

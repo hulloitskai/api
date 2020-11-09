@@ -1,39 +1,30 @@
 use api::prelude::*;
 
-use std::convert::Infallible;
 use std::env::VarError as EnvVarError;
-use std::net::SocketAddr;
+use std::net::ToSocketAddrs;
 
-use graphql::http::{
-    playground_source as playground,
-    GraphQLPlaygroundConfig as PlaygroundConfig,
-};
-use graphql::{EmptyMutation, Request, Schema};
-use graphql_warp::{
-    graphql as graphql_filter,
-    graphql_subscription as graphql_subscription_filter, Response,
-};
+use graphql::{EmptyMutation, Schema};
 
-use warp::header::optional as warp_header;
-use warp::path::end as warp_root;
-use warp::path::{full as warp_full_path, FullPath as WarpFullPath};
-use warp::reply::{html as warp_html, json as warp_json};
+use warp::path::{end as warp_root, path as warp_path};
 use warp::Filter as WarpFilter;
-use warp::{path as warp_path, serve as warp_serve};
+use warp::{any as warp_any, serve as warp_serve};
+
+use tokio::main as tokio;
+use tokio_compat::FutureExt;
 
 use diesel::r2d2::{ConnectionManager, ManageConnection};
 use logger::try_init as init_logger;
 use sentry::init as init_sentry;
 
-use tokio::main as tokio;
-use tokio_compat::FutureExt;
-
-use api::env::{load as load_env, var as env_var};
+use api::env::{load as load_env, var as env_var, var_or as env_var_or};
 use api::graph::{Query, Subscription};
+use api::grocery::tnt::TntSailor;
 use api::models::{BuildInfo, Contact, Email};
-use api::status::{Health, Status};
 
-type ApiSchema = Schema<Query, EmptyMutation, Subscription>;
+use api::routes::graphql::graphql as graphql_route;
+use api::routes::graphql::playground as playground_route;
+use api::routes::healthz::healthz as healthz_route;
+use api::routes::shortcuts::bargain_day as bargain_day_route;
 
 #[tokio]
 async fn main() -> Result<()> {
@@ -75,37 +66,37 @@ async fn main() -> Result<()> {
         .data(me)
         .finish();
 
-    let graphql = warp_path("graphql")
-        .and(graphql_subscription_filter(schema.clone()))
-        .or(graphql_filter(schema.clone()).and_then(
-            |(schema, request): (ApiSchema, Request)| async move {
-                let response = schema.execute(request).await;
-                Ok::<_, Infallible>(Response::from(response))
-            },
-        ));
-    let healthz = warp_path("healthz").map(|| {
-        let health = Health::new(Status::Pass);
-        warp_json(&health)
-    });
-    let index = warp_root()
-        .and(warp_full_path())
-        .and(warp_header::<String>("X-Forwarded-Prefix"))
-        .map(|path: WarpFullPath, prefix: Option<String>| {
-            let prefix = prefix.unwrap_or_else(String::new);
-            let path = format!("{}{}graphql", &prefix, path.as_str());
-            let html = playground(
-                PlaygroundConfig::new(&path).subscription_endpoint(&path),
-            );
-            warp_html(html)
-        });
-    let filter = index.or(healthz).or(graphql);
+    let sailor = TntSailor::new();
+    let sailor = Arc::new(sailor);
 
-    let server_port = env_var("PORT").context("get port")?;
-    let server_addr: SocketAddr =
-        format!("0.0.0.0:{}", &server_port).parse()?;
+    let shortcuts_bargain_day =
+        warp_path("bargain-day").and(bargain_day_route(sailor));
+    let shortcuts = warp_path("shortcuts").and(shortcuts_bargain_day);
+    let playground = warp_any().and(playground_route());
+    let graphql = warp_path("graphql").and(graphql_route(&schema));
+    let healthz = warp_path("healthz").and(healthz_route());
 
-    info!("Listening on http://{}", server_addr);
-    warp_serve(filter).run(server_addr).compat().await;
+    let server_host = env_var_or("HOST", "0.0.0.0").context("get host")?;
+    let server_port = env_var_or("PORT", "8080").context("get port")?;
+    let server_addr = format!("{}:{}", &server_host, &server_port)
+        .to_socket_addrs()
+        .context("parse address")?
+        .as_slice()
+        .first()
+        .unwrap()
+        .to_owned();
+
+    info!("Listening on http://{}", &server_addr);
+    warp_serve(
+        warp_root()
+            .and(playground)
+            .or(healthz)
+            .or(graphql)
+            .or(shortcuts),
+    )
+    .run(server_addr)
+    .compat()
+    .await;
     Ok(())
 }
 
@@ -128,8 +119,8 @@ fn connect_db() -> Result<DbPool> {
 }
 
 fn contact_from_env() -> Result<Contact> {
-    let first_name = env_var("CONTACT_FIRST_NAME").context("first name")?;
-    let last_name = env_var("CONTACT_LAST_NAME").context("last name")?;
+    let first_name = env_var("CONTACT_FIRST_NAME").context("get first name")?;
+    let last_name = env_var("CONTACT_LAST_NAME").context("get last name")?;
 
     let about = match env_var("CONTACT_ABOUT") {
         Ok(about) => Ok(Some(about)),
@@ -138,9 +129,9 @@ fn contact_from_env() -> Result<Contact> {
             error => Err(error),
         },
     }
-    .context("about")?;
+    .context("get about text")?;
 
-    let email = env_var("CONTACT_EMAIL").context("email")?;
+    let email = env_var("CONTACT_EMAIL").context("get email")?;
     let email = Email::new(email).context("parse email")?;
 
     let birthday = env_var("CONTACT_BIRTHDAY").context("birthday")?;
