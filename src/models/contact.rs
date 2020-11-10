@@ -1,6 +1,6 @@
+use super::Email;
 use crate::prelude::*;
 
-use super::Email;
 use chrono::{Date as TzDate, LocalResult};
 
 #[derive(Debug, Clone, Serialize, Deserialize)]

@@ -1,5 +1,3 @@
-use std::convert::Infallible;
-
 use warp::header::optional as header;
 use warp::path::{full as full_path, FullPath};
 use warp::reply::{html, Reply};
@@ -8,14 +6,16 @@ use warp::{any, Filter, Rejection};
 use graphql::http::{
     playground_source, GraphQLPlaygroundConfig as PlaygroundConfig,
 };
-use graphql::{
-    ObjectType, Request as GraphQLRequest, Schema, SubscriptionType,
-};
+use graphql::{ObjectType, SubscriptionType};
+use graphql::{Request as GraphQLRequest, Schema};
+
 use graphql_warp::{
     graphql as graphql_filter,
     graphql_subscription as graphql_subscription_filter,
     Response as GraphQLResponse,
 };
+
+use std::convert::Infallible;
 
 pub fn graphql<Query, Mutation, Subscription>(
     schema: &Schema<Query, Mutation, Subscription>,

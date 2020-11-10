@@ -1,10 +1,11 @@
 use crate::prelude::*;
 
-use dotenv::dotenv;
 use std::env::{
     set_var as set_env_var, var as env_var, VarError as EnvVarError,
 };
 use std::io::ErrorKind as IoErrorKind;
+
+use dotenv::dotenv;
 
 pub const NAMESPACE: &str = "API";
 

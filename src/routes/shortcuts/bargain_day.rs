@@ -1,4 +1,6 @@
+use crate::grocery::{Product, Sailor};
 use crate::prelude::*;
+use crate::routes::RouteError;
 
 use warp::filters::query::query;
 use warp::reject::{custom, Rejection};
@@ -6,9 +8,6 @@ use warp::reply::Reply;
 use warp::{get, head, Filter};
 
 use std::sync::Arc;
-
-use crate::grocery::{Product, Sailor};
-use crate::routes::RouteError;
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 struct BargainDayParams {
@@ -21,7 +20,7 @@ pub fn bargain_day<S>(
 where
     S: Sailor + Send + Sync,
 {
-    let method = get().or(head()).unify();
+    let method = head().or(get()).unify();
     method
         .map(move || sailor.clone())
         .and(query::<BargainDayParams>())

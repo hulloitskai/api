@@ -1,14 +1,14 @@
 use super::prelude::*;
-
 use crate::models::Contact as ContactModel;
+
 use chrono_humanize::{
     Accuracy as HumanAccuracy, HumanTime, Tense as HumanTense,
 };
 use chrono_tz::Tz;
-use std::time::Duration;
-use tokio::time::interval;
 
 use graphql::Subscription;
+use std::time::Duration;
+use tokio::time::interval;
 
 pub struct Subscription;
 

@@ -1,12 +1,12 @@
-pub mod graphql;
-pub mod healthz;
-pub mod shortcuts;
-
 use crate::prelude::*;
 
 use http::StatusCode;
 use warp::reject::{Reject, Rejection};
 use warp::reply::{with_status, Reply, Response};
+
+pub mod graphql;
+pub mod healthz;
+pub mod shortcuts;
 
 #[derive(Debug, Clone)]
 pub struct RouteError {

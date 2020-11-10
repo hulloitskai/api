@@ -1,8 +1,4 @@
-pub mod prelude;
-
-pub use diesel::r2d2::{ConnectionManager, Pool};
-pub use diesel::PgConnection;
-pub type DbPool = Pool<ConnectionManager<PgConnection>>;
+mod prelude;
 
 pub mod build;
 pub mod contact;
@@ -13,3 +9,7 @@ pub use build::*;
 pub use contact::*;
 pub use query::*;
 pub use subscription::*;
+
+pub use diesel::r2d2::{ConnectionManager, Pool};
+pub use diesel::PgConnection;
+pub type DbPool = Pool<ConnectionManager<PgConnection>>;

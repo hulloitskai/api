@@ -1,5 +1,14 @@
-mod config;
-use config::{Clap, Config};
+use api::routes::graphql::graphql as graphql_route;
+use api::routes::graphql::playground as playground_route;
+use api::routes::healthz::healthz as healthz_route;
+use api::routes::recover;
+use api::routes::shortcuts::bargain_day as bargain_day_route;
+
+use api::env::load as load_env;
+use api::graph::{Query, Subscription};
+use api::grocery::tnt::TntSailor;
+use api::models::BuildInfo;
+use api::prelude::*;
 
 use warp::path::{end as warp_root, path as warp_path};
 use warp::Filter as WarpFilter;
@@ -8,23 +17,14 @@ use warp::{any as warp_any, serve as warp_serve};
 use tokio::main as tokio;
 use tokio_compat::FutureExt;
 
+mod config;
+use config::{Clap, Config};
+
 use diesel::r2d2::{ConnectionManager, ManageConnection};
 use graphql::{EmptyMutation, Schema};
 use logger::try_init as init_logger;
 use sentry::init as init_sentry;
 use std::net::ToSocketAddrs;
-
-use api::env::load as load_env;
-use api::graph::{Query, Subscription};
-use api::grocery::tnt::TntSailor;
-use api::models::BuildInfo;
-use api::prelude::*;
-
-use api::routes::graphql::graphql as graphql_route;
-use api::routes::graphql::playground as playground_route;
-use api::routes::healthz::healthz as healthz_route;
-use api::routes::recover;
-use api::routes::shortcuts::bargain_day as bargain_day_route;
 
 #[tokio]
 async fn main() -> Result<()> {

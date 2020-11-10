@@ -1,12 +1,11 @@
+use api::env::{load as load_env, var as env_var};
+use api::grocery::tnt::TntSailor;
+use api::grocery::Sailor;
 use api::prelude::*;
 
 use logger::try_init as init_logger;
 use std::env::{args, VarError as EnvVarError};
 use tokio::main as tokio;
-
-use api::env::{load as load_env, var as env_var};
-use api::grocery::tnt::TntSailor;
-use api::grocery::Sailor;
 
 #[tokio]
 async fn main() -> Result<()> {
