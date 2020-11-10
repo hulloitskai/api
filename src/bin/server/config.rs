@@ -4,7 +4,7 @@ use api::prelude::*;
 pub use clap::{AppSettings, ArgSettings, Clap};
 
 #[derive(Debug, Clap)]
-#[clap(name = "api", version = env!("BUILD_VERSION"), author)]
+#[clap(name = "api-server", version = env!("BUILD_VERSION"), author)]
 #[clap(about = "My personal API server")]
 #[clap(setting = AppSettings::ColoredHelp)]
 pub struct Config {

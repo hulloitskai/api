@@ -3,7 +3,7 @@ name = "api"
 version = "4.0.0"
 authors = ["Steven Xie <dev@stevenxie.me>"]
 edition = "2018"
-default-run = "api"
+default-run = "server"
 
 
 [dependencies]

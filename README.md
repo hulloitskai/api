@@ -30,7 +30,7 @@ _A personal GraphQL API, implemented in Rust._
     vi .env               # edit template
     ```
 
-4. Install dependencies, set up hooks, and build target:
+4. Install dependencies, set up hooks, and build targets:
 
     ```bash
     cargo build
