@@ -14,7 +14,7 @@ COPY --chown=rust:rust build.rs ./
 
 # Build binaries:
 ENV BUILD_VERSION_DIRTY_SUFFIX=""
-RUN cargo build --release --target x86_64-unknown-linux-musl
+RUN cargo build --bin api --release --target x86_64-unknown-linux-musl
 
 
 # == RUNNER ==
@@ -24,8 +24,7 @@ FROM alpine:3.12
 RUN apk add --update ca-certificates curl
 
 # Copy built binary:
-ENV CMD=api
-COPY --from=builder /src/target/x86_64-unknown-linux-musl/release/${CMD} /bin/${CMD}
+COPY --from=builder /src/target/x86_64-unknown-linux-musl/release/api /bin/api
 
 # Configure ports:
 ENV API_SERVER_PORT=80
