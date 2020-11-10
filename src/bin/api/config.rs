@@ -8,15 +8,14 @@ pub use clap::{AppSettings, ArgSettings, Clap};
 #[clap(about = "My personal API server")]
 #[clap(setting = AppSettings::ColoredHelp)]
 pub struct Config {
-    #[clap(long, short, default_value = "0.0.0.0", env = "API_HOST")]
+    #[clap(long, default_value = "0.0.0.0", env = "API_HOST")]
     pub host: String,
-    #[clap(long, short, default_value = "8080", env = "API_PORT")]
+    #[clap(long, default_value = "8080", env = "API_PORT")]
     pub port: u16,
 
     #[clap(
         long,
         value_name = "url",
-        default_value = "postgres://postgres@127.0.0.1/api",
         env = "API_DB_URL",
         hide_env_values = true,
         help_heading = Some("DATABASE")
