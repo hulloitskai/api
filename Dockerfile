@@ -40,5 +40,5 @@ EXPOSE $API_PORT
 
 # Configure healthcheck and entrypoint:
 HEALTHCHECK --interval=10s --timeout=1s --start-period=5s --retries=3 CMD curl -f http://localhost || exit 1
-ENTRYPOINT $CMD
+ENTRYPOINT ["api"]
 CMD ["serve"]

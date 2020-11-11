@@ -1,5 +1,5 @@
 use super::prelude::*;
-use crate::models::BuildInfo as BuildInfoModel;
+use crate::build::Build;
 
 #[derive(ConstantObject)]
 pub struct BuildInfo {
@@ -8,8 +8,8 @@ pub struct BuildInfo {
 }
 
 impl BuildInfo {
-    pub fn new(model: BuildInfoModel) -> Self {
-        let BuildInfoModel { timestamp, version } = model;
+    pub fn new(build: Build) -> Self {
+        let Build { timestamp, version } = build;
         BuildInfo { timestamp, version }
     }
 }

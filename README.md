@@ -12,29 +12,29 @@ _A personal GraphQL API, implemented in Rust._
 
 1. Ensure you have the required development dependencies:
 
-    - [Rust](https://www.rust-lang.org/tools/install)
-    - [Docker Engine](https://docs.docker.com/get-docker/)
-    - [Docker Compose](https://docs.docker.com/compose/)
+   - [Rust](https://www.rust-lang.org/tools/install)
+   - [Docker Engine](https://docs.docker.com/get-docker/)
+   - [Docker Compose](https://docs.docker.com/compose/)
 
 2. Clone and enter repo:
 
-    ```bash
-    git clone git@github.com:stevenxie/api
-    cd api
-    ```
+   ```bash
+   git clone git@github.com:stevenxie/api
+   cd api
+   ```
 
 3. Configure `.env`:
 
-    ```bash
-    cp .env.example .env  # copy template
-    vi .env               # edit template
-    ```
+   ```bash
+   cp .env.example .env  # copy template
+   vi .env               # edit template
+   ```
 
 4. Install dependencies, set up hooks, and build targets:
 
-    ```bash
-    cargo build
-    ```
+   ```bash
+   cargo build
+   ```
 
 ### Workflow
 
@@ -42,8 +42,8 @@ _A personal GraphQL API, implemented in Rust._
 # Start dependencies (database, etc.):
 docker-compose up -d
 
-# Start server:
-cargo run
+# Run server:
+cargo run -- serve
 
 # Format source code:
 cargo fmt
