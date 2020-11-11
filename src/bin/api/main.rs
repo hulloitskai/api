@@ -10,6 +10,9 @@ use api::grocery::tnt::TntSailor;
 use api::models::BuildInfo;
 use api::prelude::*;
 
+mod cli;
+use cli::*;
+
 use warp::path::{end as warp_root, path as warp_path};
 use warp::Filter as WarpFilter;
 use warp::{any as warp_any, serve as warp_serve};
@@ -17,9 +20,7 @@ use warp::{any as warp_any, serve as warp_serve};
 use tokio::main as tokio;
 use tokio_compat::FutureExt;
 
-mod config;
-use config::{Clap, Config};
-
+use chrono::FixedOffset;
 use diesel::r2d2::{ConnectionManager, ManageConnection};
 use graphql::{EmptyMutation, Schema};
 use logger::try_init as init_logger;
@@ -30,8 +31,8 @@ use std::net::ToSocketAddrs;
 async fn main() -> Result<()> {
     load_env().context("load environment variables")?;
 
-    let config = Config::parse();
-    let _guard = config
+    let cli = Cli::parse();
+    let _guard = cli
         .sentry_dsn
         .as_ref()
         .map(|dsn| init_sentry(dsn.as_str()))
@@ -47,23 +48,47 @@ async fn main() -> Result<()> {
         version => Some(version.to_owned()),
     };
 
+    let ctx = Context { timestamp, version };
+    use Command::*;
+
+    let cmd = match cli.cmd {
+        Serve(cli) => serve(&ctx, cli),
+    };
+    cmd.await
+}
+
+struct Context {
+    timestamp: DateTime<FixedOffset>,
+    version: Option<String>,
+}
+
+async fn serve(ctx: &Context, cli: Serve) -> Result<()> {
     init_logger().context("init logger")?;
-    if let Some(version) = &version {
+
+    if let Some(version) = &ctx.version {
         info!("Starting up (version: {})", version);
     } else {
         info!("Starting up");
     };
 
+    let Context { timestamp, version } = &ctx;
     let meta = BuildInfo {
-        timestamp: timestamp.into(),
-        version,
+        timestamp: timestamp.to_owned().into(),
+        version: version.to_owned(),
     };
-    let me = config.me();
-    let db = connect_db(&config).context("connect database")?;
+
+    let Serve {
+        db_url,
+        db_max_connections,
+        ..
+    } = &cli;
+    let db = connect_db(db_url, db_max_connections.to_owned())
+        .context("connect database")?;
+
     let schema = Schema::build(Query, EmptyMutation, Subscription)
         .data(meta)
         .data(db)
-        .data(me)
+        .data(cli.me())
         .finish();
 
     let sailor = TntSailor::new();
@@ -82,7 +107,7 @@ async fn main() -> Result<()> {
         .or(shortcuts)
         .recover(recover);
 
-    let Config { host, port, .. } = &config;
+    let Serve { host, port, .. } = &cli;
     let address = format!("{}:{}", host, port)
         .to_socket_addrs()
         .context("parse address")?
@@ -95,22 +120,16 @@ async fn main() -> Result<()> {
     Ok(())
 }
 
-fn connect_db(
-    Config {
-        db_url,
-        db_max_connections,
-        ..
-    }: &Config,
-) -> Result<DbPool> {
+fn connect_db(url: &str, max_connections: Option<u32>) -> Result<PgPool> {
     let manager = {
-        let manager = ConnectionManager::new(db_url);
+        let manager = ConnectionManager::new(url);
         let mut conn = manager.connect()?;
         manager.is_valid(&mut conn).context("test connection")?;
         manager
     };
-    let mut pool = DbPool::builder();
-    if let Some(size) = db_max_connections {
-        pool = pool.max_size(*size);
+    let mut pool = PgPool::builder();
+    if let Some(size) = max_connections {
+        pool = pool.max_size(size);
     }
     pool.build(manager).context("create connection pool")
 }

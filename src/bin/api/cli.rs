@@ -1,13 +1,33 @@
 use api::models::{Contact, Email};
 use api::prelude::*;
 
-pub use clap::{AppSettings, ArgSettings, Clap};
+pub use clap::{AppSettings, Clap};
 
 #[derive(Debug, Clap)]
-#[clap(name = "api-server", version = env!("BUILD_VERSION"), author)]
+#[clap(name = "api", version = env!("BUILD_VERSION"), author)]
 #[clap(about = "My personal API server")]
 #[clap(setting = AppSettings::ColoredHelp)]
-pub struct Config {
+pub struct Cli {
+    #[clap(
+        long,
+        value_name = "dsn",
+        env = "API_SENTRY_DSN",
+        hide_env_values = true,
+        help_heading = Some("SENTRY")
+    )]
+    pub sentry_dsn: Option<String>,
+
+    #[clap(subcommand)]
+    pub cmd: Command,
+}
+
+#[derive(Debug, Clap)]
+pub enum Command {
+    Serve(Serve),
+}
+
+#[derive(Debug, Clap)]
+pub struct Serve {
     #[clap(long, default_value = "0.0.0.0", env = "API_HOST")]
     pub host: String,
     #[clap(long, default_value = "8080", env = "API_PORT")]
@@ -28,15 +48,6 @@ pub struct Config {
         help_heading = Some("DATABASE")
     )]
     pub db_max_connections: Option<u32>,
-
-    #[clap(
-        long,
-        value_name = "dsn",
-        env = "API_SENTRY_DSN",
-        hide_env_values = true,
-        help_heading = Some("SENTRY")
-    )]
-    pub sentry_dsn: Option<String>,
 
     #[clap(
         long,
@@ -75,9 +86,9 @@ pub struct Config {
     pub my_birthday: Date,
 }
 
-impl Config {
+impl Serve {
     pub fn me(&self) -> Contact {
-        let Config {
+        let Self {
             my_first_name,
             my_last_name,
             my_about,

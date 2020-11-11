@@ -3,7 +3,7 @@ name = "api"
 version = "4.0.0"
 authors = ["Steven Xie <dev@stevenxie.me>"]
 edition = "2018"
-default-run = "server"
+default-run = "api"
 
 
 [dependencies]
@@ -18,16 +18,14 @@ derive_builder = "0.9"
 diesel = { version = "1", features = ["postgres", "r2d2", "serde_json"] }
 dotenv = "0.15"
 errors = { package = "thiserror", version = "1" }
-fake = { version = "2", features = ["derive"] }
 futures = "0.3"
 graphql_warp = { package = "async-graphql-warp", version = "2" }
 http = "0.2"
-json = { package = "serde_json", version = "1.0" }
+json = { package = "serde_json", version = "1" }
 json_dotpath = "1"
 lazy_static = "1"
 log = "0.4"
 logger = { package = "pretty_env_logger", version = "0.4" }
-rand = "0.7"
 regex = "1"
 serde = "1"
 tokio = { version = "0.3", features = ["rt", "rt-multi-thread", "time", "macros"] }
