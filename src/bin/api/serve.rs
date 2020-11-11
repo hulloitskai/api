@@ -19,69 +19,67 @@ use warp::{any as warp_any, serve as warp_serve};
 use clap::{AppSettings, Clap};
 use diesel::r2d2::{ConnectionManager, ManageConnection};
 use graphql::{EmptyMutation, Schema};
-use logger::try_init as init_logger;
 use std::net::ToSocketAddrs;
 use tokio_compat::FutureExt;
 
 #[derive(Debug, Clap)]
 #[clap(about = "Serve my personal API")]
 #[clap(setting = AppSettings::ColoredHelp)]
+#[clap(setting = AppSettings::DeriveDisplayOrder)]
 pub struct ServeCli {
-    #[clap(long, default_value = "0.0.0.0", env = "API_HOST")]
+    #[clap(
+        long,
+        about = "Host to serve on",
+        default_value = "0.0.0.0",
+        env = "API_HOST"
+    )]
     pub host: String,
-    #[clap(long, default_value = "8080", env = "API_PORT")]
+
+    #[clap(
+        long,
+        about = "Port to serve on",
+        default_value = "8080",
+        env = "API_PORT"
+    )]
     pub port: u16,
 
     #[clap(
         long,
+        about = "Database URL",
         value_name = "url",
         env = "API_DB_URL",
-        hide_env_values = true,
-        help_heading = Some("DATABASE")
+        hide_env_values = true
     )]
+    #[clap(help_heading = Some("DATABASE"))]
     pub db_url: String,
-    #[clap(
-        long,
-        value_name = "connections",
-        env = "API_DB_MAX_CONNECTIONS",
-        help_heading = Some("DATABASE")
-    )]
-    pub db_max_connections: Option<u32>,
 
     #[clap(
         long,
-        value_name = "first name",
-        env = "API_MY_FIRST_NAME",
-        help_heading = Some("SELF")
+        about = "Maximum concurrent database connections",
+        value_name = "connections",
+        env = "API_DB_MAX_CONNECTIONS"
     )]
+    #[clap(help_heading = Some("DATABASE"))]
+    pub db_max_connections: Option<u32>,
+
+    #[clap(long, value_name = "first name", env = "API_MY_FIRST_NAME")]
+    #[clap(help_heading = Some("SELF"))]
     pub my_first_name: String,
-    #[clap(
-        long,
-        value_name = "last name",
-        env = "API_MY_LAST_NAME",
-        help_heading = Some("SELF")
-    )]
+
+    #[clap(long, value_name = "last name", env = "API_MY_LAST_NAME")]
+    #[clap(help_heading = Some("SELF"))]
     pub my_last_name: String,
-    #[clap(
-        long,
-        value_name = "email",
-        env = "API_MY_EMAIL",
-        help_heading = Some("SELF")
-    )]
+
+    #[clap(long, value_name = "email", env = "API_MY_EMAIL")]
+    #[clap(help_heading = Some("SELF"))]
     pub my_email: Email,
-    #[clap(
-        long,
-        value_name = "description",
-        env = "API_MY_ABOUT",
-        help_heading = Some("SELF")
-    )]
+
+    #[clap(long, value_name = "description", env = "API_MY_ABOUT")]
+    #[clap(help_heading = Some("SELF"))]
     pub my_about: Option<String>,
-    #[clap(
-        long,
-        value_name = "birthday",
-        env = "API_MY_BIRTHDAY",
-        help_heading = Some("SELF")
-    )]
+
+    #[clap(long, value_name = "birthday", env = "API_MY_BIRTHDAY")]
+    #[clap(help_heading = Some("SELF"))]
     pub my_birthday: Date,
 }
 
@@ -106,14 +104,6 @@ impl ServeCli {
 }
 
 pub async fn serve(ctx: &Context, cli: ServeCli) -> Result<()> {
-    init_logger().context("init logger")?;
-
-    if let Some(version) = &ctx.version {
-        info!("Starting up (version: {})", version);
-    } else {
-        info!("Starting up");
-    };
-
     let Context { timestamp, version } = &ctx;
     let build = Build {
         timestamp: timestamp.to_owned().into(),
@@ -159,7 +149,7 @@ pub async fn serve(ctx: &Context, cli: ServeCli) -> Result<()> {
         .unwrap()
         .to_owned();
 
-    info!("Listening on http://{}", &address);
+    info!("listening on http://{}", &address);
     warp_serve(filter).run(address).compat().await;
     Ok(())
 }

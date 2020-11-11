@@ -1,7 +1,8 @@
 use crate::prelude::*;
 
 use std::env::{
-    set_var as set_env_var, var as env_var, VarError as EnvVarError,
+    remove_var as remove_env_var, set_var as set_env_var, var as env_var,
+    VarError as EnvVarError,
 };
 use std::io::ErrorKind as IoErrorKind;
 
@@ -37,18 +38,9 @@ pub fn load() -> Result<()> {
     }
 
     // Configure backtraces.
+    remove_env_var("RUST_BACKTRACE");
     if None == var("BACKTRACE").ok() {
         set_env_var("RUST_BACKTRACE", "1")
     }
-
-    // Configure logging.
-    set_env_var(
-        "RUST_LOG",
-        match var("LOG").ok() {
-            Some(s) => s,
-            None => "warn,api=info".to_owned(),
-        },
-    );
-
     Ok(())
 }
