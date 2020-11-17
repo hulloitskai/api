@@ -28,7 +28,7 @@ log = "0.4"
 logger = { package = "pretty_env_logger", version = "0.4" }
 regex = "1"
 serde = "1"
-tokio = { version = "0.3", features = ["rt", "rt-multi-thread", "time", "macros"] }
+tokio = { version = "0.3", features = ["rt", "rt-multi-thread", "time"] }
 tokio_compat = { package = "tokio-compat-02", version = "0.1" }
 uuid = "0.8"
 warp = "0.2"

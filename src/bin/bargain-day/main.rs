@@ -5,10 +5,9 @@ use api::prelude::*;
 
 use logger::try_init as init_logger;
 use std::env::{args, VarError as EnvVarError};
-use tokio::main as tokio;
+use tokio::runtime::Runtime;
 
-#[tokio]
-async fn main() -> Result<()> {
+fn main() -> Result<()> {
     load_env().context("load environment variables")?;
     init_logger().context("init logger")?;
 
@@ -35,12 +34,16 @@ async fn main() -> Result<()> {
         .build()
         .map_err(|message| anyhow!(message))
         .context("build sailor")?;
-
     let postcode = args().nth(1).ok_or_else(|| anyhow!("missing postcode"))?;
-    let products = sailor
-        .get_sale_products(postcode)
-        .await
-        .context("get sale items")?;
+
+    let runtime = Runtime::new().context("initialize runtime")?;
+    let products = runtime.block_on(async {
+        sailor
+            .get_sale_products(postcode)
+            .await
+            .context("get sale items")
+    })?;
+
     products
         .iter()
         .for_each(|product| match product.discount() {

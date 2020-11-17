@@ -6,7 +6,6 @@ use sentry::init as init_sentry;
 
 use clap::{AppSettings, Clap};
 use std::env::set_var as set_env_var;
-use tokio::main as tokio;
 
 mod context;
 use context::*;
@@ -47,8 +46,7 @@ pub enum Command {
     Serve(ServeCli),
 }
 
-#[tokio]
-async fn main() -> Result<()> {
+fn main() -> Result<()> {
     load_env().context("load environment variables")?;
 
     // Parse command line and initialize Sentry.
@@ -82,8 +80,7 @@ async fn main() -> Result<()> {
 
     // Run subcommand.
     use Command::*;
-    let cmd = match cli.cmd {
+    match cli.cmd {
         Serve(cli) => serve(&context, cli),
-    };
-    cmd.await
+    }
 }

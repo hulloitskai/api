@@ -16,11 +16,13 @@ use warp::path::{end as warp_root, path as warp_path};
 use warp::Filter as WarpFilter;
 use warp::{any as warp_any, serve as warp_serve};
 
+use tokio::runtime::Runtime;
+use tokio_compat::FutureExt;
+
 use clap::{AppSettings, Clap};
 use diesel::r2d2::{ConnectionManager, ManageConnection};
 use graphql::{EmptyMutation, Schema};
 use std::net::ToSocketAddrs;
-use tokio_compat::FutureExt;
 
 #[derive(Debug, Clap)]
 #[clap(about = "Serve my personal API")]
@@ -103,7 +105,7 @@ impl ServeCli {
     }
 }
 
-pub async fn serve(ctx: &Context, cli: ServeCli) -> Result<()> {
+pub fn serve(ctx: &Context, cli: ServeCli) -> Result<()> {
     let Context { timestamp, version } = &ctx;
     let build = Build {
         timestamp: timestamp.to_owned().into(),
@@ -149,9 +151,12 @@ pub async fn serve(ctx: &Context, cli: ServeCli) -> Result<()> {
         .unwrap()
         .to_owned();
 
-    info!("listening on http://{}", &address);
-    warp_serve(filter).run(address).compat().await;
-    Ok(())
+    let runtime = Runtime::new().context("initialize runtime")?;
+    runtime.block_on(async {
+        info!("listening on http://{}", &address);
+        warp_serve(filter).run(address).compat().await;
+        Ok(())
+    })
 }
 
 fn connect_db(url: &str, max_connections: Option<u32>) -> Result<PgPool> {
