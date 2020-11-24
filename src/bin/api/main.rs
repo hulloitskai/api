@@ -15,25 +15,27 @@ use serve::*;
 #[derive(Debug, Clap)]
 #[clap(name = "api", version = env!("BUILD_VERSION"))]
 #[clap(about = "My personal API server")]
-#[clap(setting = AppSettings::ColoredHelp)]
-#[clap(setting = AppSettings::DeriveDisplayOrder)]
+#[clap(global_setting = AppSettings::ColoredHelp)]
+#[clap(global_setting = AppSettings::DeriveDisplayOrder)]
 pub struct Cli {
     #[clap(
         long,
-        about = "Sentry DSN for error reporting",
-        value_name = "dsn",
         env = "API_SENTRY_DSN",
-        hide_env_values = true
+        about = "Sentry DSN for error reporting",
+        value_name = "DSN",
+        hide_env_values = true,
+        global = true
     )]
     pub sentry_dsn: Option<String>,
 
     #[clap(
         long,
-        about = "Log level and directives",
-        value_name = "level",
         env = "API_LOG",
+        about = "Log level and directives",
+        value_name = "LEVEL",
         default_value = "warn,api=info",
-        hide_default_value = true
+        hide_default_value = true,
+        global = true
     )]
     pub log: String,
 

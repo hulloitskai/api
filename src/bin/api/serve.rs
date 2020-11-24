@@ -19,37 +19,37 @@ use warp::{any as warp_any, serve as warp_serve};
 use tokio::runtime::Runtime;
 use tokio_compat::FutureExt;
 
-use clap::{AppSettings, Clap};
+use clap::Clap;
 use diesel::r2d2::{ConnectionManager, ManageConnection};
 use graphql::{EmptyMutation, Schema};
 use std::net::ToSocketAddrs;
 
 #[derive(Debug, Clap)]
 #[clap(about = "Serve my personal API")]
-#[clap(setting = AppSettings::ColoredHelp)]
-#[clap(setting = AppSettings::DeriveDisplayOrder)]
 pub struct ServeCli {
     #[clap(
         long,
+        env = "API_HOST",
         about = "Host to serve on",
-        default_value = "0.0.0.0",
-        env = "API_HOST"
+        value_name = "HOST",
+        default_value = "0.0.0.0"
     )]
     pub host: String,
 
     #[clap(
         long,
+        env = "API_PORT",
         about = "Port to serve on",
-        default_value = "8080",
-        env = "API_PORT"
+        value_name = "PORT",
+        default_value = "8080"
     )]
     pub port: u16,
 
     #[clap(
         long,
-        about = "Database URL",
-        value_name = "url",
         env = "API_DB_URL",
+        about = "Database URL",
+        value_name = "URL",
         hide_env_values = true
     )]
     #[clap(help_heading = Some("DATABASE"))]
@@ -57,30 +57,30 @@ pub struct ServeCli {
 
     #[clap(
         long,
+        env = "API_DB_MAX_CONNECTIONS",
         about = "Maximum concurrent database connections",
-        value_name = "connections",
-        env = "API_DB_MAX_CONNECTIONS"
+        value_name = "N"
     )]
     #[clap(help_heading = Some("DATABASE"))]
     pub db_max_connections: Option<u32>,
 
-    #[clap(long, value_name = "first name", env = "API_MY_FIRST_NAME")]
+    #[clap(long, env = "API_MY_FIRST_NAME", value_name = "first name")]
     #[clap(help_heading = Some("SELF"))]
     pub my_first_name: String,
 
-    #[clap(long, value_name = "last name", env = "API_MY_LAST_NAME")]
+    #[clap(long, env = "API_MY_LAST_NAME", value_name = "last name")]
     #[clap(help_heading = Some("SELF"))]
     pub my_last_name: String,
 
-    #[clap(long, value_name = "email", env = "API_MY_EMAIL")]
+    #[clap(long, env = "API_MY_EMAIL", value_name = "email")]
     #[clap(help_heading = Some("SELF"))]
     pub my_email: Email,
 
-    #[clap(long, value_name = "description", env = "API_MY_ABOUT")]
+    #[clap(long, env = "API_MY_ABOUT", value_name = "description")]
     #[clap(help_heading = Some("SELF"))]
     pub my_about: Option<String>,
 
-    #[clap(long, value_name = "birthday", env = "API_MY_BIRTHDAY")]
+    #[clap(long, env = "API_MY_BIRTHDAY", value_name = "birthday")]
     #[clap(help_heading = Some("SELF"))]
     pub my_birthday: Date,
 }
