@@ -1,8 +1,8 @@
 use api::env::{load as load_env, var as env_var};
 use api::grocery::tnt::TntSailor;
 use api::grocery::Sailor;
-use api::prelude::*;
 
+use anyhow::{format_err, Context as AnyhowContext, Result};
 use logger::try_init as init_logger;
 use std::env::{args, VarError as EnvVarError};
 use tokio::runtime::Runtime;
@@ -32,9 +32,11 @@ fn main() -> Result<()> {
     }
     let sailor = sailor
         .build()
-        .map_err(|message| anyhow!(message))
+        .map_err(|message| format_err!(message))
         .context("build sailor")?;
-    let postcode = args().nth(1).ok_or_else(|| anyhow!("missing postcode"))?;
+    let postcode = args()
+        .nth(1)
+        .ok_or_else(|| format_err!("missing postcode"))?;
 
     let runtime = Runtime::new().context("initialize runtime")?;
     let products = runtime.block_on(async {

@@ -1,4 +1,4 @@
-use crate::prelude::*;
+use crate::common::*;
 
 lazy_static! {
     static ref EMAIL_REGEX: Regex = Regex::new(
@@ -15,7 +15,7 @@ impl Email {
         if EMAIL_REGEX.is_match(&s) {
             Ok(Email(s))
         } else {
-            Err(anyhow!("invalid email address"))
+            Err(format_err!("invalid email address"))
         }
     }
 

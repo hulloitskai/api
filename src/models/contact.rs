@@ -1,5 +1,5 @@
 use super::Email;
-use crate::prelude::*;
+use crate::common::*;
 
 use chrono::{Date as TzDate, LocalResult};
 
@@ -25,7 +25,7 @@ impl Contact {
         if let LocalResult::Single(date) = birthday {
             Ok(date)
         } else {
-            Err(anyhow!("invalid or ambiguous conversion"))
+            Err(format_err!("invalid or ambiguous conversion"))
         }
     }
 }

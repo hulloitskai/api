@@ -10,11 +10,11 @@ default-run = "api"
 anyhow = "1"
 async_trait = { package = "async-trait", version = "0.1" }
 bigdecimal = { version = "0.2", features = ["serde"] }
+builder = { package = "derive_builder", version = "0.9" }
 chrono = { version = "0.4", features = ["serde"] }
 chrono_tz = { package = "chrono-tz", version = "0.5" }
 chrono_humanize = { package = "chrono-humanize", version = "0.1" }
 clap = { version = "3.0.0-beta.2", features = ["color"] }
-derive_builder = "0.9"
 diesel = { version = "1", features = ["postgres", "r2d2", "serde_json"] }
 dotenv = "0.15"
 errors = { package = "thiserror", version = "1" }

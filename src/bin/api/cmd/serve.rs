@@ -1,4 +1,4 @@
-use super::context::Context;
+use crate::common::*;
 
 use api::routes::graphql::graphql as graphql_route;
 use api::routes::graphql::playground as playground_route;
@@ -6,11 +6,11 @@ use api::routes::healthz::healthz as healthz_route;
 use api::routes::recover;
 use api::routes::shortcuts::bargain_day as bargain_day_route;
 
-use api::build::Build;
+use api::db::PgPool;
 use api::graph::{Query, Subscription};
 use api::grocery::tnt::TntSailor;
+use api::meta::BuildInfo;
 use api::models::{Contact, Email};
-use api::prelude::*;
 
 use warp::path::{end as warp_root, path as warp_path};
 use warp::Filter as WarpFilter;
@@ -19,10 +19,12 @@ use warp::{any as warp_any, serve as warp_serve};
 use tokio::runtime::Runtime;
 use tokio_compat::FutureExt;
 
+use std::net::ToSocketAddrs;
+use std::sync::Arc;
+
 use clap::Clap;
 use diesel::r2d2::{ConnectionManager, ManageConnection};
 use graphql::{EmptyMutation, Schema};
-use std::net::ToSocketAddrs;
 
 #[derive(Debug, Clap)]
 #[clap(about = "Serve my personal API")]
@@ -107,7 +109,7 @@ impl ServeCli {
 
 pub fn serve(ctx: &Context, cli: ServeCli) -> Result<()> {
     let Context { timestamp, version } = &ctx;
-    let build = Build {
+    let build = BuildInfo {
         timestamp: timestamp.to_owned().into(),
         version: version.to_owned(),
     };

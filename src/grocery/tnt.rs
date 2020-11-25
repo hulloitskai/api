@@ -1,5 +1,5 @@
 use super::{Prices, Product, Sailor};
-use crate::prelude::*;
+use crate::common::*;
 
 use json::Value as JsonValue;
 use json_dotpath::DotPaths;
@@ -84,12 +84,13 @@ impl Sailor for TntSailor {
         let value: JsonValue =
             response.json().await.context("parse response")?;
 
-        let products: Vec<TntProduct> =
-            match value.dot_get("data.category.items") {
-                Ok(products) => products.ok_or_else(|| anyhow!("missing data")),
-                Err(error) => Err(error.into()),
-            }
-            .context("parse products")?;
+        let products: Vec<TntProduct> = match value
+            .dot_get("data.category.items")
+        {
+            Ok(products) => products.ok_or_else(|| format_err!("missing data")),
+            Err(error) => Err(error.into()),
+        }
+        .context("parse products")?;
         let products: Vec<TntProduct> = products
             .into_iter()
             .filter(|product| {

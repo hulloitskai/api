@@ -1,5 +1,5 @@
 use super::Email;
-use crate::prelude::*;
+use crate::common::*;
 
 #[derive(Debug, Clone, Hash, Serialize, Deserialize)]
 struct Person {

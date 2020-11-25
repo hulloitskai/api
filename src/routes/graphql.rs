@@ -17,20 +17,17 @@ use graphql_warp::{
 
 use std::convert::Infallible;
 
-pub fn graphql<Query, Mutation, Subscription>(
-    schema: &Schema<Query, Mutation, Subscription>,
+pub fn graphql<Q, M, S>(
+    schema: &Schema<Q, M, S>,
 ) -> impl Filter<Extract = (impl Reply,), Error = Rejection> + Clone
 where
-    Query: ObjectType + Send + Sync + 'static,
-    Mutation: ObjectType + Send + Sync + 'static,
-    Subscription: SubscriptionType + Send + Sync + 'static,
+    Q: ObjectType + Send + Sync + 'static,
+    M: ObjectType + Send + Sync + 'static,
+    S: SubscriptionType + Send + Sync + 'static,
 {
     let subscription = graphql_subscription_filter(schema.clone());
     subscription.or(graphql_filter(schema.clone()).and_then(
-        |(schema, request): (
-            Schema<Query, Mutation, Subscription>,
-            GraphQLRequest,
-        )| async move {
+        |(schema, request): (Schema<Q, M, S>, GraphQLRequest)| async move {
             let response = schema.execute(request).await;
             Ok::<_, Infallible>(GraphQLResponse::from(response))
         },

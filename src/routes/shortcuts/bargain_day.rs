@@ -1,6 +1,5 @@
 use crate::grocery::{Product, Sailor};
-use crate::prelude::*;
-use crate::routes::RouteError;
+use crate::routes::common::*;
 
 use warp::filters::query::query;
 use warp::reject::{custom, Rejection};
@@ -42,7 +41,7 @@ where
                 None => match products.first() {
                     Some(product) => describe_product(product),
                     None => {
-                        let error = anyhow!("no products found");
+                        let error = format_err!("no products found");
                         return Err(custom(RouteError::from(error)));
                     }
                 },

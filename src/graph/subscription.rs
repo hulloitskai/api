@@ -1,4 +1,4 @@
-use super::prelude::*;
+use super::common::*;
 use crate::models::Contact as ContactModel;
 
 use chrono_humanize::{
@@ -22,7 +22,7 @@ impl Subscription {
     ) -> FieldResult<impl Stream<Item = FieldResult<String>>> {
         let me = ctx.data::<ContactModel>()?;
         let time_zone = Tz::from_str(&time_zone)
-            .map_err(|message| anyhow!(message))
+            .map_err(|message| format_err!(message))
             .context("parse time zone")
             .map_err(|error| format!("{:#}", error))?;
         let birthday = me

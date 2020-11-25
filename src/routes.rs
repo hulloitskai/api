@@ -1,12 +1,17 @@
-use crate::prelude::*;
-
-use http::StatusCode;
-use warp::reject::{Reject, Rejection};
-use warp::reply::{with_status, Reply, Response};
+mod common {
+    pub use super::RouteError;
+    pub use crate::common::*;
+}
 
 pub mod graphql;
 pub mod healthz;
 pub mod shortcuts;
+
+use crate::common::*;
+
+use http::StatusCode;
+use warp::reject::{Reject, Rejection};
+use warp::reply::{with_status, Reply, Response};
 
 #[derive(Debug, Clone)]
 pub struct RouteError {
