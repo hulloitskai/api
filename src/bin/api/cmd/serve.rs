@@ -1,4 +1,4 @@
-use crate::common::*;
+use crate::common::{info as __info, *};
 
 use api::routes::graphql::graphql as graphql_route;
 use api::routes::graphql::playground as playground_route;
@@ -8,6 +8,7 @@ use api::routes::shortcuts::bargain_day as bargain_day_route;
 
 use api::db::PgPool;
 use api::graph::{Query, Subscription};
+use api::graphql::extensions::Logging as LoggingExtension;
 use api::grocery::tnt::TntSailor;
 use api::meta::BuildInfo;
 use api::models::{Contact, Email};
@@ -19,16 +20,33 @@ use warp::{any as warp_any, serve as warp_serve};
 use tokio::runtime::Runtime;
 use tokio_compat::FutureExt;
 
+use graphql::extensions::ApolloTracing as TracingExtension;
+use graphql::{EmptyMutation, Schema};
+
 use std::net::ToSocketAddrs;
 use std::sync::Arc;
 
 use clap::Clap;
 use diesel::r2d2::{ConnectionManager, ManageConnection};
-use graphql::{EmptyMutation, Schema};
+
+macro_rules! info {
+    ($($arg:tt)+) => (
+        __info!(target: "api::serve", $($arg)+);
+    )
+}
 
 #[derive(Debug, Clap)]
 #[clap(about = "Serve my personal API")]
 pub struct ServeCli {
+    #[clap(
+        long,
+        env = "API_TRACE",
+        about = "Enable Apollo Tracing",
+        takes_value = false
+    )]
+    #[clap(help_heading = Some("SERVER"))]
+    pub trace: bool,
+
     #[clap(
         long,
         env = "API_HOST",
@@ -36,6 +54,7 @@ pub struct ServeCli {
         value_name = "HOST",
         default_value = "0.0.0.0"
     )]
+    #[clap(help_heading = Some("SERVER"))]
     pub host: String,
 
     #[clap(
@@ -45,26 +64,8 @@ pub struct ServeCli {
         value_name = "PORT",
         default_value = "8080"
     )]
+    #[clap(help_heading = Some("SERVER"))]
     pub port: u16,
-
-    #[clap(
-        long,
-        env = "API_DB_URL",
-        about = "Database URL",
-        value_name = "URL",
-        hide_env_values = true
-    )]
-    #[clap(help_heading = Some("DATABASE"))]
-    pub db_url: String,
-
-    #[clap(
-        long,
-        env = "API_DB_MAX_CONNECTIONS",
-        about = "Maximum concurrent database connections",
-        value_name = "N"
-    )]
-    #[clap(help_heading = Some("DATABASE"))]
-    pub db_max_connections: Option<u32>,
 
     #[clap(long, env = "API_MY_FIRST_NAME", value_name = "first name")]
     #[clap(help_heading = Some("SELF"))]
@@ -85,6 +86,25 @@ pub struct ServeCli {
     #[clap(long, env = "API_MY_BIRTHDAY", value_name = "birthday")]
     #[clap(help_heading = Some("SELF"))]
     pub my_birthday: Date,
+
+    #[clap(
+        long,
+        env = "API_DATABASE_URL",
+        about = "Database URL",
+        value_name = "URL",
+        hide_env_values = true
+    )]
+    #[clap(help_heading = Some("DATABASE"))]
+    pub database_url: String,
+
+    #[clap(
+        long,
+        env = "API_DATABASE_MAX_CONNECTIONS",
+        about = "Maximum number of concurrent database connections",
+        value_name = "N"
+    )]
+    #[clap(help_heading = Some("DATABASE"))]
+    pub database_max_connections: Option<u32>,
 }
 
 impl ServeCli {
@@ -115,18 +135,30 @@ pub fn serve(ctx: &Context, cli: ServeCli) -> Result<()> {
     };
 
     let ServeCli {
-        db_url,
-        db_max_connections,
+        database_url: db_url,
+        database_max_connections: db_max_connections,
         ..
     } = &cli;
     let db = connect_db(db_url, db_max_connections.to_owned())
         .context("connect database")?;
 
-    let schema = Schema::build(Query, EmptyMutation, Subscription)
+    let query = Query;
+    let mutation = EmptyMutation;
+    let subscription = Subscription;
+
+    let mut schema = Schema::build(query, mutation, subscription)
+        .extension(LoggingExtension)
         .data(build)
         .data(db)
-        .data(cli.me())
-        .finish();
+        .data(cli.me());
+    if cli.trace {
+        info!("using Apollo Tracing extension");
+        schema = schema.extension(TracingExtension);
+    }
+    let schema = schema.finish();
+
+    let runtime = Runtime::new().context("initialize runtime")?;
+    let runtime = Arc::new(runtime);
 
     let sailor = TntSailor::new();
     let sailor = Arc::new(sailor);
@@ -134,8 +166,10 @@ pub fn serve(ctx: &Context, cli: ServeCli) -> Result<()> {
     let shortcuts_bargain_day =
         warp_path("bargain-day").and(bargain_day_route(sailor));
     let shortcuts = warp_path("shortcuts").and(shortcuts_bargain_day);
+
     let playground = warp_any().and(playground_route());
-    let graphql = warp_path("graphql").and(graphql_route(&schema));
+    let graphql =
+        warp_path("graphql").and(graphql_route(schema, runtime.clone()));
     let healthz = warp_path("healthz").and(healthz_route());
     let filter = warp_root()
         .and(playground)
@@ -153,7 +187,6 @@ pub fn serve(ctx: &Context, cli: ServeCli) -> Result<()> {
         .unwrap()
         .to_owned();
 
-    let runtime = Runtime::new().context("initialize runtime")?;
     runtime.block_on(async {
         info!("listening on http://{}", &address);
         warp_serve(filter).run(address).compat().await;

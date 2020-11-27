@@ -53,11 +53,6 @@ pub struct Cli {
     pub cmd: Command,
 }
 
-#[derive(Debug, Clap)]
-pub enum Command {
-    Serve(ServeCli),
-}
-
 fn main() -> Result<()> {
     load_env().context("load environment variables")?;
 
@@ -79,12 +74,12 @@ fn main() -> Result<()> {
         "" => None,
         version => Some(version.to_owned()),
     };
-    let context = Context { timestamp, version };
+    let ctx = Context { timestamp, version };
 
     // Configure logger.
     set_env_var("RUST_LOG", &cli.log);
     init_logger();
-    if let Some(version) = &context.version {
+    if let Some(version) = &ctx.version {
         debug!("starting up (version: {})", version);
     } else {
         debug!("starting up");
@@ -93,6 +88,6 @@ fn main() -> Result<()> {
     // Run subcommand.
     use Command::*;
     match cli.cmd {
-        Serve(cli) => serve(&context, cli),
+        Serve(cli) => serve(&ctx, cli),
     }
 }

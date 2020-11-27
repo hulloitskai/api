@@ -5,8 +5,10 @@ extern crate builder;
 mod common {
     pub use std::collections::{HashMap as Map, HashSet as Set};
     pub use std::convert::{TryFrom, TryInto};
+    pub use std::fmt::{Display, Formatter};
+    pub use std::fmt::{Error as FmtError, Result as FmtResult};
     pub use std::str::FromStr;
-    pub use std::sync::Arc;
+    pub use std::sync::{Arc, Mutex};
 
     pub use anyhow::Context as ResultContext;
     pub use anyhow::{bail, format_err, Error, Result};
@@ -29,6 +31,7 @@ mod common {
 pub mod db;
 pub mod env;
 pub mod graph;
+pub mod graphql;
 pub mod grocery;
 pub mod meta;
 pub mod models;

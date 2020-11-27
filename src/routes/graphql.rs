@@ -1,3 +1,5 @@
+use super::common::*;
+
 use warp::header::optional as header;
 use warp::path::{full as full_path, FullPath};
 use warp::reply::{html, Reply};
@@ -16,22 +18,34 @@ use graphql_warp::{
 };
 
 use std::convert::Infallible;
+use tokio::runtime::Runtime;
 
 pub fn graphql<Q, M, S>(
-    schema: &Schema<Q, M, S>,
+    schema: Schema<Q, M, S>,
+    runtime: Arc<Runtime>,
 ) -> impl Filter<Extract = (impl Reply,), Error = Rejection> + Clone
 where
     Q: ObjectType + Send + Sync + 'static,
     M: ObjectType + Send + Sync + 'static,
     S: SubscriptionType + Send + Sync + 'static,
 {
-    let subscription = graphql_subscription_filter(schema.clone());
-    subscription.or(graphql_filter(schema.clone()).and_then(
-        |(schema, request): (Schema<Q, M, S>, GraphQLRequest)| async move {
-            let response = schema.execute(request).await;
-            Ok::<_, Infallible>(GraphQLResponse::from(response))
-        },
-    ))
+    let graphql = graphql_filter(schema.clone())
+        .map(move |(schema, request)| (schema, request, runtime.clone()))
+        .and_then(
+            |(schema, request, runtime): (
+                Schema<Q, M, S>,
+                GraphQLRequest,
+                Arc<Runtime>,
+            )| async move {
+                let response = runtime
+                    .spawn(async move { schema.execute(request).await })
+                    .await
+                    .unwrap();
+                Ok::<_, Infallible>(GraphQLResponse::from(response))
+            },
+        );
+    let subscription = graphql_subscription_filter(schema);
+    subscription.or(graphql)
 }
 
 pub fn playground(
