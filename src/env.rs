@@ -1,12 +1,13 @@
 use crate::common::*;
 
-use std::env::{
-    remove_var as remove_env_var, set_var as set_env_var, var as env_var,
-    VarError as EnvVarError,
-};
+use std::env::remove_var as remove_env_var;
+use std::env::set_var as set_env_var;
+use std::env::var as env_var;
+use std::env::VarError as EnvVarError;
 use std::io::ErrorKind as IoErrorKind;
 
 use dotenv::dotenv;
+use dotenv::Error as DotenvError;
 
 pub const NAMESPACE: &str = "API";
 
@@ -31,7 +32,7 @@ pub fn var_or(
 }
 
 pub fn load() -> Result<()> {
-    if let Err(dotenv::Error::Io(error)) = dotenv() {
+    if let Err(DotenvError::Io(error)) = dotenv() {
         if error.kind() != IoErrorKind::NotFound {
             return Err(error).context("failed to load .env");
         }

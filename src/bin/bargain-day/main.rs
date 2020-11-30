@@ -1,12 +1,13 @@
-use api::grocery::tnt::TntSailor;
-use api::grocery::Sailor;
-use api::{
-    env::{load as load_env, var as env_var},
-    grocery::Product,
-};
+use api::env::load as load_env;
+use api::env::var as env_var;
 
-use anyhow::{format_err, Context as AnyhowContext, Result};
+use api::grocery::tnt::TntSailor;
+use api::grocery::Product;
+use api::grocery::Sailor;
+
+use anyhow::{format_err, Context as ResultContext, Error, Result};
 use logger::init as init_logger;
+
 use std::env::{args, VarError as EnvVarError};
 use tokio::runtime::Runtime;
 
@@ -16,18 +17,16 @@ fn main() -> Result<()> {
 
     let page_size = match env_var("TNT_PAGE_SIZE") {
         Ok(s) => Ok(Some(s)),
-        Err(error) => match error {
-            EnvVarError::NotPresent => Ok(None),
-            error => Err(error),
-        },
+        Err(EnvVarError::NotPresent) => Ok(None),
+        Err(error) => Err(error),
     }
-    .context("invalid page size")?;
+    .context("failed to get page size")?;
     let page_size: Result<Option<u32>> =
         page_size.map_or(Ok(None as Option<u32>), |s| {
             let size: u32 = s.parse()?;
             Ok(Some(size))
         });
-    let page_size = page_size.context("invalid page size")?;
+    let page_size = page_size.context("failed to parse page size")?;
 
     let mut sailor = TntSailor::builder();
     if let Some(page_size) = page_size {
@@ -35,7 +34,7 @@ fn main() -> Result<()> {
     }
     let sailor = sailor
         .build()
-        .map_err(|message| format_err!(message))
+        .map_err(Error::msg)
         .context("failed to initialize sailor")?;
     let postcode = args()
         .nth(1)

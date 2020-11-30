@@ -83,15 +83,12 @@ impl Sailor for TntSailor {
             bail!("bad response: {}", &status);
         }
         let value: JsonValue =
-            response.json().await.context("invalid response")?;
+            response.json().await.context("failed to parse response")?;
 
-        let products: Vec<TntProduct> = match value
-            .dot_get("data.category.items")
-        {
-            Ok(products) => products.ok_or_else(|| format_err!("missing data")),
-            Err(error) => Err(error.into()),
-        }
-        .context("failed to parse products")?;
+        let products = value
+            .dot_get::<Vec<TntProduct>>("data.category.items")
+            .context("failed to parse response items")?
+            .context("missing response items")?;
         let products: Vec<TntProduct> = products
             .into_iter()
             .filter(|product| {

@@ -96,9 +96,11 @@ impl<'a> Display for DisplayError<'a> {
                 if i != 0 {
                     write!(f, ".")?;
                 }
+
+                use PathSegment::*;
                 match segment {
-                    PathSegment::Field(field) => f.write_str(field),
-                    PathSegment::Index(i) => write!(f, "{}", i),
+                    Field(field) => f.write_str(field),
+                    Index(i) => write!(f, "{}", i),
                 }?;
             }
             write!(f, ", ")?;

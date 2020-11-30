@@ -23,7 +23,7 @@ impl Subscription {
         let me = ctx.data::<ContactModel>()?;
         let time_zone = Tz::from_str(&time_zone)
             .map_err(|message| format_err!(message))
-            .context("invalid time zone")
+            .context("failed to parse time zone")
             .into_field_result()?;
         let birthday = me
             .birthday_in_time_zone(time_zone)

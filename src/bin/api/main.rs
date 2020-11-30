@@ -1,7 +1,7 @@
 mod common {
     pub use crate::ctx::*;
 
-    pub use anyhow::{format_err, Context as AnyhowContext, Result};
+    pub use anyhow::{format_err, Context as ResultContext, Result};
     pub use chrono::{Datelike, Duration, NaiveDate as Date, TimeZone, Utc};
     pub use clap::Clap;
     pub use log::{debug, error, info, warn};
@@ -69,7 +69,7 @@ fn main() -> Result<()> {
 
     // Read build info.
     let timestamp = DateTime::parse_from_rfc3339(env!("BUILD_TIMESTAMP"))
-        .context("parse build timestamp")?;
+        .context("failed to parse build timestamp")?;
     let version = match env!("BUILD_VERSION") {
         "" => None,
         version => Some(version.to_owned()),

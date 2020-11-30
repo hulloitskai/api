@@ -8,8 +8,9 @@
 !*.secret
 
 
-# == Dotenv ==
+# == Config ==
 .env
+/.config/
 
 
 # == IDE ==

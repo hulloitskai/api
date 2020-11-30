@@ -18,7 +18,8 @@ clap = { version = "3.0.0-beta.2", features = ["color"] }
 diesel = { version = "1", features = ["postgres", "r2d2", "serde_json"] }
 dotenv = "0.15"
 errors = { package = "thiserror", version = "1" }
-futures = "0.3"
+futures = { package = "futures-core", version = "0.3" }
+futures_util = { package = "futures-util", version = "0.3" }
 graphql_warp = { package = "async-graphql-warp", version = "2" }
 http = "0.2"
 json = { package = "serde_json", version = "1" }
@@ -30,7 +31,7 @@ regex = "1"
 serde = "1"
 tokio = { version = "0.3", features = ["rt", "rt-multi-thread", "time"] }
 tokio_compat = { package = "tokio-compat-02", version = "0.1" }
-uuid = "0.8"
+uuid = { version = "0.8", features = ["v4"] }
 warp = "0.2"
 
 [dependencies.graphql]

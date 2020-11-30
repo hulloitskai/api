@@ -32,31 +32,28 @@ fn git_version() -> Result<String> {
                 .describe_tags()
                 .show_commit_oid_as_fallback(true),
         )
-        .context("describe HEAD")?;
+        .context("failed to describe HEAD")?;
 
     let suffix = get_env("BUILD_VERSION_DIRTY_SUFFIX");
     let suffix = match suffix {
         Ok(suffix) => suffix,
         Err(error) => match error {
             EnvVarError::NotPresent => "dirty".to_owned(),
-            error => {
-                return Err(error).context("get dirty suffix");
-            }
+            error => return Err(error).context("failed to get dirty suffix"),
         },
     };
-    let suffix = if !suffix.is_empty() {
-        Some(format!("-{}", suffix))
-    } else {
-        None
+    let suffix = match suffix.as_str() {
+        "" => None,
+        suffix => Some(format!("-{}", suffix)),
     };
 
     let mut opts = DescribeFormatOptions::default();
-    let opts = match suffix {
-        Some(suffix) => opts.dirty_suffix(&suffix),
-        None => &opts,
+    if let Some(suffix) = &suffix {
+        opts.dirty_suffix(suffix);
     };
 
-    desc.format(Some(&opts)).context("format describe result")
+    desc.format(Some(&opts))
+        .context("failed to format describe result")
 }
 
 fn fmt_version(version: String) -> String {
