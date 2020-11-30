@@ -128,19 +128,23 @@ impl ServeCli {
 }
 
 pub fn serve(ctx: &Context, cli: ServeCli) -> Result<()> {
-    let Context { timestamp, version } = &ctx;
-    let build = BuildInfo {
-        timestamp: timestamp.to_owned().into(),
-        version: version.to_owned(),
+    let db = {
+        let ServeCli {
+            database_url: url,
+            database_max_connections: max_connections,
+            ..
+        } = &cli;
+        init_db(url, max_connections.to_owned())
+            .context("failed to initialize database")?
     };
 
-    let ServeCli {
-        database_url: db_url,
-        database_max_connections: db_max_connections,
-        ..
-    } = &cli;
-    let db = connect_db(db_url, db_max_connections.to_owned())
-        .context("connect database")?;
+    let build = {
+        let Context { timestamp, version } = &ctx;
+        BuildInfo {
+            timestamp: timestamp.to_owned().into(),
+            version: version.to_owned(),
+        }
+    };
 
     let query = Query;
     let mutation = EmptyMutation;
@@ -157,7 +161,7 @@ pub fn serve(ctx: &Context, cli: ServeCli) -> Result<()> {
     }
     let schema = schema.finish();
 
-    let runtime = Runtime::new().context("initialize runtime")?;
+    let runtime = Runtime::new().context("failed to initialize runtime")?;
     let runtime = Arc::new(runtime);
 
     let sailor = TntSailor::new();
@@ -181,7 +185,7 @@ pub fn serve(ctx: &Context, cli: ServeCli) -> Result<()> {
     let ServeCli { host, port, .. } = &cli;
     let address = format!("{}:{}", host, port)
         .to_socket_addrs()
-        .context("parse address")?
+        .context("invalid server address")?
         .as_slice()
         .first()
         .unwrap()
@@ -194,16 +198,17 @@ pub fn serve(ctx: &Context, cli: ServeCli) -> Result<()> {
     })
 }
 
-fn connect_db(url: &str, max_connections: Option<u32>) -> Result<PgPool> {
+fn init_db(url: &str, max_connections: Option<u32>) -> Result<PgPool> {
     let manager = {
         let manager = ConnectionManager::new(url);
         let mut conn = manager.connect()?;
-        manager.is_valid(&mut conn).context("test connection")?;
+        manager.is_valid(&mut conn).context("invalid connection")?;
         manager
     };
     let mut pool = PgPool::builder();
     if let Some(size) = max_connections {
         pool = pool.max_size(size);
     }
-    pool.build(manager).context("create connection pool")
+    pool.build(manager)
+        .context("failed to create connection pool")
 }

@@ -23,15 +23,14 @@ impl Subscription {
         let me = ctx.data::<ContactModel>()?;
         let time_zone = Tz::from_str(&time_zone)
             .map_err(|message| format_err!(message))
-            .context("parse time zone")
-            .map_err(|error| format!("{:#}", error))?;
+            .context("invalid time zone")
+            .into_field_result()?;
         let birthday = me
             .birthday_in_time_zone(time_zone)
-            .map(|date| date.and_hms(0, 0, 0))
-            .context("get birthday in timezone")
-            .map_err(|error| format!("{:#}", error))?;
+            .context("failed to represent birthday in the given timezone")
+            .into_field_result()?
+            .and_hms(0, 0, 0);
         let stream = interval(Duration::from_secs(1)).map(move |_| {
-            debug!("i dont understandsdfsa");
             let now: DateTime<Tz> = Utc::now().with_timezone(&time_zone);
             let age = now - birthday;
             let age = HumanTime::from(age)

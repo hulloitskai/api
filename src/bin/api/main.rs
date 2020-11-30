@@ -54,7 +54,7 @@ pub struct Cli {
 }
 
 fn main() -> Result<()> {
-    load_env().context("load environment variables")?;
+    load_env().context("failed to load environment variables")?;
 
     // Parse command line and initialize Sentry.
     let cli = Cli::parse();
@@ -63,7 +63,7 @@ fn main() -> Result<()> {
         .as_ref()
         .map(|dsn| init_sentry(dsn.as_str()))
         .or_else(|| {
-            warn!("Missing Sentry DSN; Sentry is disabled");
+            warn!("missing Sentry DSN; Sentry is disabled");
             None
         });
 

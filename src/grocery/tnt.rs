@@ -1,12 +1,13 @@
-use super::{Prices, Product, Sailor};
+use super::{Prices, Product, ProductIterator, Sailor};
 use crate::common::*;
 
 use json::Value as JsonValue;
 use json_dotpath::DotPaths;
 
+use std::fmt::{Display, Formatter, Result as FmtResult};
+
 use bigdecimal::Zero;
 use request::Client;
-use std::fmt::{Display, Formatter, Result as FmtResult};
 use tokio_compat::FutureExt;
 
 /// A `TntSailor` finds sales at T&T Supermarket.
@@ -46,7 +47,7 @@ impl Sailor for TntSailor {
     async fn get_sale_products(
         &self,
         postcode: String,
-    ) -> Result<Vec<Product>> {
+    ) -> Result<ProductIterator> {
         // Set location.
         // TODO: Split this into a separate helper function.
         let url =
@@ -59,10 +60,10 @@ impl Sailor for TntSailor {
             .send()
             .compat()
             .await
-            .context("send request")?;
+            .context("failed to send request")?;
         let status = response.status();
         if !status.is_success() {
-            warn!("Failed to set preferred store: {}", &status)
+            warn!("failed to set preferred store: {}", &status)
         }
 
         // Get weekly specials.
@@ -76,13 +77,13 @@ impl Sailor for TntSailor {
             .send()
             .compat()
             .await
-            .context("send request")?;
+            .context("failed to send request")?;
         let status = response.status();
         if !status.is_success() {
             bail!("bad response: {}", &status);
         }
         let value: JsonValue =
-            response.json().await.context("parse response")?;
+            response.json().await.context("invalid response")?;
 
         let products: Vec<TntProduct> = match value
             .dot_get("data.category.items")
@@ -90,28 +91,27 @@ impl Sailor for TntSailor {
             Ok(products) => products.ok_or_else(|| format_err!("missing data")),
             Err(error) => Err(error.into()),
         }
-        .context("parse products")?;
+        .context("failed to parse products")?;
         let products: Vec<TntProduct> = products
             .into_iter()
             .filter(|product| {
                 if (product.is_available == 0) {
-                    info!("Found an unavailable product: {}", product);
+                    info!("found an unavailable product: {}", product);
                     return false;
                 }
                 if (product.is_saleable == 0) {
-                    info!("Found an unsellable product: {}", product);
+                    info!("found an unsellable product: {}", product);
                     return false;
                 }
                 if (product.prices.final_price.amount.is_zero()) {
-                    info!("Found an unpriced product: {}", product);
+                    info!("found an unpriced product: {}", product);
                     return false;
                 }
                 true
             })
             .collect();
-        let products: Vec<Product> =
-            products.into_iter().map(Into::into).collect();
-        Ok(products)
+        let products = products.into_iter().map(Product::from);
+        Ok(Box::new(products))
     }
 }
 

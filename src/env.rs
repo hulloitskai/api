@@ -33,7 +33,7 @@ pub fn var_or(
 pub fn load() -> Result<()> {
     if let Err(dotenv::Error::Io(error)) = dotenv() {
         if error.kind() != IoErrorKind::NotFound {
-            return Err(error).context("load .env");
+            return Err(error).context("failed to load .env");
         }
     }
 

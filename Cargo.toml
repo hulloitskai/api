@@ -33,6 +33,18 @@ tokio_compat = { package = "tokio-compat-02", version = "0.1" }
 uuid = "0.8"
 warp = "0.2"
 
+[dependencies.graphql]
+package = "async-graphql"
+version = "2"
+default-features = false
+features = ["uuid", "chrono", "chrono-tz"]
+
+[dependencies.request]
+package = "reqwest"
+version = "0.10"
+default-features = false
+features = ["rustls-tls", "json", "cookies"]
+
 [dependencies.sentry]
 version = "0.20"
 default-features = false
@@ -45,18 +57,6 @@ features = [
   "panic",
   "transport",
 ]
-
-[dependencies.request]
-package = "reqwest"
-version = "0.10"
-default-features = false
-features = ["rustls-tls", "json", "cookies"]
-
-[dependencies.graphql]
-package = "async-graphql"
-version = "2"
-default-features = false
-features = ["log", "url", "uuid", "chrono", "chrono-tz"]
 
 
 [build-dependencies]

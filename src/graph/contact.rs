@@ -39,14 +39,14 @@ impl Contact {
     ) -> FieldResult<String> {
         let time_zone = Tz::from_str(&time_zone)
             .map_err(|message| format_err!(message))
-            .context("parse time zone")
-            .map_err(|error| format!("{:#}", error))?;
+            .context("invalid time zone")
+            .into_field_result()?;
         let birthday = self
             .model
             .birthday_in_time_zone(time_zone)
-            .map(|date| date.and_hms(0, 0, 0))
-            .context("get birthday in timezone")
-            .map_err(|error| format!("{:#}", error))?;
+            .context("failed to represent birthday in the given timezone")
+            .into_field_result()?
+            .and_hms(0, 0, 0);
         let now: DateTime<Tz> =
             time_zone.from_utc_datetime(&Utc::now().naive_utc());
         let age = now - birthday;

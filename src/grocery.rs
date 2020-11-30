@@ -53,8 +53,13 @@ impl Prices {
         Some(&self.original - sale)
     }
 }
+
+pub type ProductIterator = Box<dyn Iterator<Item = Product>>;
+
 #[async_trait]
 pub trait Sailor {
-    async fn get_sale_products(&self, postcode: String)
-        -> Result<Vec<Product>>;
+    async fn get_sale_products(
+        &self,
+        postcode: String,
+    ) -> Result<ProductIterator>;
 }

@@ -27,8 +27,9 @@ where
             let products: Vec<Product> = sailor
                 .get_sale_products(params.postcode)
                 .await
-                .context("get on-sale products")
-                .map_err(|error| custom(RouteError::from(error)))?;
+                .context("failed to get on-sale products")
+                .map_err(|error| custom(RouteError::from(error)))?
+                .collect();
             let message = match products[..].split_last() {
                 Some((last, init)) => format!(
                     "{}, and {}",
