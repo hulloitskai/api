@@ -5,10 +5,13 @@ use api::grocery::tnt::TntSailor;
 use api::grocery::Product;
 use api::grocery::Sailor;
 
-use anyhow::{format_err, Context as ResultContext, Error, Result};
-use logger::init as init_logger;
+use std::env::args;
+use std::env::VarError as EnvVarError;
 
-use std::env::{args, VarError as EnvVarError};
+use anyhow::Context as ResultContext;
+use anyhow::{format_err, Error, Result};
+
+use logger::init as init_logger;
 use tokio::runtime::Runtime;
 
 fn main() -> Result<()> {
@@ -21,11 +24,7 @@ fn main() -> Result<()> {
         Err(error) => Err(error),
     }
     .context("failed to get page size")?;
-    let page_size: Result<Option<u32>> =
-        page_size.map_or(Ok(None as Option<u32>), |s| {
-            let size: u32 = s.parse()?;
-            Ok(Some(size))
-        });
+    let page_size = page_size.map(|s| s.parse::<u32>()).transpose();
     let page_size = page_size.context("failed to parse page size")?;
 
     let mut sailor = TntSailor::builder();
